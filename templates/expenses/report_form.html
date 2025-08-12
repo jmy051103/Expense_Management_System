@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% if is_edit %}Edit{% else %}New{% endif %} Expense Report</title>
+  <style>
+    table{width:100%;border-collapse:collapse;margin:12px 0}
+    th,td{border:1px solid #ddd;padding:8px}
+    tfoot td{font-weight:bold}
+    .actions{margin:12px 0}
+    input[type="number"]{width:100px}
+    input[type="text"]{width:100%}
+    textarea{width:100%;height:80px}
+  </style>
+</head>
+<body>
+  <h1>{% if is_edit %}Edit{% else %}Create{% endif %} Expense Report</h1>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <fieldset>
+      <legend>매출처</legend>
+      <div>회사: {{ form.company }}</div>
+      <div>전화번호: {{ form.contact_phone }}</div>
+      <div>이메일: {{ form.email }}</div>
+      <div>담당자: {{ form.handler }}</div>
+      <div>VAT: {{ form.vat_rate }}</div>
+    </fieldset>
+
+    <h3>거래내역</h3>
+    {{ formset.management_form }}
+    <table id="items">
+      <thead>
+        <tr>
+          <th>품목</th>
+          <th>수량</th>
+          <th>매입단가</th>
+          <th>금액</th>
+          <th>삭제</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in formset.forms %}
+          <tr class="item-row">
+            <td>{{ f.product }}</td>
+            <td>{{ f.quantity }}</td>
+            <td>{{ f.unit_price }}</td>
+            <td class="row-total">0</td>
+            <td>
+              {% if f.instance.pk %}
+                {{ f.DELETE }} 삭제
+              {% else %}
+                <button type="button" class="remove">X</button>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr><td colspan="3">합계(부가세 제외)</td><td id="subtotal">0</td><td></td></tr>
+        <tr><td colspan="3">VAT</td><td id="vat">0</td><td></td></tr>
+        <tr><td colspan="3">총액</td><td id="grand">0</td><td></td></tr>
+      </tfoot>
+    </table>
+
+    <div class="actions">
+      <button type="button" id="add-row">품목 추가</button>
+    </div>
+
+    <h3>기타정보</h3>
+    {{ form.notes }}
+
+    <div class="actions">
+      <button type="submit">{% if is_edit %}수정 저장{% else %}저장하기{% endif %}</button>
+      {% if is_edit %}
+        <a href="{% url 'report_detail' report.id %}">취소</a>
+      {% else %}
+        <a href="/">취소</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- 빈 폼 템플릿 (formset용) -->
+  <template id="empty-row">
+    <tr class="item-row">
+      <td><input type="text" name="__name__-product" maxlength="100" required></td>
+      <td><input type="number" name="__name__-quantity" value="1" min="1" required></td>
+      <td><input type="number" name="__name__-unit_price" value="0" min="0" required></td>
+      <td class="row-total">0</td>
+      <td><button type="button" class="remove">X</button></td>
+    </tr>
+  </template>
+
+  <script>
+    // 간단 합계 계산 & 폼 행 추가/삭제
+    const formPrefix = "{{ formset.prefix }}"; // default: expenseitem_set
+    const totalForms = document.getElementById('id_' + formPrefix + '-TOTAL_FORMS');
+    const tbody = document.querySelector('#items tbody');
+    const empty = document.getElementById('empty-row').content;
+
+    function recalc() {
+      let subtotal = 0;
+      tbody.querySelectorAll('tr.item-row').forEach(tr => {
+        const qty = Number(tr.querySelector('input[name*="-quantity"]')?.value || tr.querySelector('input[id$="quantity"]')?.value || 0);
+        const price = Number(tr.querySelector('input[name*="-unit_price"]')?.value || tr.querySelector('input[id$="unit_price"]')?.value || 0);
+        const row = qty * price;
+        const cell = tr.querySelector('.row-total');
+        if (cell) cell.textContent = row.toLocaleString();
+        subtotal += row;
+      });
+      const vatSelect = document.querySelector('select[name="vat_rate"]');
+      const vatRate = Number(vatSelect ? vatSelect.value : 0);
+      const vat = Math.floor(subtotal * (vatRate/100));
+      document.getElementById('subtotal').textContent = subtotal.toLocaleString();
+      document.getElementById('vat').textContent = vat.toLocaleString();
+      document.getElementById('grand').textContent = (subtotal+vat).toLocaleString();
+    }
+
+    function wireInputs(tr){
+      tr.addEventListener('input', recalc);
+      const rm = tr.querySelector('button.remove');
+      if(rm){
+        rm.onclick = () => { tr.remove(); renumber(); recalc(); };
+      }
+    }
+
+    function renumber(){
+      const rows = Array.from(tbody.querySelectorAll('tr.item-row'));
+      rows.forEach((tr, idx) => {
+        tr.querySelectorAll('input').forEach(inp=>{
+          if (inp.name.startsWith('__name__')) {
+            inp.name = inp.name.replace(/^\_\_name\_\_/, String(idx));
+          }
+        });
+      });
+      if (totalForms) totalForms.value = rows.length;
+    }
+
+    document.getElementById('add-row').onclick = () => {
+      const tr = document.importNode(empty, true).querySelector('tr');
+      wireInputs(tr);
+      tbody.appendChild(tr);
+      renumber();
+      recalc();
+    };
+
+    tbody.querySelectorAll('tr.item-row').forEach(wireInputs);
+    document.addEventListener('input', recalc);
+    recalc();
+  </script>
+</body>
+</html>
