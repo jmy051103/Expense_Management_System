@@ -15,7 +15,7 @@
         {% csrf_token %}
         <input type="hidden" name="next" value="{% url 'dashboard' %}">
         {% load static %}
-        <img class="logo" src="{% static 'image/logo.png' %}" alt="Logo">
+        <img class="logo" src="{% static 'image/logo.jpeg' %}" alt="Logo">
       
         <input type="text" id="username" name="username"
                required autocomplete="username" inputmode="text" placeholder="아이디">
