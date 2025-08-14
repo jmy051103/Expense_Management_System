@@ -8,7 +8,14 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", TemplateView.as_view(template_name="home.html"), name="home"),
 
-    path("accounts/login/",  LoginView.as_view(redirect_authenticated_user=True), name="login"),
+    path(
+        "accounts/login/",
+        LoginView.as_view(
+            template_name="home.html",          
+            redirect_authenticated_user=True,
+        ),
+        name="login",
+    ),
     path("accounts/logout/", LogoutView.as_view(next_page="home"), name="logout"),
     path("accounts/signup/", SignUpView.as_view(), name="signup"),
 
