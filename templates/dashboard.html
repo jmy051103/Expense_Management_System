@@ -13,6 +13,11 @@
         <a href="{% url 'report_list' %}">📄 정산서 목록 보기</a>
     </p>
 
+    <form action="{% url 'logout' %}" method="post" style="display:inline">
+        {% csrf_token %}
+        <button type="submit">로그아웃</button>
+    </form>
+
     {% if "employee" in groups %}
         <p>Employee: 새 정산서를 등록하고 목록에서 확인하세요.</p>
     {% elif "approver" in groups %}
