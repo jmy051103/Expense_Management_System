@@ -47,6 +47,7 @@ body {
   margin: 8px 0;          
   padding: 10px;
   box-sizing: border-box;
+  border-color:#71AAC5;
   width: 100%;
   height: 50px;
   display: block;
@@ -59,7 +60,7 @@ body {
   padding: 12px;
   border: 0;
   border-radius: 8px;
-  background: #0ea5e9;
+  background: #2e7192;
   color: #fff;
   cursor: pointer;
   
