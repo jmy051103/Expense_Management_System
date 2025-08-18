@@ -1,31 +1,129 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
-    <title>Dashboard</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>업무지원시스템 Dashboard</title>
+   {% load static %}   
+  <link rel="stylesheet" href="{% static 'dashboard.css' %}">
 </head>
 <body>
-    <h1>Dashboard</h1>
-    <p>Signed in as: <strong>{{ user.username }}</strong></p>
 
-    <p>
-        <a href="{% url 'report_create' %}">+결제(정산) 등록</a> |
-        <a href="{% url 'report_list' %}">📄 정산서 목록 보기</a>
-    </p>
+  <!-- 상단 상태줄 -->
+  <div class="topbar">
+    <strong>시험운영</strong>
+    <span class="sep">|</span>
+    <small>Today {{ today|date:"Y.m.d" }}</small>
+    <span class="ip" style="margin-left:auto;">현재접속 IP : {{ request.META.REMOTE_ADDR|default:"-" }}</span>
+  </div>
 
-    <form action="{% url 'logout' %}" method="post" style="display:inline">
+    <!-- 타이틀 + 탭(고정) -->
+    <div class="sticky-wrap">
+    <div class="titlebar">
+        <h1>(주)대진아이엔티 업무지원시스템</h1>
+        <form action="{% url 'logout' %}" method="post" style="display:inline">
         {% csrf_token %}
-        <button type="submit">로그아웃</button>
-    </form>
+        <button type="submit" class="login-btn">로그아웃</button>
+        </form>
+    </div>
 
-    {% if "employee" in groups %}
-        <p>Employee: 새 정산서를 등록하고 목록에서 확인하세요.</p>
-    {% elif "approver" in groups %}
-        <p>Approver: 정산서를 확인하고 승인/삭제할 수 있습니다.</p>
-    {% elif "admin" in groups %}
-        <p>Admin: 모든 기능에 접근 가능합니다.</p>
-    {% endif %}
+    <!-- 탭 -->
+    <nav class="tabs" role="tablist" aria-label="상단 메뉴">
+      <button class="tab" role="tab">계정관리</button>
+      <button class="tab" role="tab">업무관리</button>
+      <button class="tab" role="tab">계약정보</button>
+      <button class="tab" role="tab">통계</button>
+    </nav>
+  </div>
 
-    <p><a href="/">← 홈으로</a></p>
+  <main class="container">
+
+    <!-- KPI 카드 -->
+    <section class="cards" aria-label="핵심 지표">
+      <article class="card">
+        <a class="card-link" href="#"></a>
+        <div class="meta">
+          <div class="label">임시저장</div>
+          <div class="value num big">{{ stats.temp|default:"71" }}</div>
+          <div class="link" aria-hidden="true">임시저장건</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <a class="card-link" href="#"></a>
+        <div class="meta">
+          <div class="label">품의요청</div>
+          <div class="value num big">{{ stats.request_count|default:"2" }}</div>
+          <div class="link" aria-hidden="true">요청건</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <a class="card-link" href="#"></a>
+        <div class="meta">
+          <div class="label">결재처리중</div>
+          <div class="value num big">{{ stats.in_progress|default:"7" }}</div>
+          <div class="link" aria-hidden="true">처리중건</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <a class="card-link" href="#"></a>
+        <div class="meta">
+          <div class="label">결재완료</div>
+          <div class="value num big">{{ stats.done|default:"8660" }}</div>
+          <div class="link" aria-hidden="true">완료건</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <a class="card-link" href="#"></a>
+        <div class="meta">
+          <div class="label">거래 매출처</div>
+          <div class="value num big">{{ stats.accounts|default:"1,135" }}</div>
+          <div class="link" aria-hidden="true">정보</div>
+        </div>
+      </article>
+    </section>
+
+    <!-- 이번달 거래 -->
+    <h2 class="section-title">이달의 거래 진행 현황</h2>
+    <section class="panel">
+      <div class="grid-2">
+        <!-- 좌측 표 -->
+        <div class="side-box">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:120px">총매입</th>
+                <th style="width:120px">총매출</th>
+                <th style="width:100px">마진율</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="right">
+                  <div class="num">{{ monthly.buy_count|default:"-" }}건</div>
+                  <div class="num strong">445,009,889.5<span class="won"></span></div>
+                </td>
+                <td class="right">
+                  <div class="num">72건</div>
+                  <div class="num strong">518,860,760.9<span class="won"></span></div>
+                </td>
+                <td><strong>14.23%</strong></td>
+              </tr>
+              <tr>
+                <td colspan="3" class="left">
+                  <a class="btn" href="#">매입계약등록 +</a>
+                  <a class="btn" href="#">매출계약등록 +</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
 </body>
 </html>
