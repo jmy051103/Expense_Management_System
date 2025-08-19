@@ -40,7 +40,7 @@ class SignUpView(CreateView):
     가입 성공하면 자동 로그인 + employee 그룹 자동 배정 후 대시보드로 이동.
     """
     form_class = UserCreationForm
-    template_name = "registration/signup.html"
+    template_name = "registration/create_profile.html"
     success_url = reverse_lazy("dashboard")
 
     def form_valid(self, form):
