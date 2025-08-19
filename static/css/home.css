@@ -9,7 +9,6 @@ body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-
 .container {
     flex: 1;
     display: grid;
@@ -21,18 +20,16 @@ body {
 
 .logo {
     display: block;          
-    margin: 0 auto 16px;     
-    max-width: 100%;
+    margin: 0 auto 20px;     
+    max-width: 70%;         
     height: auto;
-  }
+}
 
 .login_wrap {
-    width: 50%;
-    max-width: 356px;        
-    padding: 32px;
+    width: 60%;             
+    max-width: 500px;        
+    padding: 36px;          
     background-color: white;
-    border-color: black;
-    padding: 32px;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.1);
 }
@@ -44,34 +41,34 @@ body {
 }
 
 .login_wrap input {
-  margin: 8px 0;          
-  padding: 10px;
+  margin: 10px 0;          
+  padding: 12px;
   box-sizing: border-box;
-  border-color:#71AAC5;
-  width: 100%;
-  height: 50px;
-  display: block;
-  border-radius: 10px;
-  border-color: none;
+  border: 1px solid #71AAC5;
+  height: 48px;
+  font-size: 15px;
+  border-radius: 8px;
 }
 
 .login_wrap button {
   margin-top: 20px;
-  padding: 12px;
+  height: 48px;
+  font-size: 15px;
   border: 0;
   border-radius: 8px;
   background: #2e7192;
   color: #fff;
   cursor: pointer;
-  
+}
+
+.login_wrap button:hover { 
+    filter: brightness(0.96); 
 }
 
 p {
     color: #222;
     font-size: 50%;
 }
-
-.login_wrap button:hover { filter: brightness(0.96); }
 
 .field-note {
   margin-top: 8px;
