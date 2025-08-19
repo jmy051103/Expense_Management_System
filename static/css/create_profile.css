@@ -1,6 +1,7 @@
-/* body {
-    display: flex;
+html, body { 
+    height: 100%; 
 }
+
 .wrap { 
     max-width: 420px; 
     margin: 40px auto; 
@@ -9,11 +10,13 @@
     border-radius: 12px; 
 }
 
-label { 
-    display:block; 
-    margin: 12px 0 6px; 
-    font-weight:600; 
-}
+label {
+    display: inline-block;   /* keep label inline */
+    margin-right: 8px;       /* add some spacing */
+  }
+  input {
+    display: inline-block;   /* default is inline anyway */
+  }
     
 input, select { 
     width:100%; 
@@ -36,4 +39,4 @@ button {
 .helptext, ul { 
     font-size:12px; 
     color:#777; 
-} */
+}
