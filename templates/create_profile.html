@@ -4,8 +4,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/create_profile.css' %}?v=2025-08-19-05">
+  <title>프로필 관리</title>
+  <link rel="stylesheet" href="{% static 'css/create_profile.css' %}?v=2025-08-21-09">
 </head>
 <body>
 
@@ -24,10 +24,38 @@
     </nav>
   </div>
 
-  
+  <div id="container" class="container">
+    <h1>프로필 생성</h1>
+    
+    <input type="text" id="username" name="username"
+          placeholder="아이디" required autocomplete="username">
 
- 
+    <input type="password" id="password" name="password"
+      required autocomplete="current-password" placeholder="패스워드">
 
+    <input type="text" id="name" name="name" placeholder="이름">
 
+      <select id="position" name="position" required>
+        <option value="" selected disabled>직책</option>
+        <option>사장</option>
+        <option>부장</option>
+        <option>팀장</option>
+      </select>
+    
+      <select id="department" name="department" required>
+        <option value="" selected disabled>부서</option>
+        <option>홍보팀</option>
+        <option>기획팀</option>
+        <option>회장단</option>
+      </select>
+
+      <select id="access" name="access" required>
+        <option value="" selected disabled>관리자 권한 설정</option>
+        <option>관리자모드</option>
+        <option>사장모드</option>
+        <option>직원모드</option>
+      </select>
+
+  </div>
 </body>
 </html>
