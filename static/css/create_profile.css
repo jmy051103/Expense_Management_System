@@ -122,19 +122,24 @@ body {
   background: var(--brand);
 }
 
-
-
 .container {
   flex: 1;
   display: grid;
-  width: 50%;                          
+  width: 44%;                          
   background-color: white;
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.1);
   max-width: 1280px;
   margin: 0 auto;
   padding: 34px 24px 40px;
+  border-radius: 10px;
 
+}
+
+.container h1 {
+  color: black;
+  margin-top: 10px;
+  justify-self: center;
 }
 
 .post input, select {
@@ -146,23 +151,20 @@ body {
   font-size: 15px;
   border-radius: 8px;
   width: 100%;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end; 
-  margin-top: 20px;
+  justify-self: center;
 }
 
 .actions button {
-  margin-top: 20px;
+  margin-top: 10px;
   height: 48px;
   font-size: 15px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #2e7192;
   color: #fff;
   cursor: pointer;
   justify-self: start; 
   padding: 0 20px;
+  margin-bottom: 10px;
+  width: 100%;
 }
