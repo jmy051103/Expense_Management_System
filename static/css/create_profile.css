@@ -68,6 +68,15 @@ body {
   font-weight: 500;
 }
 
+.titlebar h1 .title-link {
+  color: #ffffff;           /* same as original h1 */
+  text-decoration: none;    /* remove underline */
+}
+
+.titlebar h1 .title-link:hover {
+  text-decoration: underline; /* optional hover effect */
+}
+
 .logout-form { 
   grid-column: 3; 
   justify-self: end; 
@@ -113,28 +122,7 @@ body {
   background: var(--brand);
 }
 
-/* 레이아웃 */
-.container {
-  flex: 1;
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 34px 24px 40px;
-}
 
-
-/* 버튼 */
-.btn {
-  display: inline-block;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
-  font-size: 13px;
-  color: #374151;
-  text-decoration: none;
-}
-.btn + .btn { margin-left: 8px; }
 
 .container {
   flex: 1;
@@ -143,6 +131,9 @@ body {
   background-color: white;
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 34px 24px 40px;
 
 }
 
@@ -157,8 +148,17 @@ body {
   width: 100%;
 }
 
+select option[disabled] {
+  color: #222;
+}
 
-.post button {
+.actions {
+  display: flex;
+  justify-content: flex-end; 
+  margin-top: 20px;
+}
+
+.actions button {
   margin-top: 20px;
   height: 48px;
   font-size: 15px;
@@ -167,6 +167,6 @@ body {
   background: #2e7192;
   color: #fff;
   cursor: pointer;
-  width: 25%;
-  
+  justify-self: start; 
+  padding: 0 20px;
 }
