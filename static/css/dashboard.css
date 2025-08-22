@@ -107,11 +107,18 @@ body {
   padding: 0 20px;
   background: #fff;
   border-bottom: 1px solid var(--line);
+  align-items: stretch;
+  justify-items: stretch;
+}
+.tab-group,
+.tab {
+  width: 100%;
+  text-align: center;
 }
 .tab {
   position: relative;
+  display: block;
   padding: 18px 8px;
-  text-align: center;
   font-size: 16px;
   font-weight: 700;
   color: #374151;
@@ -128,6 +135,42 @@ body {
   height: 3px;
   background: var(--brand);
 }
+
+/* 드롭다운 (hover로 표시) */
+.tab-group { position: relative; }
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, 6px);
+  min-width: 180px;
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.10);
+  z-index: 100;
+
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+}
+.tab-group:hover .dropdown,
+.tab-group:focus-within .dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+.dropdown a {
+  display: block;
+  padding: 10px 12px;
+  color: #111;
+  text-decoration: none;
+  font-size: 14px;
+}
+.dropdown a:hover { background: #f3f4f6; }
 
 /* 레이아웃 */
 .container {
@@ -169,8 +212,8 @@ body {
 
 .card .label { 
   font-size: 13px; 
-  color: #374151;   /* 더 진하게 */
-  font-weight: 600; /* 강조 */
+  color: #374151;
+  font-weight: 600;
 }
 .card .value { 
   font-size: 44px; 
@@ -268,3 +311,34 @@ tbody td {
   font-size: 14px;
   line-height: 1.75;
 }
+
+/* 타이틀 링크 색/밑줄 고정 */
+.titlebar h1 a.title-link,
+.titlebar h1 a.title-link:visited {
+  color: #ffffff;
+  text-decoration: none;
+}
+.titlebar h1 a.title-link:hover {
+  text-decoration: underline; /* 원하면 제거 가능 */
+  text-underline-offset: 3px;
+}
+
+/* 탭/드롭다운 링크 밑줄 제거 */
+.tab,
+.tab-group > a,
+.dropdown a {
+  text-decoration: none;
+}
+.tab:hover,
+.tab-group > a:hover,
+.dropdown a:hover {
+  text-decoration: none;
+}
+
+/* 직원모드 등: 비활성 탭 */
+.tab-disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  pointer-events: none;  /* 클릭/포커스 막기 */
+}
+.tab-disabled:hover { background: transparent; }

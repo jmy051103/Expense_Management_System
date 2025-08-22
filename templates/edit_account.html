@@ -1,0 +1,111 @@
+{% load static %}
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>계정 수정</title>
+  <link rel="stylesheet" href="{% static 'css/create_profile.css' %}?v=2025-08-23-07">
+</head>
+<body>
+
+  <!-- 상단 상태줄 -->
+  <div class="topbar">
+    <strong>시험운영</strong>
+    <span class="sep">|</span>
+    <small>Today {% now "Y.m.d (D)" %}</small>
+    <span class="ip" style="margin-left:auto;">
+      현재접속 IP : {{ request.META.REMOTE_ADDR|default:"-" }}
+    </span>
+  </div>
+
+  <!-- 타이틀 + 탭(고정) -->
+  <div class="sticky-wrap">
+    <div class="titlebar">
+      <h1>
+        <a href="{% url 'dashboard' %}" class="title-link">
+          (주)대진아이엔티 업무지원시스템
+        </a>
+      </h1>
+      <form action="{% url 'logout' %}" method="post" class="logout-form">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">로그아웃</button>
+      </form>
+    </div>
+
+    <!-- 탭 -->
+    <nav class="tabs" role="tablist" aria-label="상단 메뉴">
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false">계정관리</a>
+        <ul class="dropdown">
+          {% with acc=request.user.profile.access|default_if_none:"" %}
+            {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
+              <li><a href="{% url 'create_profile' %}">계정만들기</a></li>
+              <li><a href="{% url 'view_profile' %}">계정보기</a></li>
+            {% endif %}
+          {% endwith %}
+        </ul>
+      </div>
+
+      <a class="tab" href="#">업무관리</a>
+      <a class="tab" href="#">계약정보</a>
+      <a class="tab" href="#">통계</a>
+    </nav>
+  </div>
+
+  <!-- 메인 컨테이너 -->
+  <div id="container" class="container">
+    <h1>계정 수정: {{ target.username }}</h1>
+
+    <form method="post" class="post">
+      {% csrf_token %}
+
+      <!-- UserEditForm -->
+      {{ uform.non_field_errors }}
+      <input type="text" name="username" value="{{ uform.username.value }}" placeholder="아이디" required>
+      <input type="text" name="first_name" value="{{ uform.first_name.value }}" placeholder="이름">
+      <input type="email" name="email" value="{{ uform.email.value }}" placeholder="이메일">
+
+      <!-- ProfileEditForm -->
+      <select name="role" required>
+        <option value="" disabled {% if not pform.role.value %}selected{% endif %}>직책</option>
+        <option value="사장" {% if pform.role.value == "사장" %}selected{% endif %}>사장</option>
+        <option value="부장" {% if pform.role.value == "부장" %}selected{% endif %}>부장</option>
+        <option value="팀장" {% if pform.role.value == "팀장" %}selected{% endif %}>팀장</option>
+      </select>
+
+      <select name="department" required>
+        <option value="" disabled {% if not pform.department.value %}selected{% endif %}>부서</option>
+        <option value="홍보팀" {% if pform.department.value == "홍보팀" %}selected{% endif %}>홍보팀</option>
+        <option value="기획팀" {% if pform.department.value == "기획팀" %}selected{% endif %}>기획팀</option>
+        <option value="회장단" {% if pform.department.value == "회장단" %}selected{% endif %}>회장단</option>
+      </select>
+
+      <select name="access" required>
+        <option value="" disabled {% if not pform.access.value %}selected{% endif %}>관리자 권한 설정</option>
+        <option value="관리자모드" {% if pform.access.value == "관리자모드" %}selected{% endif %}>관리자모드</option>
+        <option value="사장모드" {% if pform.access.value == "사장모드" %}selected{% endif %}>사장모드</option>
+        <option value="직원모드" {% if pform.access.value == "직원모드" %}selected{% endif %}>직원모드</option>
+      </select>
+
+      <div class="actions">
+        <button type="submit">수정 저장</button>
+        <a href="{% url 'view_profile' %}" class="btn">취소</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left"><strong>(주)대진아이엔티</strong></div>
+      <div class="footer-right">
+        <div>경기도 남양주시 다산중앙로19번길 25-23, F동 712호</div>
+        <div>대표명 : 양정안&nbsp;&nbsp;사업자번호 : 637-81-00010</div>
+        <div>기술문의 : 양재민 (jmy051103@gmail.com)</div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

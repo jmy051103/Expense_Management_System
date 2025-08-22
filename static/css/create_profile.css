@@ -26,7 +26,6 @@ body {
   background: var(--bg);
 }
 
-
 /* 상단바 */
 .topbar {
   display: flex;
@@ -67,21 +66,19 @@ body {
   color: #ffffff;
   font-weight: 500;
 }
-
 .titlebar h1 .title-link {
-  color: #ffffff;           /* same as original h1 */
-  text-decoration: none;    /* remove underline */
+  color: #ffffff;
+  text-decoration: none;
 }
-
 .titlebar h1 .title-link:hover {
-  text-decoration: underline; /* optional hover effect */
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .logout-form { 
   grid-column: 3; 
   justify-self: end; 
 }
-
 .logout-btn {
   padding: 10px 14px;
   border: 1px solid var(--line);
@@ -92,7 +89,7 @@ body {
   cursor: pointer;
 }
 
-/* 탭 */
+/* 탭 (그리드 보정 포함) */
 .tabs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -100,11 +97,18 @@ body {
   padding: 0 20px;
   background: #fff;
   border-bottom: 1px solid var(--line);
+  align-items: stretch;      /* 높이 정렬 */
+  justify-items: stretch;    /* 각 칸 꽉 채우기 → 중앙 배치 느낌 */
+}
+.tab-group,
+.tab {
+  width: 100%;
+  text-align: center;
 }
 .tab {
   position: relative;
+  display: block;
   padding: 18px 8px;
-  text-align: center;
   font-size: 16px;
   font-weight: 700;
   color: #374151;
@@ -122,10 +126,56 @@ body {
   background: var(--brand);
 }
 
+/* --- 계정관리 드롭다운 (hover) --- */
+.tab-group {                 /* 드롭다운 기준점 */
+  position: relative;
+  justify-self: stretch;
+}
+
+/* 기본 숨김 */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, 6px);   /* 중앙 아래로 살짝 */
+  min-width: 180px;
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.10);
+  z-index: 100;
+
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+}
+
+/* 호버/포커스 시 표시 */
+.tab-group:hover .dropdown,
+.tab-group:focus-within .dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+/* 메뉴 항목 */
+.dropdown a {
+  display: block;
+  padding: 10px 12px;
+  color: #111;
+  text-decoration: none;
+  font-size: 14px;
+}
+.dropdown a:hover { background: #f3f4f6; }
+
+/* 폼 컨테이너 */
 .container {
   flex: 1;
   display: grid;
-  width: 44%;                          
+  width: 44%;
   background-color: white;
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.1);
@@ -133,17 +183,14 @@ body {
   margin: 0 auto;
   padding: 34px 24px 40px;
   border-radius: 10px;
-
 }
-
 .container h1 {
   color: black;
   margin-top: 10px;
   justify-self: center;
 }
-
 .post input, select {
-  margin: 10px 0;          
+  margin: 10px 0;
   padding: 12px;
   box-sizing: border-box;
   border: 1px solid #71AAC5;
@@ -153,7 +200,6 @@ body {
   width: 100%;
   justify-self: center;
 }
-
 .actions button {
   margin-top: 10px;
   height: 48px;
@@ -168,3 +214,62 @@ body {
   margin-bottom: 10px;
   width: 100%;
 }
+
+/* 푸터 */
+.site-footer {
+  margin-top: 32px;
+  background: var(--footer-bg);
+  color: var(--footer-ink);
+}
+.footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px 24px;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.footer-left {
+  padding: 8px 0;
+  text-align: center;
+  font-weight: 800;
+  font-size: 18px;
+  border-right: 1px solid rgba(255,255,255,.25);
+}
+.footer-right {
+  padding: 8px 0 8px 18px;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* 타이틀 링크 색/밑줄 고정 */
+.titlebar h1 a.title-link,
+.titlebar h1 a.title-link:visited {
+  color: #ffffff;
+  text-decoration: none;
+}
+.titlebar h1 a.title-link:hover {
+  text-decoration: underline; /* 원하면 제거 가능 */
+  text-underline-offset: 3px;
+}
+
+/* 탭/드롭다운 링크 밑줄 제거 */
+.tab,
+.tab-group > a,
+.dropdown a {
+  text-decoration: none;
+}
+.tab:hover,
+.tab-group > a:hover,
+.dropdown a:hover {
+  text-decoration: none;
+}
+
+/* 직원모드 등: 비활성 탭 */
+.tab-disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  pointer-events: none;  /* 클릭/포커스 막기 */
+}
+.tab-disabled:hover { background: transparent; }

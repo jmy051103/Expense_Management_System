@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-08-19-05">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-08-23-01">
 </head>
 <body>
 
@@ -13,7 +13,6 @@
   <div class="topbar">
     <strong>시험운영</strong>
     <span class="sep">|</span>
-    <!-- 날짜: today 컨텍스트 없이도 보이도록 now 태그 사용 -->
     <small>Today {% now "Y.m.d (D)" %}</small>
     <span class="ip" style="margin-left:auto;">현재접속 IP : {{ request.META.REMOTE_ADDR|default:"-" }}</span>
   </div>
@@ -21,7 +20,11 @@
   <!-- 타이틀 + 탭(고정) -->
   <div class="sticky-wrap">
     <div class="titlebar">
-      <h1>(주)대진아이엔티 업무지원시스템</h1>
+      <h1>
+        <a href="{% url 'dashboard' %}" class="title-link">
+          (주)대진아이엔티 업무지원시스템
+        </a>
+      </h1>
       <form action="{% url 'logout' %}" method="post" class="logout-form">
         {% csrf_token %}
         <button type="submit" class="logout-btn">로그아웃</button>
@@ -30,7 +33,22 @@
 
     <!-- 탭 -->
     <nav class="tabs" role="tablist" aria-label="상단 메뉴">
-      <a href="{% url 'create_profile' %}" class="tab" role="tab">계정관리</a>
+      {% with acc=request.user.profile.access|default_if_none:"" %}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
+          <div class="tab-group has-dropdown">
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">
+              계정관리
+            </a>
+            <ul id="menu-accounts" class="dropdown" role="menu" aria-label="계정관리 메뉴">
+              <li role="none"><a role="menuitem" href="{% url 'create_profile' %}">계정만들기</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'view_profile' %}">계정보기</a></li>
+            </ul>
+          </div>
+        {% else %}
+          <span class="tab tab-disabled" aria-disabled="true">계정관리</span>
+        {% endif %}
+      {% endwith %} 
+
       <button class="tab" role="tab">업무관리</button>
       <button class="tab" role="tab">계약정보</button>
       <button class="tab" role="tab">통계</button>
@@ -38,8 +56,7 @@
   </div>
 
   <main class="container">
-
-    <!-- KPI 카드 (모두 가운데 정렬) -->
+    <!-- KPI 카드 -->
     <section class="cards" aria-label="핵심 지표">
       <article class="card">
         <div class="meta">
@@ -48,7 +65,6 @@
           <div class="link">임시저장건</div>
         </div>
       </article>
-
       <article class="card">
         <div class="meta">
           <div class="label">품의요청</div>
@@ -56,7 +72,6 @@
           <div class="link">요청건</div>
         </div>
       </article>
-
       <article class="card">
         <div class="meta">
           <div class="label">결재처리중</div>
@@ -64,7 +79,6 @@
           <div class="link">처리중건</div>
         </div>
       </article>
-
       <article class="card">
         <div class="meta">
           <div class="label">결재완료</div>
@@ -72,7 +86,6 @@
           <div class="link">완료건</div>
         </div>
       </article>
-
       <article class="card">
         <div class="meta">
           <div class="label">거래 매출처</div>
@@ -108,7 +121,6 @@
                 <td class="center"><strong>14.23%</strong></td>
               </tr>
               <tr>
-                <!-- 버튼 셀 가운데 정렬 -->
                 <td colspan="3" class="center">
                   <a class="btn" href="#">매입계약등록 +</a>
                   <a class="btn" href="#">매출계약등록 +</a>
@@ -119,7 +131,6 @@
         </div>
       </div>
     </section>
-
   </main>
 
   <!-- 하단 회사 정보 -->
