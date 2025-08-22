@@ -1,0 +1,38 @@
+{% load static %}
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>업무지원 시스템</title>
+  <link rel="stylesheet" href="{% static 'css/view_profile.css' %}?v=2025-08-22-09">
+</head>
+<body>
+
+  <!-- 상단 상태줄 -->
+  <div class="topbar">
+    <strong>시험운영</strong>
+    <span class="sep">|</span>
+    <!-- 날짜: today 컨텍스트 없이도 보이도록 now 태그 사용 -->
+    <small>Today {% now "Y.m.d (D)" %}</small>
+    <span class="ip" style="margin-left:auto;">현재접속 IP : {{ request.META.REMOTE_ADDR|default:"-" }}</span>
+  </div>
+
+  <!-- 타이틀 + 탭(고정) -->
+  <div class="sticky-wrap">
+    <div class="titlebar">
+      <h1>(주)대진아이엔티 업무지원시스템</h1>
+      <form action="{% url 'logout' %}" method="post" class="logout-form">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">로그아웃</button>
+      </form>
+    </div>
+
+    <!-- 탭 -->
+    <nav class="tabs" role="tablist" aria-label="상단 메뉴">
+      <a href="{% url 'create_profile' %}" class="tab" role="tab">계정관리</a>
+      <button class="tab" role="tab">업무관리</button>
+      <button class="tab" role="tab">계약정보</button>
+      <button class="tab" role="tab">통계</button>
+    </nav>
+  </div>
