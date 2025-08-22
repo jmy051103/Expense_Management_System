@@ -21,6 +21,10 @@ urlpatterns = [
     path("accounts/create_profile/", create_profile, name="create_profile"),
 
     path("dashboard/", dashboard, name="dashboard"),
+
+    path("", TemplateView.as_view(template_name="home.html"), name="home"),
+    path("dashboard/", dashboard, name="dashboard"),
+    path("accounts/create/", create_profile, name="create_profile"),
     
     # expenses 앱
     path("expenses/", include("expenses.urls")),

@@ -141,11 +141,12 @@ body {
   display: grid;
   width: 50%;                          
   background-color: white;
-  /* border-radius: 10px; */
+  border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+
 }
 
-.input {
+.post input, select {
   margin: 10px 0;          
   padding: 12px;
   box-sizing: border-box;
@@ -153,4 +154,19 @@ body {
   height: 48px;
   font-size: 15px;
   border-radius: 8px;
+  width: 100%;
+}
+
+
+.post button {
+  margin-top: 20px;
+  height: 48px;
+  font-size: 15px;
+  border: 0;
+  border-radius: 8px;
+  background: #2e7192;
+  color: #fff;
+  cursor: pointer;
+  width: 25%;
+  
 }
