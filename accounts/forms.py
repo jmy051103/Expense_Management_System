@@ -6,12 +6,11 @@ from .models import Profile
 class UserEditForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ["username", "first_name", "email", "is_active", "is_staff"]
+        fields = ["username", "first_name", "email", "is_staff"]
         labels = {
             "username": "아이디",
             "first_name": "이름",
             "email": "이메일",
-            "is_active": "활성",
             "is_staff": "스태프 여부",
         }
         widgets = {

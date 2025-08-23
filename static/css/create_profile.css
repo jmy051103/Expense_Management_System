@@ -268,7 +268,7 @@ body {
 
 /* 직원모드 등: 비활성 탭 */
 .tab-disabled {
-  color: #9ca3af;
+  color: black;
   cursor: not-allowed;
   pointer-events: none;  /* 클릭/포커스 막기 */
 }
