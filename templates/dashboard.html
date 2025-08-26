@@ -50,7 +50,16 @@
       {% endwith %} 
 
       <button class="tab" role="tab">업무관리</button>
-      <button class="tab" role="tab">계약정보</button>
+      <!-- <button type="submit" class="tab" role="tab">계약정보</button> -->
+       <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">
+          계약정보
+        </a>
+        <ul id="menu-contract" class="dropdown" role="menu" aria-label="계약정보 메뉴">
+          <li role="none"><a role="menuitem" href="{% url 'add_contract' %}">계약정보 등록</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
+        </ul>
+      </div>
       <button class="tab" role="tab">통계</button>
     </nav>
   </div>

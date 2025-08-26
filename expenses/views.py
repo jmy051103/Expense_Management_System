@@ -106,3 +106,11 @@ def report_delete(request, pk):
     report = get_object_or_404(ExpenseReport, pk=pk)
     report.delete()
     return redirect("report_list")
+
+@login_required
+def add_contract(request):
+    return render(request, "add_contract.html")
+
+@login_required
+def contract_list(request):
+    return render(request, "contract_list.html")
