@@ -109,8 +109,13 @@ def report_delete(request, pk):
 
 @login_required
 def add_contract(request):
-    return render(request, "add_contract.html")
+    ctx = {
+        "sales_people": ["권용호", "권화영", "김나진"],         # later you can fill this with queryset from DB
+        "customer_managers": [], 
+    }
+    return render(request, "add_contract.html", ctx)
 
 @login_required
 def contract_list(request):
     return render(request, "contract_list.html")
+

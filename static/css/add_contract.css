@@ -26,6 +26,23 @@ body {
   background: var(--bg);
 }
 
+/* 숫자/정렬 */
+.num { 
+  font-variant-numeric: tabular-nums; 
+  font-feature-settings: "tnum"; 
+}
+.big { font-size: 44px; font-weight: 800; }
+.strong { font-weight: 700; }
+.right { text-align: right; }
+.left { text-align: left; }
+.center { text-align: center; }
+.won::after { 
+  content: "원"; 
+  margin-left: 2px; 
+  color: var(--muted); 
+  font-size: 12px; 
+}
+
 /* 상단바 */
 .topbar {
   display: flex;
@@ -66,19 +83,12 @@ body {
   color: #ffffff;
   font-weight: 500;
 }
-.titlebar h1 .title-link {
-  color: #ffffff;
-  text-decoration: none;
-}
-.titlebar h1 .title-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
 
 .logout-form { 
   grid-column: 3; 
   justify-self: end; 
 }
+
 .logout-btn {
   padding: 10px 14px;
   border: 1px solid var(--line);
@@ -89,7 +99,7 @@ body {
   cursor: pointer;
 }
 
-/* 탭 (그리드 보정 포함) */
+/* 탭 */
 .tabs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -97,8 +107,8 @@ body {
   padding: 0 20px;
   background: #fff;
   border-bottom: 1px solid var(--line);
-  align-items: stretch;      /* 높이 정렬 */
-  justify-items: stretch;    /* 각 칸 꽉 채우기 → 중앙 배치 느낌 */
+  align-items: stretch;
+  justify-items: stretch;
 }
 .tab-group,
 .tab {
@@ -126,18 +136,13 @@ body {
   background: var(--brand);
 }
 
-/* --- 계정관리 드롭다운 (hover) --- */
-.tab-group {                 /* 드롭다운 기준점 */
-  position: relative;
-  justify-self: stretch;
-}
-
-/* 기본 숨김 */
+/* 드롭다운 (hover로 표시) */
+.tab-group { position: relative; }
 .dropdown {
   position: absolute;
   top: 100%;
   left: 50%;
-  transform: translate(-50%, 6px);   /* 중앙 아래로 살짝 */
+  transform: translate(-50%, 6px);
   min-width: 180px;
   list-style: none;
   margin: 0;
@@ -152,16 +157,12 @@ body {
   visibility: hidden;
   transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
 }
-
-/* 호버/포커스 시 표시 */
 .tab-group:hover .dropdown,
 .tab-group:focus-within .dropdown {
   opacity: 1;
   visibility: visible;
   transform: translate(-50%, 0);
 }
-
-/* 메뉴 항목 */
 .dropdown a {
   display: block;
   padding: 10px 12px;
@@ -170,3 +171,111 @@ body {
   font-size: 14px;
 }
 .dropdown a:hover { background: #f3f4f6; }
+
+/* container */
+.page-wrap{
+    max-width:1200px;
+    margin:0 auto;
+    padding:40px 20px;
+    display: block;
+}
+
+/* title */
+.page-title{
+    font-size:32px; 
+    font-weight:700; 
+    text-align:center; 
+    margin:16px 0 8px;
+}
+
+.page-sub{
+    color:#666; 
+    text-align:center; 
+    margin-bottom:28px;
+}
+
+.form-head{
+    display:flex; 
+    gap:12px; 
+    align-items:center; 
+    justify-content:flex-end; 
+    margin:16px 0 32px;
+}
+
+.field-inline{
+    display:flex; 
+    align-items:center; 
+    gap:8px;
+}
+
+.field-inline label{
+    white-space:nowrap; 
+    color:#444;
+}
+
+/* contents */
+.panel{background:#fff; border:1px solid var(--line,#e5e7eb); border-radius:12px; padding:16px; margin-bottom:18px;}
+.section-title{font-size:18px; font-weight:700; margin:28px 0 12px;}
+table.form-table{width:100%; border-collapse:collapse; table-layout:fixed;}
+.form-table th,.form-table td{border:1px solid var(--line,#e5e7eb); padding:10px; vertical-align:middle;}
+.form-table th{background:#f8fafc; text-align:left; color:#374151;}
+.form-table td .inp{width:100%; height:36px; padding:6px 10px; border:1px solid #d1d5db; border-radius:8px;}
+.form-table td .sel{width:100%; height:36px; padding:6px 8px; border:1px solid #d1d5db; border-radius:8px; background:#fff;}
+.num{font-variant-numeric: tabular-nums;}
+.right{text-align:right;}
+.center{text-align:center;}
+.muted{color:#6b7280; font-size:12px;}
+.btn{display:inline-block; padding:8px 12px; border-radius:10px; border:1px solid #d1d5db; background:#fff; cursor:pointer;}
+.btn.primary{background:#111827; color:#fff; border-color:#111827;}
+.btn.danger{background:#ef4444; color:#fff; border-color:#ef4444;}
+.btn-row{display:flex; gap:10px; justify-content:flex-end; margin-top:18px;}
+.tfoot{background:#f9fafb; font-weight:700;}
+.help-row{color:#6b7280; font-size:12px; padding-top:4px;}
+
+/* 푸터 */
+.site-footer {
+  margin-top: 32px;
+  background: var(--footer-bg);
+  color: var(--footer-ink);
+}
+.footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px 24px;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.footer-left {
+  padding: 8px 0;
+  text-align: center;
+  font-weight: 800;
+  font-size: 18px;
+  border-right: 1px solid rgba(255,255,255,.25);
+}
+.footer-right {
+  padding: 8px 0 8px 18px;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* 탭/드롭다운 링크 밑줄 제거 */
+.tab,
+.tab-group > a,
+.dropdown a {
+  text-decoration: none;
+}
+.tab:hover,
+.tab-group > a:hover,
+.dropdown a:hover {
+  text-decoration: none;
+}
+
+/* 직원모드 등: 비활성 탭 */
+.tab-disabled {
+  color: black;
+  cursor: not-allowed;
+  pointer-events: none;  /* 클릭/포커스 막기 */
+}
+.tab-disabled:hover { background: transparent; }
