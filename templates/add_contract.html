@@ -95,8 +95,39 @@
             </select>
           </label>
         </div>
-
+    
+    
     <div class="contents">
+
+      <h2 class="section-title">| 첨부 이미지</h2>
+      <section class="panel">
+        <div class="muted" style="margin-bottom:8px;">
+          JPG/PNG 최대 10장까지 업로드 가능합니다. (드래그 앤 드롭 지원)
+        </div>
+
+        <!-- Hidden real input (multiple) -->
+        <input id="images-input" class="inp" type="file" name="images" accept="image/*" multiple hidden>
+
+        <!-- Controls -->
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+          <button type="button" class="btn" id="pick-images">파일 선택</button>
+          <span class="muted">또는 아래 상자에 이미지를 드롭하세요.</span>
+        </div>
+
+        <!-- Drop zone -->
+        <div id="drop-zone" style="
+            border:2px dashed #d1d5db; border-radius:12px; padding:16px; text-align:center;
+            background:#f9fafb; cursor:pointer;">
+          <div>이미지를 여기에 끌어다 놓기 (또는 클릭)</div>
+        </div>
+
+        <!-- Preview grid -->
+        <div id="thumbs" style="
+            display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+            gap:12px; margin-top:12px;">
+          <!-- thumbnails injected here -->
+        </div>
+      </section>
         <h2 class="section-title">| 매출처</h2>
         <section class="panel">
             <table class="form-table">
