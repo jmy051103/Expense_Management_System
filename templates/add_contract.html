@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-08-26-02">
+  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-01-02">
 </head>
 <body>
 
@@ -67,19 +67,34 @@
   <!--container-->
   <main class="page-wrap">
     <div class="top">
-        <form action="" method="post" id="contract-form" novalidate>
-            {% csrf_token %}
-            <h1 class="page-title">계약정보 등록</h1>
-            <p class="page-sub">하기와 같이 납품코자 하오니 결재 바랍니다.</p><br>
-            <p class="page-sub">작성자 * 신명옥 / 영업담당자</p> 
-                <!-- <select class="sel" name="sales_owner">
-                    <option value="">선택</option>
-                    {% for p in sales_people %}
-                        <option value="{{ p.id }}">{{ p.name }}</option>
-                    {% endfor %}
-                </select> -->
-        </form>
-    </div>
+      <form action="" method="post" id="contract-form" novalidate>
+        {% csrf_token %}
+
+        <h1 class="page-title">계약정보 등록</h1>
+        <p class="page-sub">하기와 같이 납품코자 하오니 결재 바랍니다.</p>
+
+        <!-- 작성자(고정) + 영업담당자(선택) -->
+        <div class="form-head">
+          <!-- 작성자: 로그인 계정 표시만 -->
+          <span class="strong">작성자 *</span>
+          <span class="pill">
+            {{ request.user.first_name|default:request.user.username }}
+          </span>
+
+          <!-- 영업담당자 드롭다운 -->
+          <label class="field-inline" for="sales_owner" style="margin-left:12px;">
+            <span class="strong">영업담당자</span>
+            <select class="sel" id="sales_owner" name="sales_owner" required>
+              <option value="">선택</option>
+              {% for u in sales_people %}
+                <option value="{{ u.id }}">
+                  {{ u.first_name|default:u.username }}
+                  {% if u.profile.role %} / {{ u.profile.role }}{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
 
     <div class="contents">
         <h2 class="section-title">| 매출처</h2>
@@ -275,6 +290,8 @@
         <button type="submit" class="btn primary">저장하기</button>
         <button type="submit" name="submit_final" value="1" class="btn warn">품의요청</button>
       </div>
+    
+    </form>
 
 
 </main>

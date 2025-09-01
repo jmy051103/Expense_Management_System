@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.db import transaction
-
+from django.contrib.auth.models import User
 from .forms import ExpenseReportForm, ExpenseItemFormSet
 from .models import ExpenseReport
 
@@ -107,14 +107,26 @@ def report_delete(request, pk):
     report.delete()
     return redirect("report_list")
 
+
 @login_required
 def add_contract(request):
+    # 활성 사용자 전체(또는 조건을 걸어 영업 관련만) 쿼리셋으로 전달
+    sales_people = (
+        User.objects.filter(is_active=True)
+        .select_related("profile")
+        .order_by("first_name", "username")
+    )
+    # 필요하면 영업만:
+    # from django.db.models import Q
+    # sales_people = sales_people.filter(
+    #     Q(profile__department__icontains="영업") | Q(profile__role__icontains="영업")
+    # )
+
     ctx = {
-        "sales_people": ["권용호", "권화영", "김나진"],         # later you can fill this with queryset from DB
-        "customer_managers": [], 
+        "sales_people": sales_people,
+        "customer_managers": [],
     }
     return render(request, "add_contract.html", ctx)
-
 @login_required
 def contract_list(request):
     return render(request, "contract_list.html")

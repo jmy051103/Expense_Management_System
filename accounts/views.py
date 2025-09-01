@@ -4,10 +4,23 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db import IntegrityError, transaction
 from django.shortcuts import render, redirect, get_object_or_404
-
+from django.db.models import Q
 from expenses.models import ExpenseReport
 from .models import Profile
 from .forms import UserEditForm, ProfileEditForm
+
+
+
+def get_sales_people(only_sales: bool = False):
+    """
+    영업담당자 드롭다운에 넣을 사용자 목록을 반환.
+    only_sales=True 이면 부서/직책에 '영업'이 들어간 계정만.
+    """
+    qs = User.objects.filter(is_active=True).select_related("profile")
+    if only_sales:
+        qs = qs.filter(Q(profile__department__icontains="영업") |
+                       Q(profile__role__icontains="영업"))
+    return qs.order_by("first_name", "username")
 
 
 def can_manage_accounts(user):
@@ -114,3 +127,24 @@ def edit_account(request, user_id):
     return render(request, "edit_account.html", {
         "uform": uform, "pform": pform, "target": target
     })
+
+
+
+@login_required
+def add_contract(request):
+    # 반드시 User 객체 쿼리셋을 넘김
+    sales_people = (
+        User.objects.filter(is_active=True)          # 활성 사용자만
+        .select_related("profile")
+        .order_by("first_name", "username")
+    )
+    # 특정 조건을 원할 때 예시:
+    # sales_people = sales_people.filter(
+    #     Q(profile__department__icontains="영업") | Q(profile__role__icontains="영업")
+    # )
+
+    ctx = {
+        "sales_people": sales_people,
+        # ... 기존 컨텍스트들 ...
+    }
+    return render(request, "add_contract.html", ctx)

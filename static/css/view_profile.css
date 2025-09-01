@@ -70,9 +70,6 @@ body {
   color: #ffffff;
   font-weight: 500;
 }
-.titlebar h1 a.title-link,
-.titlebar h1 a.title-link:visited { color:#fff; text-decoration:none; }
-.titlebar h1 a.title-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 .logout-form { grid-column: 3; justify-self: end; }
 .logout-btn {
