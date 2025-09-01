@@ -82,7 +82,7 @@
     </div>
 
     <div class="contents">
-        <h2 class="section-title">매출처</h2>
+        <h2 class="section-title">| 매출처</h2>
         <section class="panel">
             <table class="form-table">
             <colgroup>
@@ -120,7 +120,7 @@
         </section>
     </div>
 
-    <h2 class="section-title">거래내역</h2>
+    <h2 class="section-title">| 거래내역</h2>
       <section class="panel">
         <div class="muted" style="margin-bottom:8px;">*각 항목칸에서 Enter키를 치면 다음 칸으로 이동하면서 매출/매입가가 자동 계산 됩니다.</div>
 
@@ -190,6 +190,93 @@
           <button type="button" class="btn" id="btn-add-row">품목추가</button>
         </div>
       </section>
+
+      <!--배송 정보-->
+      <h2 class="section-title">| 배송정보</h2>
+      <section class="panel">
+        <table class="form-table">
+          <colgroup><col style="width:120px"><col><col style="width:120px"><col></colgroup>
+          <tbody>
+            <tr>
+              <th>종목</th>
+              <td><input class="inp" name="ship_item"></td>
+              <th>배송일</th>
+              <td><input class="inp" type="date" name="ship_date"></td>
+            </tr>
+            <tr>
+              <th>배송지주소</th>
+              <td><input class="inp" name="ship_addr"></td>
+              <th>배송지연락처</th>
+              <td><input class="inp" name="ship_phone"></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!--대금회수-->
+      <h2 class="section-title">| 대금회수</h2>
+      <section class="panel">
+        <table class="form-table">
+          <colgroup><col style="width:160px"><col><col style="width:120px"><col></colgroup>
+          <tbody>
+            <tr>
+              <th>세금계산서발행</th>
+              <td><input class="inp" type="date" name="collect_date"></td>
+              <th>수금일자</th>
+              <td><input class="inp" type="date" name="collect_date"></td>
+            </tr>
+            <tr>
+              <th>비고</th>
+              <td colspan="3"><input class="inp" name="collect_note"></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+
+      <!-- 기타정보 + 마진 -->
+      <h2 class="section-title">| 기타정보</h2>
+      <section class="panel">
+        <table class="form-table">
+          <colgroup><col style="width:120px"><col></colgroup>
+          <tbody>
+            <tr>
+              <th>특이사항</th>
+              <td><input class="inp" name="ship_item"></td>
+            </tr>
+            
+          </tbody>
+            
+          </tbody>
+        </table>
+      </section>
+
+      <h2 class="section-title">| N.I.P</h2>
+      <section class="panel">
+        <table class="form-table">
+          <colgroup><col style="width:120px"><col></colgroup>
+          <tbody>
+            <tr>
+              <th>마진율</th>
+              <td><name="margin">0.0%</td>
+              <th>엽업이익</th>
+              <td><name="ptofit">0원</td>
+            </tr>
+            
+          </tbody>
+            
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 하단 버튼 -->
+      <div class="btn-row" style="justify-content:center;margin-top:22px">
+        <a href="{% url 'contract_list' %}" class="btn">목록으로</a>
+        <button type="submit" class="btn primary">저장하기</button>
+        <button type="submit" name="submit_final" value="1" class="btn warn">품의요청</button>
+      </div>
+
+
 </main>
 
 
