@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-01-02">
+  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-02-09">
 </head>
 <body>
 
@@ -47,11 +47,11 @@
         {% else %}
           <span class="tab tab-disabled" aria-disabled="true">계정관리</span>
         {% endif %}
-      {% endwith %} 
+      {% endwith %}
 
       <button class="tab" role="tab">업무관리</button>
-      <!-- <button type="submit" class="tab" role="tab">계약정보</button> -->
-       <div class="tab-group has-dropdown">
+
+      <div class="tab-group has-dropdown">
         <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">
           계약정보
         </a>
@@ -60,6 +60,7 @@
           <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
         </ul>
       </div>
+
       <button class="tab" role="tab">통계</button>
     </nav>
   </div>
@@ -67,7 +68,8 @@
   <!--container-->
   <main class="page-wrap">
     <div class="top">
-      <form action="" method="post" id="contract-form" novalidate>
+      <!-- enctype 추가됨 -->
+      <form action="" method="post" id="contract-form" novalidate enctype="multipart/form-data">
         {% csrf_token %}
 
         <h1 class="page-title">계약정보 등록</h1>
@@ -95,238 +97,229 @@
             </select>
           </label>
         </div>
-    
-    
-    <div class="contents">
 
-      <h2 class="section-title">| 첨부 이미지</h2>
-      <section class="panel">
-        <div class="muted" style="margin-bottom:8px;">
-          JPG/PNG 최대 10장까지 업로드 가능합니다. (드래그 앤 드롭 지원)
-        </div>
+        <div class="contents">
 
-        <!-- Hidden real input (multiple) -->
-        <input id="images-input" class="inp" type="file" name="images" accept="image/*" multiple hidden>
+          <h2 class="section-title">| 첨부 이미지</h2>
+          <section class="panel">
+            <div class="muted" style="margin-bottom:8px;">
+              JPG/PNG 최대 10장까지 업로드 가능합니다. (드래그 앤 드롭 지원)
+            </div>
 
-        <!-- Controls -->
-        <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-          <button type="button" class="btn" id="pick-images">파일 선택</button>
-          <span class="muted">또는 아래 상자에 이미지를 드롭하세요.</span>
-        </div>
+            <!-- Hidden real input (multiple) -->
+            <input id="images-input" class="inp" type="file" name="images" accept="image/*" multiple hidden>
 
-        <!-- Drop zone -->
-        <div id="drop-zone" style="
-            border:2px dashed #d1d5db; border-radius:12px; padding:16px; text-align:center;
-            background:#f9fafb; cursor:pointer;">
-          <div>이미지를 여기에 끌어다 놓기 (또는 클릭)</div>
-        </div>
+            <!-- Controls -->
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+              <button type="button" class="btn" id="pick-images">파일 선택</button>
+              <span class="muted">또는 아래 상자에 이미지를 드롭하세요.</span>
+            </div>
 
-        <!-- Preview grid -->
-        <div id="thumbs" style="
-            display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
-            gap:12px; margin-top:12px;">
-          <!-- thumbnails injected here -->
-        </div>
-      </section>
-        <h2 class="section-title">| 매출처</h2>
-        <section class="panel">
+            <!-- Drop zone -->
+            <div id="drop-zone" style="
+                border:2px dashed #d1d5db; border-radius:12px; padding:16px; text-align:center;
+                background:#f9fafb; cursor:pointer;">
+              <div>이미지를 여기에 끌어다 놓기 (또는 클릭)</div>
+            </div>
+
+            <!-- Preview grid -->
+            <div id="thumbs" style="
+                display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+                gap:12px; margin-top:12px;">
+              <!-- thumbnails injected here -->
+            </div>
+          </section>
+
+          <h2 class="section-title">| 매출처</h2>
+          <section class="panel">
             <table class="form-table">
-            <colgroup>
+              <colgroup>
                 <col style="width:140px"><!-- 라벨 -->
                 <col><!-- 입력 -->
                 <col style="width:140px">
                 <col>
-            </colgroup>
-            <tbody>
+              </colgroup>
+              <tbody>
                 <tr>
-                <th>회사&nbsp;*</th>
-                <td>
+                  <th>회사&nbsp;*</th>
+                  <td>
                     <input class="inp" name="customer_company" placeholder="회사명 입력 후 Enter로 검색이 가능합니다" required>
                     <div class="help-row">*텍스트 박스에서 Enter키를 치시면 매출처를 검색할 수 있습니다</div>
-                </td>
-                <th>담당자</th>
-                <td>
+                  </td>
+                  <th>담당자</th>
+                  <td>
                     <select class="sel" name="customer_manager">
-                    <option value="">선택</option>
-                    {% for m in customer_managers %}
+                      <option value="">선택</option>
+                      {% for m in customer_managers %}
                         <option value="{{ m.id }}">{{ m.name }}</option>
-                    {% endfor %}
+                      {% endfor %}
                     </select>
                     <div class="help-row">*회사를 선택하면 담당자 정보를 선택할 수 있습니다</div>
-                </td>
+                  </td>
                 </tr>
                 <tr>
-                <th>전화번호</th>
-                <td><input class="inp" name="customer_phone" placeholder="010-0000-0000"></td>
-                <th>이메일</th>
-                <td><input class="inp" type="email" name="customer_email" placeholder="name@example.com"></td>
+                  <th>전화번호</th>
+                  <td><input class="inp" name="customer_phone" placeholder="010-0000-0000"></td>
+                  <th>이메일</th>
+                  <td><input class="inp" type="email" name="customer_email" placeholder="name@example.com"></td>
                 </tr>
-            </tbody>
+              </tbody>
             </table>
+          </section>
+        </div>
+
+        <h2 class="section-title">| 거래내역</h2>
+        <section class="panel">
+          <div class="muted" style="margin-bottom:8px;">*각 항목칸에서 Enter키를 치면 다음 칸으로 이동하면서 매출/매입가가 자동 계산 됩니다.</div>
+
+          <div class="table-wrap">
+            <table class="form-table" id="items-table">
+              <thead>
+                <tr>
+                  <th style="width:170px">품목&nbsp;*</th>
+                  <th style="width:90px" class="center">수량</th>
+                  <th style="width:90px" class="center">규격</th>
+
+                  <th style="width:110px" class="right hide-sm">매출단가</th>
+                  <th style="width:110px" class="right">매출금액</th>
+
+                  <th style="width:110px" class="right hide-sm">매입단가</th>
+                  <th style="width:110px" class="right">매입금액</th>
+
+                  <th style="width:110px">매입처</th>
+                  <th style="width:110px">품목관리</th>
+                  <th style="width:100px">과세여부</th>
+                </tr>
+              </thead>
+              <tbody id="items-body">
+                <!-- 초기 1행 -->
+                <tr data-row>
+                  <td><input class="inp" name="item_name[]" placeholder="검색어 입력 후 Enter" required></td>
+                  <td><input class="inp right" name="qty[]" inputmode="numeric" value="1"></td>
+
+                  <td class="hide-sm"><input class="inp right" name="sell_unit[]" inputmode="decimal" placeholder="0"></td>
+                  <td><input class="inp right" name="sell_total[]" inputmode="decimal" placeholder="0"></td>
+
+                  <td class="hide-sm"><input class="inp right" name="buy_unit[]" inputmode="decimal" placeholder="0"></td>
+                  <td><input class="inp right" name="buy_total[]" inputmode="decimal" placeholder="0"></td>
+
+                  <td><input class="inp" name="vendor[]" placeholder="매입처"></td>
+                  <td>
+                    <select class="sel" name="item_vat_mode[]">
+                      <option value="separate">VAT별도</option>
+                      <option value="included">VAT포함</option>
+                      <option value="exempt">면세</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select class="sel" name="tax_type[]">
+                      <option value="taxable">과세</option>
+                      <option value="dutyfree">면세</option>
+                    </select>
+                  </td>
+                  <td class="center">
+                    <button type="button" class="btn danger" data-remove>품목삭제</button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="tfoot">
+                  <td class="right" colspan="3">합계</td>
+                  <td class="right"><span id="sum-sell" class="num">0</span></td>
+                  <td class="right hide-sm"></td>
+                  <td class="right"><span id="sum-buy" class="num">0</span></td>
+                  <td colspan="4"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn" id="btn-add-row">품목추가</button>
+          </div>
         </section>
-    </div>
 
-    <h2 class="section-title">| 거래내역</h2>
-      <section class="panel">
-        <div class="muted" style="margin-bottom:8px;">*각 항목칸에서 Enter키를 치면 다음 칸으로 이동하면서 매출/매입가가 자동 계산 됩니다.</div>
-
-        <div class="table-wrap">
-          <table class="form-table" id="items-table">
-            <thead>
+        <!--배송 정보-->
+        <h2 class="section-title">| 배송정보</h2>
+        <section class="panel">
+          <table class="form-table">
+            <colgroup><col style="width:120px"><col><col style="width:120px"><col></colgroup>
+            <tbody>
               <tr>
-                <th style="width:170px">품목&nbsp;*</th>
-                <th style="width:90px" class="center">수량</th>
-                <th style="width:90px" class="center">규격</th>
-
-                <th style="width:110px" class="right hide-sm">매출단가</th>
-                <th style="width:110px" class="right">매출금액</th>
-
-                <th style="width:110px" class="right hide-sm">매입단가</th>
-                <th style="width:110px" class="right">매입금액</th>
-
-                <th style="width:110px">매입처</th>
-                <th style="width:110px">품목관리</th>
-                <th style="width:100px">과세여부</th>
+                <th>종목</th>
+                <td><input class="inp" name="ship_item"></td>
+                <th>배송일</th>
+                <td><input class="inp" type="date" name="ship_date"></td>
               </tr>
-            </thead>
-            <tbody id="items-body">
-              <!-- 초기 1행 -->
-              <tr data-row>
-                <td><input class="inp" name="item_name[]" placeholder="검색어 입력 후 Enter" required></td>
-                <td><input class="inp right" name="qty[]" inputmode="numeric" value="1"></td>
-
-                <td class="hide-sm"><input class="inp right" name="sell_unit[]" inputmode="decimal" placeholder="0"></td>
-                <td><input class="inp right" name="sell_total[]" inputmode="decimal" placeholder="0"></td>
-
-                <td class="hide-sm"><input class="inp right" name="buy_unit[]" inputmode="decimal" placeholder="0"></td>
-                <td><input class="inp right" name="buy_total[]" inputmode="decimal" placeholder="0"></td>
-
-                <td><input class="inp" name="vendor[]" placeholder="매입처"></td>
-                <td>
-                  <select class="sel" name="item_vat_mode[]">
-                    <option value="separate">VAT별도</option>
-                    <option value="included">VAT포함</option>
-                    <option value="exempt">면세</option>
-                  </select>
-                </td>
-                <td>
-                  <select class="sel" name="tax_type[]">
-                    <option value="taxable">과세</option>
-                    <option value="dutyfree">면세</option>
-                  </select>
-                </td>
-                <td class="center">
-                  <button type="button" class="btn danger" data-remove>품목삭제</button>
-                </td>
+              <tr>
+                <th>배송지주소</th>
+                <td><input class="inp" name="ship_addr"></td>
+                <th>배송지연락처</th>
+                <td><input class="inp" name="ship_phone"></td>
               </tr>
             </tbody>
-            <tfoot>
-              <tr class="tfoot">
-                <td class="right" colspan="3">합계</td>
-                <td class="right"><span id="sum-sell" class="num">0</span></td>
-                <td class="right hide-sm"></td>
-                <td class="right"><span id="sum-buy" class="num">0</span></td>
-                <td colspan="4"></td>
-              </tr>
-            </tfoot>
           </table>
+        </section>
+
+        <!--대금회수-->
+        <h2 class="section-title">| 대금회수</h2>
+        <section class="panel">
+          <table class="form-table">
+            <colgroup><col style="width:160px"><col><col style="width:120px"><col></colgroup>
+            <tbody>
+              <tr>
+                <th>세금계산서발행</th>
+                <td><input class="inp" type="date" name="collect_invoice_date"></td>
+                <th>수금일자</th>
+                <td><input class="inp" type="date" name="collect_date"></td>
+              </tr>
+              <tr>
+                <th>비고</th>
+                <td colspan="3"><input class="inp" name="collect_note"></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 기타정보 + 마진 -->
+        <h2 class="section-title">| 기타정보</h2>
+        <section class="panel">
+          <table class="form-table">
+            <colgroup><col style="width:120px"><col></colgroup>
+            <tbody>
+              <tr>
+                <th>특이사항</th>
+                <td><input class="inp" name="special_note"></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <h2 class="section-title">| N.I.P</h2>
+        <section class="panel">
+          <table class="form-table">
+            <colgroup><col style="width:120px"><col><col style="width:120px"><col></colgroup>
+            <tbody>
+              <tr>
+                <th>마진율</th>
+                <td><span name="margin">0.0%</span></td>
+                <th>영업이익</th>
+                <td><span name="profit">0원</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 하단 버튼 -->
+        <div class="btn-row" style="justify-content:center;margin-top:22px">
+          <a href="{% url 'contract_list' %}" class="btn">목록으로</a>
+          <button type="submit" class="btn primary">저장하기</button>
+          <button type="submit" name="submit_final" value="1" class="btn warn">품의요청</button>
         </div>
 
-        <div class="btn-row">
-          <button type="button" class="btn" id="btn-add-row">품목추가</button>
-        </div>
-      </section>
-
-      <!--배송 정보-->
-      <h2 class="section-title">| 배송정보</h2>
-      <section class="panel">
-        <table class="form-table">
-          <colgroup><col style="width:120px"><col><col style="width:120px"><col></colgroup>
-          <tbody>
-            <tr>
-              <th>종목</th>
-              <td><input class="inp" name="ship_item"></td>
-              <th>배송일</th>
-              <td><input class="inp" type="date" name="ship_date"></td>
-            </tr>
-            <tr>
-              <th>배송지주소</th>
-              <td><input class="inp" name="ship_addr"></td>
-              <th>배송지연락처</th>
-              <td><input class="inp" name="ship_phone"></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <!--대금회수-->
-      <h2 class="section-title">| 대금회수</h2>
-      <section class="panel">
-        <table class="form-table">
-          <colgroup><col style="width:160px"><col><col style="width:120px"><col></colgroup>
-          <tbody>
-            <tr>
-              <th>세금계산서발행</th>
-              <td><input class="inp" type="date" name="collect_date"></td>
-              <th>수금일자</th>
-              <td><input class="inp" type="date" name="collect_date"></td>
-            </tr>
-            <tr>
-              <th>비고</th>
-              <td colspan="3"><input class="inp" name="collect_note"></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-
-      <!-- 기타정보 + 마진 -->
-      <h2 class="section-title">| 기타정보</h2>
-      <section class="panel">
-        <table class="form-table">
-          <colgroup><col style="width:120px"><col></colgroup>
-          <tbody>
-            <tr>
-              <th>특이사항</th>
-              <td><input class="inp" name="ship_item"></td>
-            </tr>
-            
-          </tbody>
-            
-          </tbody>
-        </table>
-      </section>
-
-      <h2 class="section-title">| N.I.P</h2>
-      <section class="panel">
-        <table class="form-table">
-          <colgroup><col style="width:120px"><col></colgroup>
-          <tbody>
-            <tr>
-              <th>마진율</th>
-              <td><name="margin">0.0%</td>
-              <th>엽업이익</th>
-              <td><name="ptofit">0원</td>
-            </tr>
-            
-          </tbody>
-            
-          </tbody>
-        </table>
-      </section>
-
-      <!-- 하단 버튼 -->
-      <div class="btn-row" style="justify-content:center;margin-top:22px">
-        <a href="{% url 'contract_list' %}" class="btn">목록으로</a>
-        <button type="submit" class="btn primary">저장하기</button>
-        <button type="submit" name="submit_final" value="1" class="btn warn">품의요청</button>
-      </div>
-    
-    </form>
-
-
-</main>
-
+      </form>
+    </div>
+  </main>
 
   <!-- 하단 회사 정보 -->
   <footer class="site-footer">
@@ -342,5 +335,131 @@
     </div>
   </footer>
 
+  <!-- 업로드 미리보기 스크립트: footer 뒤, </body> 직전 -->
+  <script>
+  (function(){
+    const MAX_FILES = 10;
+    const MAX_MB = 5; // 파일당 5MB 예시
+    const input = document.getElementById('images-input');
+    const pickBtn = document.getElementById('pick-images');
+    const dropZone = document.getElementById('drop-zone');
+    const thumbs = document.getElementById('thumbs');
+
+    // 현재 선택된 파일들을 모아 관리 (삭제/정렬 위해)
+    let filesState = [];
+
+    // 파일 선택 버튼
+    pickBtn.addEventListener('click', () => input.click());
+
+    // input 변경 시
+    input.addEventListener('change', (e) => {
+      mergeFiles(Array.from(e.target.files));
+      render();
+    });
+
+    // 드래그&드롭
+    ['dragenter','dragover'].forEach(ev =>
+      dropZone.addEventListener(ev, (e) => {
+        e.preventDefault(); e.stopPropagation();
+        dropZone.style.background = '#eef2ff';
+      })
+    );
+    ['dragleave','drop'].forEach(ev =>
+      dropZone.addEventListener(ev, (e) => {
+        e.preventDefault(); e.stopPropagation();
+        dropZone.style.background = '#f9fafb';
+      })
+    );
+    dropZone.addEventListener('drop', (e) => {
+      mergeFiles(Array.from(e.dataTransfer.files));
+      render();
+    });
+    // 클릭해서도 파일 선택 열기
+    dropZone.addEventListener('click', () => input.click());
+
+    // 파일 병합(중복 제거, 용량/개수 제한, 이미지 타입만)
+    function mergeFiles(newFiles){
+      const imgs = newFiles.filter(f => /^image\//.test(f.type));
+      const merged = [...filesState];
+
+      imgs.forEach(f => {
+        const exists = merged.some(x => x.name === f.name && x.size === f.size);
+        if (exists) return; // 간단 중복 방지
+        if (f.size > MAX_MB * 1024 * 1024) {
+          alert(`${f.name} : ${MAX_MB}MB 초과라 제외됩니다.`);
+          return;
+        }
+        if (merged.length < MAX_FILES) merged.push(f);
+      });
+
+      filesState = merged;
+      syncInputFiles();
+    }
+
+    // filesState -> input.files 로 반영 (폼 제출 시 전송 대상)
+    function syncInputFiles(){
+      const dt = new DataTransfer();
+      filesState.forEach(f => dt.items.add(f));
+      input.files = dt.files;
+    }
+
+    // 썸네일 렌더링
+    function render(){
+      thumbs.innerHTML = '';
+      filesState.forEach((file, idx) => {
+        const url = URL.createObjectURL(file);
+        const card = document.createElement('div');
+        card.style.border = '1px solid #e5e7eb';
+        card.style.borderRadius = '10px';
+        card.style.padding = '8px';
+        card.style.background = '#fff';
+
+        card.innerHTML = `
+          <img src="${url}" alt="${file.name}" style="width:100%;height:100px;object-fit:cover;border-radius:6px">
+          <div class="meta" style="font-size:12px;color:#6b7280;margin-top:6px;word-break:break-all">
+            ${file.name}<br>${(file.size/1024).toFixed(0)} KB
+          </div>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button type="button" data-del="${idx}" class="btn"
+              style="flex:1;border:1px solid #e5e7eb;border-radius:8px;padding:4px 6px;background:#fff;cursor:pointer">
+              삭제
+            </button>
+          </div>
+        `;
+        // 이미지 로드 후 URL 해제(메모리 관리)
+        card.querySelector('img').addEventListener('load', () => URL.revokeObjectURL(url));
+        thumbs.appendChild(card);
+      });
+
+      // 삭제 버튼 이벤트
+      thumbs.querySelectorAll('[data-del]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = +e.currentTarget.getAttribute('data-del');
+          filesState.splice(idx, 1);
+          syncInputFiles();
+          render();
+        });
+      });
+
+      // 남은 수량 안내
+      const remain = MAX_FILES - filesState.length;
+      dropZone.querySelector('div').textContent =
+        remain > 0
+        ? `이미지를 여기에 끌어다 놓기 (또는 클릭) — 최대 ${remain}장 더 추가 가능`
+        : `최대 ${MAX_FILES}장까지 업로드 가능합니다.`;
+    }
+
+    // 처음 문구 세팅
+    render();
+
+    // 제출 전 검증 (선택)
+    document.getElementById('contract-form').addEventListener('submit', (e) => {
+      if (filesState.length > MAX_FILES) {
+        e.preventDefault();
+        alert(`이미지는 최대 ${MAX_FILES}장까지 업로드 가능합니다.`);
+      }
+    });
+  })();
+  </script>
 </body>
 </html>

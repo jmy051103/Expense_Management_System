@@ -1,6 +1,8 @@
+# expenses/models.py
 from django.conf import settings
 from django.db import models
 
+# ---------------- 기존 보고서 모델 ----------------
 class ExpenseReport(models.Model):
     VAT_CHOICES = [(0, "0%"), (10, "10%")]
 
@@ -27,7 +29,7 @@ class ExpenseReport(models.Model):
 
     def __str__(self):
         return f"[{self.id}] {self.company} by {self.creator}"
-    
+
 
 class ExpenseItem(models.Model):
     report = models.ForeignKey(ExpenseReport, on_delete=models.CASCADE, related_name="items")
@@ -41,3 +43,71 @@ class ExpenseItem(models.Model):
 
     def __str__(self):
         return f"{self.product} x {self.quantity}"
+
+
+# ---------------- 새로 추가: 계약/이미지 모델 ----------------
+class Contract(models.Model):
+    STATUS_CHOICES = [
+        ("draft", "임시저장"),
+        ("submitted", "품의요청"),
+        ("approved", "승인"),
+        ("rejected", "반려"),
+    ]
+
+    title = models.CharField(max_length=200, default="무제 계약")
+    writer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="contracts_written")
+    sales_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="contracts_owned"
+    )
+
+    # 매출처
+    customer_company = models.CharField(max_length=200, blank=True)
+    customer_manager = models.CharField(max_length=200, blank=True)
+    customer_phone = models.CharField(max_length=50, blank=True)
+    customer_email = models.EmailField(blank=True)
+
+    # 배송
+    ship_item = models.CharField(max_length=200, blank=True)
+    ship_date = models.DateField(null=True, blank=True)
+    ship_addr = models.CharField(max_length=300, blank=True)
+    ship_phone = models.CharField(max_length=50, blank=True)
+
+    # 회수/비고
+    collect_invoice_date = models.DateField(null=True, blank=True)
+    collect_date = models.DateField(null=True, blank=True)
+    collect_note = models.CharField(max_length=500, blank=True)
+    special_note = models.CharField(max_length=500, blank=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"[{self.get_status_display()}] {self.title} (#{self.pk})"
+
+
+class ContractImage(models.Model):
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name="images")
+
+    # 파일들 (원본/파생)
+    original = models.ImageField(upload_to="contracts/orig/%Y/%m/%d/")
+    thumb    = models.ImageField(upload_to="contracts/thumb/%Y/%m/%d/", blank=True)
+    medium   = models.ImageField(upload_to="contracts/medium/%Y/%m/%d/", blank=True)
+
+    # 메타정보
+    filename = models.CharField(max_length=255, db_index=True, blank=True)
+    width    = models.IntegerField(null=True, blank=True)
+    height   = models.IntegerField(null=True, blank=True)
+    content_type = models.CharField(max_length=50, blank=True)
+
+    uploaded_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["contract", "uploaded_at"])]
+
+    def __str__(self):
+        return self.filename or self.original.name

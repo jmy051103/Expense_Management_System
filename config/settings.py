@@ -29,7 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",   # needed for /static/
     "django.contrib.humanize",
     "accounts",
-    "expenses",
+    "expenses.apps.ExpensesConfig",
 ]
 
 # --- Middleware ---
@@ -109,3 +109,6 @@ LOGOUT_REDIRECT_URL = "/"
 
 # --- Default PK type ---
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

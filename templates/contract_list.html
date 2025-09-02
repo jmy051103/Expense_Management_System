@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-08-26-02">
+  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-02-09">
 </head>
 <body>
 
@@ -47,11 +47,11 @@
         {% else %}
           <span class="tab tab-disabled" aria-disabled="true">계정관리</span>
         {% endif %}
-      {% endwith %} 
+      {% endwith %}
 
       <button class="tab" role="tab">업무관리</button>
-      <!-- <button type="submit" class="tab" role="tab">계약정보</button> -->
-       <div class="tab-group has-dropdown">
+
+      <div class="tab-group has-dropdown">
         <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">
           계약정보
         </a>
@@ -60,6 +60,163 @@
           <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
         </ul>
       </div>
+
       <button class="tab" role="tab">통계</button>
     </nav>
   </div>
+
+  <!-- 콘텐츠 -->
+  <main class="page-wrap">
+    <h1 class="page-title">계약정보 목록</h1>
+    <p class="page-sub">등록된 계약들을 확인하고 상세로 이동할 수 있습니다.</p>
+
+    <!-- 툴바(검색/필터) -->
+    <form class="panel toolbar" method="get" action="">
+      <div class="field">
+        <label class="strong" for="q">검색어</label>
+        <input id="q" class="inp" type="text" name="q" value="{{ request.GET.q }}" placeholder="회사명 / 메모 / 이메일 등">
+      </div>
+
+      <div class="field">
+        <label class="strong" for="status">상태</label>
+        <select id="status" class="sel" name="status">
+          <option value="">전체</option>
+          <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>임시저장</option>
+          <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>품의요청</option>
+          <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>승인</option>
+          <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>반려</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="strong" for="owner">영업담당자</label>
+        <select id="owner" class="sel" name="owner">
+          <option value="">전체</option>
+          {% for u in sales_people %}
+            <option value="{{ u.id }}" {% if request.GET.owner == u.id|stringformat:'s' %}selected{% endif %}>
+              {{ u.first_name|default:u.username }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="strong" for="date_from">작성일(시작)</label>
+        <input id="date_from" class="inp" type="date" name="date_from" value="{{ request.GET.date_from }}">
+      </div>
+
+      <div class="field">
+        <label class="strong" for="date_to">작성일(끝)</label>
+        <input id="date_to" class="inp" type="date" name="date_to" value="{{ request.GET.date_to }}">
+      </div>
+
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <a class="btn" href="{% url 'add_contract' %}">+ 새 계약 등록</a>
+        <button class="btn primary" type="submit">필터 적용</button>
+      </div>
+    </form>
+
+    <!-- 목록 테이블 -->
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="form-table">
+          <thead>
+            <tr>
+              <th style="width:70px">번호</th>
+              <th>회사명</th>
+              <th class="hide-sm" style="width:180px;">영업담당자</th>
+              <th style="width:120px;">상태</th>
+              <th class="hide-sm" style="width:160px;">작성일</th>
+              <th style="width:160px;">이미지</th>
+              <th style="width:110px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in contracts %}
+              <tr class="row-click" data-href="{% url 'contract_detail' c.id %}">
+                <td>{{ c.id }}</td>
+                <td>
+                  <div style="display:flex; flex-direction:column;">
+                    <strong>{{ c.customer_company|default:c.title }}</strong>
+                    <small class="muted">{{ c.customer_email }}</small>
+                  </div>
+                </td>
+                <td class="hide-sm">
+                  {{ c.sales_owner.first_name|default:c.sales_owner.username|default:"-" }}
+                </td>
+                <td>
+                  {% with s=c.status %}
+                    <span class="status-pill status-{{ s }}">{{ c.get_status_display }}</span>
+                  {% endwith %}
+                </td>
+                <td class="hide-sm">{{ c.created_at|date:"Y.m.d H:i" }}</td>
+                <td>
+                  <div class="thumbs-mini">
+                    {% for img in c.images.all|slice:":3" %}
+                      <img src="{{ img.thumb.url }}" alt="{{ img.filename }}">
+                    {% empty %}
+                      <span class="muted">-</span>
+                    {% endfor %}
+                  </div>
+                </td>
+                <td class="actions">
+                  <a class="btn" href="{% url 'contract_detail' c.id %}">상세</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" class="empty">등록된 계약이 없습니다.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- (선택) 간단 페이지네이션 UI: view에서 page_obj 제공 시 -->
+      {% if page_obj %}
+        <div class="btn-row" style="justify-content:center; margin-top:16px;">
+          {% if page_obj.has_previous %}
+            <a class="btn" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">이전</a>
+          {% else %}
+            <button class="btn" disabled>이전</button>
+          {% endif %}
+
+          <span class="pill">페이지 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+          {% if page_obj.has_next %}
+            <a class="btn" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">다음</a>
+          {% else %}
+            <button class="btn" disabled>다음</button>
+          {% endif %}
+        </div>
+      {% endif %}
+    </section>
+  </main>
+
+  <!-- 하단 회사 정보 -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <strong>(주)대진아이엔티</strong>
+      </div>
+      <div class="footer-right">
+        <div>경기도 남양주시 다산중앙로19번길 25-23, F동 712호</div>
+        <div>대표명 : 양정안&nbsp;&nbsp;사업자번호 : 637-81-00010</div>
+        <div>기술문의 : 양재민 (jmy051103@gmail.com), 홍지원 (jiwonh37@gmail.com)</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 행 클릭 시 상세로 이동
+    document.querySelectorAll('.row-click').forEach(tr => {
+      tr.addEventListener('click', (e) => {
+        // 버튼 클릭은 통과
+        if (e.target.closest('.actions')) return;
+        const href = tr.getAttribute('data-href');
+        if (href) window.location.href = href;
+      });
+    });
+  </script>
+</body>
+</html>
