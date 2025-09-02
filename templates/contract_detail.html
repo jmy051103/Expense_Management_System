@@ -1,0 +1,30 @@
+{% load static %}
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>계약 상세</title>
+  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-02-09">
+</head>
+<body>
+  <h1>계약 상세</h1>
+
+  <p><strong>회사명:</strong> {{ contract.customer_company }}</p>
+  <p><strong>작성자:</strong> {{ contract.writer.first_name|default:contract.writer.username }}</p>
+  <p><strong>상태:</strong> {{ contract.get_status_display }}</p>
+  <p><strong>작성일:</strong> {{ contract.created_at|date:"Y-m-d H:i" }}</p>
+
+  <h2>첨부 이미지</h2>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    {% for img in contract.images.all %}
+      <a href="{{ img.medium.url }}" target="_blank">
+        <img src="{{ img.thumb.url }}" style="width:120px; height:90px; object-fit:cover;">
+      </a>
+    {% empty %}
+      <p>첨부 이미지가 없습니다.</p>
+    {% endfor %}
+  </div>
+
+  <p><a href="{% url 'contract_list' %}">← 목록으로</a></p>
+</body>
+</html>
