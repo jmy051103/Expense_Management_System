@@ -8,6 +8,12 @@ from django.db.models import Q
 from expenses.models import ExpenseReport
 from .models import Profile
 from .forms import UserEditForm, ProfileEditForm
+from django.db.models import Count
+
+try:
+    from expenses.models import Contract
+except Exception:
+    Contract = None
 
 
 
@@ -45,10 +51,29 @@ def dashboard(request):
         .order_by("-created_at")[:5]
     )
 
+    stats = {
+        "temp": 0,
+        "request_count": 0,
+        "in_progress": 0,
+        "done": 0,
+    }
+
+    if Contract is not None:
+        qs = Contract.objects.all()
+        stats["temp"]          = qs.filter(status="draft").count()
+        stats["request_count"] = qs.filter(status="submitted").count()
+        stats["in_progress"]   = qs.filter(status="processing").count()
+        stats["done"]          = qs.filter(status="completed").count()
+
     return render(
         request,
         "dashboard.html",
-        {"groups": groups, "role": role, "recent_reports": recent_reports},
+        {
+            "groups": groups, 
+            "role": role, 
+            "recent_reports": recent_reports,
+            "stats": stats,
+        },
     )
 
 
@@ -129,22 +154,3 @@ def edit_account(request, user_id):
     })
 
 
-
-@login_required
-def add_contract(request):
-    # 반드시 User 객체 쿼리셋을 넘김
-    sales_people = (
-        User.objects.filter(is_active=True)          # 활성 사용자만
-        .select_related("profile")
-        .order_by("first_name", "username")
-    )
-    # 특정 조건을 원할 때 예시:
-    # sales_people = sales_people.filter(
-    #     Q(profile__department__icontains="영업") | Q(profile__role__icontains="영업")
-    # )
-
-    ctx = {
-        "sales_people": sales_people,
-        # ... 기존 컨텍스트들 ...
-    }
-    return render(request, "add_contract.html", ctx)

@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.db import transaction
 from django.contrib.auth.models import User
-
+from django.contrib import messages
 from .forms import ExpenseReportForm, ExpenseItemFormSet, ContractForm
 from .models import ExpenseReport, Contract, ContractImage
 
@@ -171,7 +171,8 @@ def contract_edit(request, pk):
 
     # (선택) 권한 정책: 작성자만 수정 가능. 필요 없으면 이 블록 제거.
     if not (request.user.is_superuser or request.user == contract.writer):
-        raise PermissionDenied("수정 권한이 없습니다.")
+        messages.error(request, "수정 권한이 없습니다. (작성자만 수정 가능)")
+        return redirect("contract_detail", pk=contract.pk)
 
     sales_people = (
         User.objects.filter(is_active=True)
@@ -224,6 +225,12 @@ def contract_delete(request, pk):
     """계약 삭제: 작성자 또는 superuser만"""
     contract = get_object_or_404(Contract, pk=pk)
     if not (request.user.is_superuser or request.user == contract.writer):
-        raise PermissionDenied("삭제 권한이 없습니다.")
+        from django.contrib import messages
+        messages.error(request, "삭제 권한이 없습니다. (작성자만 삭제 가능)")
+        return redirect("contract_detail", pk=contract.pk)  # 상세 페이지로 되돌리기
+
     contract.delete()
+    from django.contrib import messages
+    messages.success(request, "계약이 성공적으로 삭제되었습니다.")
     return redirect("contract_list")
+
