@@ -50,8 +50,8 @@ class Contract(models.Model):
     STATUS_CHOICES = [
         ("draft", "임시저장"),
         ("submitted", "품의요청"),
-        ("approved", "승인"),
-        ("rejected", "반려"),
+        ("processing", "결재처리중"),
+        ("completed", "결재완료"),
     ]
 
     title = models.CharField(max_length=200, default="무제 계약")

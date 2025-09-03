@@ -5,7 +5,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-02-09">
+
+  <!-- 스타일: 목록 전용 CSS 사용 -->
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-03-08">
 </head>
 <body>
 
@@ -71,55 +73,49 @@
     <p class="page-sub">등록된 계약들을 확인하고 상세로 이동할 수 있습니다.</p>
 
     <!-- 툴바(검색/필터) -->
-    <form class="panel toolbar" method="get" action="">
-      <div class="field">
-        <label class="strong" for="q">검색어</label>
-        <input id="q" class="inp" type="text" name="q" value="{{ request.GET.q }}" placeholder="회사명 / 메모 / 이메일 등">
-      </div>
+    <form class="panel toolbar compact" method="get" action="">
+      <!-- 작성일 범위 -->
+      <input class="inp w-140" type="date" name="date_from" value="{{ request.GET.date_from }}" placeholder="작성일">
+      <span class="dash">~</span>
+      <input class="inp w-140" type="date" name="date_to" value="{{ request.GET.date_to }}" placeholder="작성일">
 
-      <div class="field">
-        <label class="strong" for="status">상태</label>
-        <select id="status" class="sel" name="status">
-          <option value="">전체</option>
-          <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>임시저장</option>
-          <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>품의요청</option>
-          <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>승인</option>
-          <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>반려</option>
-        </select>
-      </div>
+      <!-- 매출처 / 매입처 -->
+      <input class="inp w-180" type="text" name="q_customer" value="{{ request.GET.q_customer }}" placeholder="매출처">
+      <input class="inp w-180" type="text" name="q_vendor"   value="{{ request.GET.q_vendor }}"   placeholder="매입처">
 
-      <div class="field">
-        <label class="strong" for="owner">영업담당자</label>
-        <select id="owner" class="sel" name="owner">
-          <option value="">전체</option>
-          {% for u in sales_people %}
-            <option value="{{ u.id }}" {% if request.GET.owner == u.id|stringformat:'s' %}selected{% endif %}>
-              {{ u.first_name|default:u.username }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
+      <!-- 작성자(영업담당자) / 상품명 / 계약번호 / 상태 -->
+      <select class="sel w-140" name="owner">
+        <option value="">작성자</option>
+        {% for u in sales_people %}
+          <option value="{{ u.id }}" {% if request.GET.owner == u.id|stringformat:'s' %}selected{% endif %}>
+            {{ u.first_name|default:u.username }}
+          </option>
+        {% endfor %}
+      </select>
 
-      <div class="field">
-        <label class="strong" for="date_from">작성일(시작)</label>
-        <input id="date_from" class="inp" type="date" name="date_from" value="{{ request.GET.date_from }}">
-      </div>
+      <input class="inp w-180" type="text" name="q_item" value="{{ request.GET.q_item }}" placeholder="상품명">
+      <input class="inp w-160" type="text" name="contract_no" value="{{ request.GET.contract_no }}" placeholder="계약번호">
 
-      <div class="field">
-        <label class="strong" for="date_to">작성일(끝)</label>
-        <input id="date_to" class="inp" type="date" name="date_to" value="{{ request.GET.date_to }}">
-      </div>
+      <select class="sel w-120" name="status">
+        <option value="">상태</option>
+        <option value="draft"     {% if request.GET.status == 'draft' %}selected{% endif %}>임시저장</option>
+        <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>품의요청</option>
+        <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>결재처리중</option>
+        <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>결재완료</option>
+      </select>
 
-      <div style="margin-left:auto; display:flex; gap:8px;">
-        <a class="btn" href="{% url 'add_contract' %}">+ 새 계약 등록</a>
-        <button class="btn primary" type="submit">필터 적용</button>
+      <!-- 버튼들 -->
+      <div class="toolbar-actions">
+        <button class="btn gray" type="submit">검색하기</button>
+
+        <a class="btn primary" href="{% url 'add_contract' %}">등록하기</a>
       </div>
     </form>
 
     <!-- 목록 테이블 -->
     <section class="panel">
       <div class="table-wrap">
-        <table class="form-table">
+        <table class="form-table table-list">
           <thead>
             <tr>
               <th style="width:70px">번호</th>
@@ -127,40 +123,53 @@
               <th class="hide-sm" style="width:180px;">영업담당자</th>
               <th style="width:120px;">상태</th>
               <th class="hide-sm" style="width:160px;">작성일</th>
-              <th style="width:160px;">이미지</th>
-              <th style="width:110px;"></th>
+              <th style="width:180px;">이미지</th> 
+              <th style="width:130px;">작업</th>
             </tr>
           </thead>
           <tbody>
             {% for c in contracts %}
               <tr class="row-click" data-href="{% url 'contract_detail' c.id %}">
-                <td>{{ c.id }}</td>
-                <td>
-                  <div style="display:flex; flex-direction:column;">
-                    <strong>{{ c.customer_company|default:c.title }}</strong>
+                <td class="num-cell">{{ c.id }}</td>
+
+                <td class="multiline">
+                  <div class="cell-stack">
+                    <strong class="cell-title">{{ c.customer_company|default:c.title }}</strong>
                     <small class="muted">{{ c.customer_email }}</small>
                   </div>
                 </td>
-                <td class="hide-sm">
-                  {{ c.sales_owner.first_name|default:c.sales_owner.username|default:"-" }}
-                </td>
+
+                <td class="hide-sm">{{ c.sales_owner.first_name|default:c.sales_owner.username|default:"-" }}</td>
+
                 <td>
                   {% with s=c.status %}
                     <span class="status-pill status-{{ s }}">{{ c.get_status_display }}</span>
                   {% endwith %}
                 </td>
+
                 <td class="hide-sm">{{ c.created_at|date:"Y.m.d H:i" }}</td>
+
                 <td>
                   <div class="thumbs-mini">
                     {% for img in c.images.all|slice:":3" %}
-                      <img src="{{ img.thumb.url }}" alt="{{ img.filename }}">
+                      <a href="{{ img.medium.url }}" class="preview" data-large="{{ img.medium.url }}">
+                        <img src="{{ img.thumb.url }}" alt="{{ img.filename }}" loading="lazy">
+                      </a>
                     {% empty %}
                       <span class="muted">-</span>
                     {% endfor %}
                   </div>
                 </td>
-                <td class="actions">
-                  <a class="btn" href="{% url 'contract_detail' c.id %}">상세</a>
+
+                <td>
+                  <div class="actions">
+                    <a class="btn" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
+                    <form method="post" action="{% url 'contract_delete' c.id %}"
+                          onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn danger">삭제</button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             {% empty %}
@@ -172,7 +181,6 @@
         </table>
       </div>
 
-      <!-- (선택) 간단 페이지네이션 UI: view에서 page_obj 제공 시 -->
       {% if page_obj %}
         <div class="btn-row" style="justify-content:center; margin-top:16px;">
           {% if page_obj.has_previous %}
@@ -207,15 +215,44 @@
     </div>
   </footer>
 
+  <!-- 라이트박스 -->
+  <div id="lightbox" class="lightbox" aria-hidden="true">
+    <img alt="">
+  </div>
+
   <script>
-    // 행 클릭 시 상세로 이동
+    // 행 클릭 → 상세로 이동 (이미지 클릭은 라이트박스 처리)
     document.querySelectorAll('.row-click').forEach(tr => {
       tr.addEventListener('click', (e) => {
-        // 버튼 클릭은 통과
-        if (e.target.closest('.actions')) return;
+        if (e.target.closest('.preview')) return;
         const href = tr.getAttribute('data-href');
         if (href) window.location.href = href;
       });
+    });
+
+    const lb = document.getElementById('lightbox');
+    const big = lb.querySelector('img');
+
+    document.querySelectorAll('a.preview').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = a.dataset.large || a.href;
+        big.src = url;
+        lb.classList.add('open');
+        lb.setAttribute('aria-hidden', 'false');
+      });
+    });
+
+    lb.addEventListener('click', () => {
+      lb.classList.remove('open');
+      lb.setAttribute('aria-hidden', 'true');
+      big.src = '';
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lb.classList.contains('open')) {
+        lb.click();
+      }
     });
   </script>
 </body>

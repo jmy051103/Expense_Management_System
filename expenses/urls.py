@@ -11,4 +11,6 @@ urlpatterns = [
     path("contracts/add/", views.add_contract, name="add_contract"),
     path("contracts/list/", views.contract_list, name="contract_list"),
     path("contracts/<int:pk>/", views.contract_detail, name="contract_detail"),
+    path("contracts/<int:pk>/edit/", views.contract_edit, name="contract_edit"),
+    path("contracts/<int:pk>/delete/", views.contract_delete, name="contract_delete"),
 ]

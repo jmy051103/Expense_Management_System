@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 from django.db import transaction
 from django.contrib.auth.models import User
 
-from .forms import ExpenseReportForm, ExpenseItemFormSet
+from .forms import ExpenseReportForm, ExpenseItemFormSet, ContractForm
 from .models import ExpenseReport, Contract, ContractImage
 
 def _is_approver(user) -> bool:
@@ -99,7 +99,7 @@ def report_delete(request, pk):
 @login_required
 def add_contract(request):
     """계약정보 등록 + 이미지 다중 업로드.
-       '저장하기' => draft, '품의요청' => submitted 로 상태 저장
+       '저장하기' => draft, '품의요청' => submitted
     """
     sales_people = (
         User.objects.filter(is_active=True)
@@ -108,76 +108,34 @@ def add_contract(request):
     )
 
     if request.method == "POST":
-        # 어떤 버튼인지 확인: 품의요청 버튼은 name="submit_final" value="1"
         is_submit = request.POST.get("submit_final") == "1"
         status = "submitted" if is_submit else "draft"
 
-        # 폼 값 받기 (네 HTML name들과 1:1)
-        sales_owner_id   = request.POST.get("sales_owner") or None
-        customer_company = request.POST.get("customer_company", "").strip()
-        customer_manager = request.POST.get("customer_manager", "").strip()  # 선택사항이면 문자열로
-        customer_phone   = request.POST.get("customer_phone", "").strip()
-        customer_email   = request.POST.get("customer_email", "").strip()
+        form = ContractForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                contract = form.save(commit=False)
+                contract.writer = request.user
+                contract.status = status
+                contract.title = contract.customer_company or "무제 계약"
+                contract.save()
 
-        ship_item = request.POST.get("ship_item", "").strip()
-        ship_date = request.POST.get("ship_date") or None
-        ship_addr = request.POST.get("ship_addr", "").strip()
-        ship_phone = request.POST.get("ship_phone", "").strip()
+                for f in request.FILES.getlist("images"):
+                    ContractImage.objects.create(contract=contract, original=f)
 
-        collect_invoice_date = request.POST.get("collect_invoice_date") or None
-        collect_date = request.POST.get("collect_date") or None
-        collect_note = request.POST.get("collect_note", "").strip()
-        special_note = request.POST.get("special_note", "").strip()
-
-        # (필요시 필수값 검사)
-        if not customer_company:
-            # 간단 유효성 피드백
+            return redirect(reverse("contract_detail", args=[contract.id]))
+        else:
+            # 폼 에러를 템플릿에서 표시할 수 있게 넘김
             ctx = {
                 "sales_people": sales_people,
                 "customer_managers": [],
-                "error": "회사명을 입력해주세요.",
+                "form_errors": form.errors,   # {{ form_errors }} 로 출력 가능
             }
             return render(request, "add_contract.html", ctx)
 
-        with transaction.atomic():
-            # Contract 저장 (Neon/Postgres에 들어감)
-            contract = Contract.objects.create(
-                title=customer_company or "무제 계약",
-                writer=request.user,
-                sales_owner_id=sales_owner_id,
-
-                customer_company=customer_company,
-                customer_manager=customer_manager,
-                customer_phone=customer_phone,
-                customer_email=customer_email,
-
-                ship_item=ship_item,
-                ship_date=ship_date,
-                ship_addr=ship_addr,
-                ship_phone=ship_phone,
-
-                collect_invoice_date=collect_invoice_date,
-                collect_date=collect_date,
-                collect_note=collect_note,
-                special_note=special_note,
-
-                status=status,
-            )
-
-            # 이미지 여러 개 저장 (name="images")
-            for f in request.FILES.getlist("images"):
-                ContractImage.objects.create(contract=contract, original=f)
-
-        # 저장 후 상세 페이지 이동
-        return redirect(reverse("contract_detail", args=[contract.id]))
-
-    # GET: 폼 렌더링
-    ctx = {
-        "sales_people": sales_people,
-        "customer_managers": [],
-    }
+    # GET
+    ctx = {"sales_people": sales_people, "customer_managers": []}
     return render(request, "add_contract.html", ctx)
-
 
 @login_required
 def contract_list(request):
@@ -201,3 +159,71 @@ def contract_detail(request, pk):
         pk=pk
     )
     return render(request, "contract_detail.html", {"contract": contract})
+
+
+@login_required
+def contract_edit(request, pk):
+    """계약 수정: add_contract.html 폼 재사용, 이미지 업로드 시 기존에 추가로 붙음"""
+    contract = get_object_or_404(
+        Contract.objects.select_related("writer", "sales_owner").prefetch_related("images"),
+        pk=pk
+    )
+
+    # (선택) 권한 정책: 작성자만 수정 가능. 필요 없으면 이 블록 제거.
+    if not (request.user.is_superuser or request.user == contract.writer):
+        raise PermissionDenied("수정 권한이 없습니다.")
+
+    sales_people = (
+        User.objects.filter(is_active=True)
+        .select_related("profile")
+        .order_by("first_name", "username")
+    )
+
+    if request.method == "POST":
+        is_submit = request.POST.get("submit_final") == "1"
+        form = ContractForm(request.POST, instance=contract)
+        if form.is_valid():
+            with transaction.atomic():
+                contract = form.save(commit=False)
+                contract.writer = contract.writer  # 유지
+                # 버튼 분기: 품의요청만 submitted로 바꾸고, 아니면 draft로 저장
+                contract.status = "submitted" if is_submit else "draft"
+                contract.title = contract.customer_company or (contract.title or "무제 계약")
+                contract.save()
+
+                # 새로 업로드된 이미지는 기존에 추가로 붙음
+                for f in request.FILES.getlist("images"):
+                    ContractImage.objects.create(contract=contract, original=f)
+
+            return redirect("contract_detail", pk=contract.pk)
+        else:
+            ctx = {
+                "sales_people": sales_people,
+                "customer_managers": [],
+                "form_errors": form.errors,
+                "contract": contract,     # 템플릿에서 기존 값/이미지 접근용(선택)
+                "is_edit": True,
+            }
+            return render(request, "add_contract.html", ctx)
+
+    # GET
+    # 폼 자체는 add_contract.html에서 input name으로 받으니,
+    # 여기선 드롭다운 등 컨텍스트만 넘겨도 됨(필요시 initial을 템플릿 value로 매핑)
+    ctx = {
+        "sales_people": sales_people,
+        "customer_managers": [],
+        "contract": contract,
+        "is_edit": True,
+    }
+    return render(request, "add_contract.html", ctx)
+
+
+@login_required
+@require_POST
+def contract_delete(request, pk):
+    """계약 삭제: 작성자 또는 superuser만"""
+    contract = get_object_or_404(Contract, pk=pk)
+    if not (request.user.is_superuser or request.user == contract.writer):
+        raise PermissionDenied("삭제 권한이 없습니다.")
+    contract.delete()
+    return redirect("contract_list")

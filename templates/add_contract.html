@@ -5,7 +5,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-02-09">
+  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-03-07">
+  <style>
+    /* 거래내역 표 내부 전용(버튼 크기/배치) */
+    #items-table .arrows-col{
+      display:flex; flex-direction:column; gap:4px; align-items:stretch;
+    }
+    #items-table .mini{
+      height:16px; padding:0 6px; font-size:10px; line-height:1;
+      border:1px solid #d1d5db; border-radius:4px; background:#f3f4f6; cursor:pointer;
+    }
+    #items-table .mini:hover{ filter:brightness(0.98); }
+  </style>
 </head>
 <body>
 
@@ -31,14 +42,11 @@
       </form>
     </div>
 
-    <!-- 탭 -->
     <nav class="tabs" role="tablist" aria-label="상단 메뉴">
       {% with acc=request.user.profile.access|default_if_none:"" %}
         {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
           <div class="tab-group has-dropdown">
-            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">
-              계정관리
-            </a>
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">계정관리</a>
             <ul id="menu-accounts" class="dropdown" role="menu" aria-label="계정관리 메뉴">
               <li role="none"><a role="menuitem" href="{% url 'create_profile' %}">계정 만들기</a></li>
               <li role="none"><a role="menuitem" href="{% url 'view_profile' %}">계정 보기</a></li>
@@ -48,50 +56,48 @@
           <span class="tab tab-disabled" aria-disabled="true">계정관리</span>
         {% endif %}
       {% endwith %}
-
       <button class="tab" role="tab">업무관리</button>
-
       <div class="tab-group has-dropdown">
-        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">
-          계약정보
-        </a>
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">계약정보</a>
         <ul id="menu-contract" class="dropdown" role="menu" aria-label="계약정보 메뉴">
           <li role="none"><a role="menuitem" href="{% url 'add_contract' %}">계약정보 등록</a></li>
           <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
         </ul>
       </div>
-
       <button class="tab" role="tab">통계</button>
     </nav>
   </div>
 
-  <!--container-->
   <main class="page-wrap">
     <div class="top">
-      <!-- enctype 추가됨 -->
       <form action="" method="post" id="contract-form" novalidate enctype="multipart/form-data">
         {% csrf_token %}
+
+        {% if form_errors %}
+          <div class="panel" style="margin-bottom:10px; color:#b91c1c;">
+            <strong>입력 오류가 있습니다:</strong>
+            <ul style="margin:6px 0 0 18px;">
+              {% for field, errors in form_errors.items %}
+                <li><b>{{ field }}</b>: {{ errors|join:", " }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
 
         <h1 class="page-title">계약정보 등록</h1>
         <p class="page-sub">하기와 같이 납품코자 하오니 결재 바랍니다.</p>
 
-        <!-- 작성자(고정) + 영업담당자(선택) -->
         <div class="form-head">
-          <!-- 작성자: 로그인 계정 표시만 -->
           <span class="strong">작성자 *</span>
-          <span class="pill">
-            {{ request.user.first_name|default:request.user.username }}
-          </span>
+          <span class="pill">{{ request.user.first_name|default:request.user.username }}</span>
 
-          <!-- 영업담당자 드롭다운 -->
           <label class="field-inline" for="sales_owner" style="margin-left:12px;">
             <span class="strong">영업담당자</span>
             <select class="sel" id="sales_owner" name="sales_owner" required>
               <option value="">선택</option>
               {% for u in sales_people %}
                 <option value="{{ u.id }}">
-                  {{ u.first_name|default:u.username }}
-                  {% if u.profile.role %} / {{ u.profile.role }}{% endif %}
+                  {{ u.first_name|default:u.username }}{% if u.profile.role %} / {{ u.profile.role }}{% endif %}
                 </option>
               {% endfor %}
             </select>
@@ -102,43 +108,26 @@
 
           <h2 class="section-title">| 첨부 이미지</h2>
           <section class="panel">
-            <div class="muted" style="margin-bottom:8px;">
-              JPG/PNG 최대 10장까지 업로드 가능합니다. (드래그 앤 드롭 지원)
-            </div>
+            <div class="muted" style="margin-bottom:8px;">JPG/PNG 최대 10장까지 업로드 가능합니다. (드래그 앤 드롭 지원)</div>
 
-            <!-- Hidden real input (multiple) -->
             <input id="images-input" class="inp" type="file" name="images" accept="image/*" multiple hidden>
 
-            <!-- Controls -->
             <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
               <button type="button" class="btn" id="pick-images">파일 선택</button>
               <span class="muted">또는 아래 상자에 이미지를 드롭하세요.</span>
             </div>
 
-            <!-- Drop zone -->
-            <div id="drop-zone" style="
-                border:2px dashed #d1d5db; border-radius:12px; padding:16px; text-align:center;
-                background:#f9fafb; cursor:pointer;">
+            <div id="drop-zone" style="border:2px dashed #d1d5db; border-radius:12px; padding:16px; text-align:center; background:#f9fafb; cursor:pointer;">
               <div>이미지를 여기에 끌어다 놓기 (또는 클릭)</div>
             </div>
 
-            <!-- Preview grid -->
-            <div id="thumbs" style="
-                display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
-                gap:12px; margin-top:12px;">
-              <!-- thumbnails injected here -->
-            </div>
+            <div id="thumbs" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:12px; margin-top:12px;"></div>
           </section>
 
           <h2 class="section-title">| 매출처</h2>
           <section class="panel">
             <table class="form-table">
-              <colgroup>
-                <col style="width:140px"><!-- 라벨 -->
-                <col><!-- 입력 -->
-                <col style="width:140px">
-                <col>
-              </colgroup>
+              <colgroup><col style="width:140px"><col><col style="width:140px"><col></colgroup>
               <tbody>
                 <tr>
                   <th>회사&nbsp;*</th>
@@ -176,34 +165,37 @@
             <table class="form-table" id="items-table">
               <thead>
                 <tr>
-                  <th style="width:170px">품목&nbsp;*</th>
-                  <th style="width:90px" class="center">수량</th>
-                  <th style="width:90px" class="center">규격</th>
-
-                  <th style="width:110px" class="right hide-sm">매출단가</th>
-                  <th style="width:110px" class="right">매출금액</th>
-
-                  <th style="width:110px" class="right hide-sm">매입단가</th>
-                  <th style="width:110px" class="right">매입금액</th>
-
-                  <th style="width:110px">매입처</th>
-                  <th style="width:110px">품목관리</th>
-                  <th style="width:100px">과세여부</th>
+                  <th rowspan="2" style="width:170px" class="center">품목&nbsp;*</th>
+                  <th rowspan="2" style="width:90px"  class="center">수량</th>
+                  <th rowspan="2" style="width:90px"  class="center">규격</th>
+                  <th colspan="2" class="center">매출가</th>
+                  <th colspan="2" class="center">매입가</th>
+                  <th rowspan="2" style="width:110px" class="center">매입처</th>
+                  <th rowspan="2" style="width:110px" class="center">품목관리</th>
+                  <th rowspan="2" style="width:100px" class="center">과세여부</th>
+                </tr>
+                <tr>
+                  <th class="right hide-sm">매출단가</th>
+                  <th class="right">매출금액</th>
+                  <th class="right hide-sm">매입단가</th>
+                  <th class="right">매입금액</th>
                 </tr>
               </thead>
               <tbody id="items-body">
-                <!-- 초기 1행 -->
                 <tr data-row>
                   <td><input class="inp" name="item_name[]" placeholder="검색어 입력 후 Enter" required></td>
-                  <td><input class="inp right" name="qty[]" inputmode="numeric" value="1"></td>
+                  <td><input class="inp right" name="qty[]" inputmode="numeric"></td>
+
+                  <!-- 규격 -->
+                  <td class="center"><input class="inp" name="spec[]"></td>
 
                   <td class="hide-sm"><input class="inp right" name="sell_unit[]" inputmode="decimal" placeholder="0"></td>
                   <td><input class="inp right" name="sell_total[]" inputmode="decimal" placeholder="0"></td>
-
                   <td class="hide-sm"><input class="inp right" name="buy_unit[]" inputmode="decimal" placeholder="0"></td>
                   <td><input class="inp right" name="buy_total[]" inputmode="decimal" placeholder="0"></td>
-
                   <td><input class="inp" name="vendor[]" placeholder="매입처"></td>
+
+                  <!-- 품목관리 = VAT 모드 -->
                   <td>
                     <select class="sel" name="item_vat_mode[]">
                       <option value="separate">VAT별도</option>
@@ -211,26 +203,36 @@
                       <option value="exempt">면세</option>
                     </select>
                   </td>
-                  <td>
-                    <select class="sel" name="tax_type[]">
-                      <option value="taxable">과세</option>
-                      <option value="dutyfree">면세</option>
-                    </select>
-                  </td>
+
+                  <!-- 과세여부 = 화살표(세로) + 삭제 -->
                   <td class="center">
-                    <button type="button" class="btn danger" data-remove>품목삭제</button>
+                    <div class="row-actions" style="display:flex; gap:8px; justify-content:flex-start; align-items:center;">
+                      <div class="arrows-col">
+                        <button type="button" class="mini" data-up>▲</button>
+                        <button type="button" class="mini" data-down>▼</button>
+                      </div>
+                      <button type="button" class="btn danger" data-remove>품목삭제</button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
-              <tfoot>
-                <tr class="tfoot">
-                  <td class="right" colspan="3">합계</td>
-                  <td class="right"><span id="sum-sell" class="num">0</span></td>
-                  <td class="right hide-sm"></td>
-                  <td class="right"><span id="sum-buy" class="num">0</span></td>
-                  <td colspan="4"></td>
-                </tr>
-              </tfoot>
+            <tfoot>
+              <tr class="tfoot">
+                <!-- 품목/수량/규격 3칸을 묶어서 "합계" -->
+                <td class="center" colspan="3">합계</td>
+
+                <!-- 매출가 그룹: 단가는 공란, 금액 아래 합계 숫자 -->
+                <td class="right hide-sm"></td>
+                <td class="right"><span id="sum-sell" class="num">0</span></td>
+
+                <!-- 매입가 그룹: 단가는 공란, 금액 아래 합계 숫자 -->
+                <td class="right hide-sm"></td>
+                <td class="right"><span id="sum-buy" class="num">0</span></td>
+
+                <!-- 나머지 열은 비우기(매입처/품목관리/과세여부) -->
+                <td colspan="3"></td>
+              </tr>
+            </tfoot>
             </table>
           </div>
 
@@ -310,7 +312,6 @@
           </table>
         </section>
 
-        <!-- 하단 버튼 -->
         <div class="btn-row" style="justify-content:center;margin-top:22px">
           <a href="{% url 'contract_list' %}" class="btn">목록으로</a>
           <button type="submit" class="btn primary">저장하기</button>
@@ -321,12 +322,9 @@
     </div>
   </main>
 
-  <!-- 하단 회사 정보 -->
   <footer class="site-footer">
     <div class="footer-inner">
-      <div class="footer-left">
-        <strong>(주)대진아이엔티</strong>
-      </div>
+      <div class="footer-left"><strong>(주)대진아이엔티</strong></div>
       <div class="footer-right">
         <div>경기도 남양주시 다산중앙로19번길 25-23, F동 712호</div>
         <div>대표명 : 양정안&nbsp;&nbsp;사업자번호 : 637-81-00010</div>
@@ -335,131 +333,344 @@
     </div>
   </footer>
 
-  <!-- 업로드 미리보기 스크립트: footer 뒤, </body> 직전 -->
+  <!-- 업로드 미리보기 -->
   <script>
   (function(){
-    const MAX_FILES = 10;
-    const MAX_MB = 5; // 파일당 5MB 예시
+    const MAX_FILES = 10, MAX_MB = 10;
     const input = document.getElementById('images-input');
     const pickBtn = document.getElementById('pick-images');
     const dropZone = document.getElementById('drop-zone');
     const thumbs = document.getElementById('thumbs');
-
-    // 현재 선택된 파일들을 모아 관리 (삭제/정렬 위해)
     let filesState = [];
 
-    // 파일 선택 버튼
     pickBtn.addEventListener('click', () => input.click());
-
-    // input 변경 시
-    input.addEventListener('change', (e) => {
-      mergeFiles(Array.from(e.target.files));
-      render();
-    });
-
-    // 드래그&드롭
-    ['dragenter','dragover'].forEach(ev =>
-      dropZone.addEventListener(ev, (e) => {
-        e.preventDefault(); e.stopPropagation();
-        dropZone.style.background = '#eef2ff';
-      })
-    );
-    ['dragleave','drop'].forEach(ev =>
-      dropZone.addEventListener(ev, (e) => {
-        e.preventDefault(); e.stopPropagation();
-        dropZone.style.background = '#f9fafb';
-      })
-    );
-    dropZone.addEventListener('drop', (e) => {
-      mergeFiles(Array.from(e.dataTransfer.files));
-      render();
-    });
-    // 클릭해서도 파일 선택 열기
+    input.addEventListener('change', (e) => { mergeFiles(Array.from(e.target.files)); render(); });
+    ['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, (e)=>{e.preventDefault();e.stopPropagation();dropZone.style.background='#eef2ff';}));
+    ['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, (e)=>{e.preventDefault();e.stopPropagation();dropZone.style.background='#f9fafb';}));
+    dropZone.addEventListener('drop', (e) => { mergeFiles(Array.from(e.dataTransfer.files)); render(); });
     dropZone.addEventListener('click', () => input.click());
 
-    // 파일 병합(중복 제거, 용량/개수 제한, 이미지 타입만)
     function mergeFiles(newFiles){
       const imgs = newFiles.filter(f => /^image\//.test(f.type));
       const merged = [...filesState];
-
       imgs.forEach(f => {
         const exists = merged.some(x => x.name === f.name && x.size === f.size);
-        if (exists) return; // 간단 중복 방지
-        if (f.size > MAX_MB * 1024 * 1024) {
-          alert(`${f.name} : ${MAX_MB}MB 초과라 제외됩니다.`);
-          return;
-        }
+        if (exists) return;
+        if (f.size > MAX_MB * 1024 * 1024) { alert(`${f.name} : ${MAX_MB}MB 초과라 제외됩니다.`); return; }
         if (merged.length < MAX_FILES) merged.push(f);
       });
-
       filesState = merged;
-      syncInputFiles();
+      const dt = new DataTransfer(); filesState.forEach(f => dt.items.add(f)); input.files = dt.files;
     }
 
-    // filesState -> input.files 로 반영 (폼 제출 시 전송 대상)
-    function syncInputFiles(){
-      const dt = new DataTransfer();
-      filesState.forEach(f => dt.items.add(f));
-      input.files = dt.files;
-    }
-
-    // 썸네일 렌더링
     function render(){
       thumbs.innerHTML = '';
       filesState.forEach((file, idx) => {
         const url = URL.createObjectURL(file);
         const card = document.createElement('div');
-        card.style.border = '1px solid #e5e7eb';
-        card.style.borderRadius = '10px';
-        card.style.padding = '8px';
-        card.style.background = '#fff';
-
+        card.style.cssText='border:1px solid #e5e7eb;border-radius:10px;padding:8px;background:#fff;';
         card.innerHTML = `
           <img src="${url}" alt="${file.name}" style="width:100%;height:100px;object-fit:cover;border-radius:6px">
-          <div class="meta" style="font-size:12px;color:#6b7280;margin-top:6px;word-break:break-all">
-            ${file.name}<br>${(file.size/1024).toFixed(0)} KB
-          </div>
+          <div class="meta" style="font-size:12px;color:#6b7280;margin-top:6px;word-break:break-all">${file.name}<br>${(file.size/1024).toFixed(0)} KB</div>
           <div style="display:flex;gap:6px;margin-top:6px">
-            <button type="button" data-del="${idx}" class="btn"
-              style="flex:1;border:1px solid #e5e7eb;border-radius:8px;padding:4px 6px;background:#fff;cursor:pointer">
-              삭제
-            </button>
-          </div>
-        `;
-        // 이미지 로드 후 URL 해제(메모리 관리)
+            <button type="button" data-del="${idx}" class="btn" style="flex:1;border:1px solid #e5e7eb;border-radius:8px;padding:4px 6px;background:#fff;cursor:pointer">삭제</button>
+          </div>`;
         card.querySelector('img').addEventListener('load', () => URL.revokeObjectURL(url));
         thumbs.appendChild(card);
       });
-
-      // 삭제 버튼 이벤트
-      thumbs.querySelectorAll('[data-del]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const idx = +e.currentTarget.getAttribute('data-del');
-          filesState.splice(idx, 1);
-          syncInputFiles();
-          render();
-        });
-      });
-
-      // 남은 수량 안내
+      thumbs.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', (e) => {
+        const i = +e.currentTarget.getAttribute('data-del'); filesState.splice(i,1);
+        const dt = new DataTransfer(); filesState.forEach(f => dt.items.add(f)); input.files = dt.files; render();
+      }));
       const remain = MAX_FILES - filesState.length;
-      dropZone.querySelector('div').textContent =
-        remain > 0
-        ? `이미지를 여기에 끌어다 놓기 (또는 클릭) — 최대 ${remain}장 더 추가 가능`
-        : `최대 ${MAX_FILES}장까지 업로드 가능합니다.`;
+      dropZone.querySelector('div').textContent = remain > 0 ? `이미지를 여기에 끌어다 놓기 (또는 클릭) — 최대 ${remain}장 더 추가 가능` : `최대 ${MAX_FILES}장까지 업로드 가능합니다.`;
     }
-
-    // 처음 문구 세팅
     render();
 
-    // 제출 전 검증 (선택)
     document.getElementById('contract-form').addEventListener('submit', (e) => {
-      if (filesState.length > MAX_FILES) {
-        e.preventDefault();
-        alert(`이미지는 최대 ${MAX_FILES}장까지 업로드 가능합니다.`);
-      }
+      if (filesState.length > MAX_FILES) { e.preventDefault(); alert(`이미지는 최대 ${MAX_FILES}장까지 업로드 가능합니다.`); return; }
+      const rows = document.querySelectorAll('#items-body tr[data-row]');
+      let ok = false;
+      rows.forEach(tr => {
+        const name = tr.querySelector('[name="item_name[]"]').value.trim();
+        const qty  = parseInt(tr.querySelector('[name="qty[]"]').value || '0', 10);
+        if (name && qty > 0) ok = true;
+      });
+      if (!ok) { e.preventDefault(); alert('거래내역에 최소 1개 이상의 품목을 입력해주세요.'); }
     });
   })();
   </script>
+
+  <!-- 거래내역: 행 추가/삭제 + 자동합계 + 화살표 이동 -->
+  <script>
+  (function(){
+    const tbody = document.getElementById("items-body");
+    const btnAdd = document.getElementById("btn-add-row");
+    const sumSellEl = document.getElementById("sum-sell");
+    const sumBuyEl  = document.getElementById("sum-buy");
+
+    const num = v => { if (typeof v === "number") return v; if (!v) return 0; return parseFloat(String(v).replace(/[, ]/g, "")) || 0; };
+    const fmt = n => new Intl.NumberFormat("ko-KR").format(Math.round(n));
+
+    function createRow(){
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-row", "");
+      tr.innerHTML = `
+        <td><input class="inp" name="item_name[]" placeholder="검색어 입력 후 Enter" required></td>
+        <td><input class="inp right" name="qty[]" inputmode="numeric"></td>
+
+        <td class="center"><input class="inp" name="spec[]"></td>
+
+        <td class="hide-sm"><input class="inp right" name="sell_unit[]" inputmode="decimal" placeholder="0"></td>
+        <td><input class="inp right" name="sell_total[]" inputmode="decimal" placeholder="0"></td>
+        <td class="hide-sm"><input class="inp right" name="buy_unit[]" inputmode="decimal" placeholder="0"></td>
+        <td><input class="inp right" name="buy_total[]" inputmode="decimal" placeholder="0"></td>
+        <td><input class="inp" name="vendor[]" placeholder="매입처"></td>
+
+        <td>
+          <select class="sel" name="item_vat_mode[]">
+            <option value="separate">VAT별도</option>
+            <option value="included">VAT포함</option>
+            <option value="exempt">면세</option>
+          </select>
+        </td>
+
+        <td class="center">
+          <div class="row-actions" style="display:flex; gap:8px; justify-content:flex-start; align-items:center;">
+            <div class="arrows-col">
+              <button type="button" class="mini" data-up>▲</button>
+              <button type="button" class="mini" data-down>▼</button>
+            </div>
+            <button type="button" class="btn danger" data-remove>품목삭제</button>
+          </div>
+        </td>`;
+      return tr;
+    }
+
+    function recalcTotals(){
+      let sellSum = 0, buySum = 0;
+      tbody.querySelectorAll('tr[data-row]').forEach(tr => {
+        sellSum += num(tr.querySelector('[name="sell_total[]"]').value);
+        buySum  += num(tr.querySelector('[name="buy_total[]"]').value);
+      });
+      sumSellEl.textContent = fmt(sellSum);
+      sumBuyEl.textContent  = fmt(buySum);
+    }
+
+    function recalcRow(tr){
+      const qty = num(tr.querySelector('[name="qty[]"]').value);
+      const sellUnit = num(tr.querySelector('[name="sell_unit[]"]').value);
+      const buyUnit  = num(tr.querySelector('[name="buy_unit[]"]').value);
+      const sellTotalEl = tr.querySelector('[name="sell_total[]"]');
+      const buyTotalEl  = tr.querySelector('[name="buy_total[]"]');
+      sellTotalEl.value = sellUnit ? fmt(qty * sellUnit) : fmt(num(sellTotalEl.value));
+      buyTotalEl.value  = buyUnit  ? fmt(qty * buyUnit)  : fmt(num(buyTotalEl.value));
+      recalcTotals();
+    }
+
+    function removeRow(btn){
+      const tr = btn.closest('tr[data-row]');
+      if (!tr) return;
+      tr.remove();           // 무조건 제거
+      recalcTotals();
+    }
+
+    /* ---- 행 이동(화살표 버튼) ---- */
+    function moveRow(tr, dir){
+      const sib = dir < 0 ? tr.previousElementSibling : tr.nextElementSibling;
+      if (!sib || !sib.matches('tr[data-row]')) return;
+      if (dir < 0) tbody.insertBefore(tr, sib);
+      else tbody.insertBefore(sib, tr);
+      recalcTotals();
+      tr.querySelector('[name="item_name[]"]')?.focus();
+    }
+
+    function bindRowEvents(tr){
+      // 숫자 입력 변화 → 해당 행 재계산
+      tr.addEventListener('input', (e) => {
+        if (e.target.matches('[name="qty[]"], [name="sell_unit[]"], [name="buy_unit[]"], [name="sell_total[]"], [name="buy_total[]"]')) recalcRow(tr);
+      });
+      tr.addEventListener('blur', (e)=>{
+        const t=e.target;
+        if (t.matches('[name="qty[]"], [name="sell_unit[]"], [name="sell_total[]"], [name="buy_unit[]"], [name="buy_total[]"]')) {
+          t.value = t.value ? new Intl.NumberFormat("ko-KR").format(num(t.value)) : "";
+        }
+      }, true);
+
+      // Enter 이동/신규행
+      tr.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const inputs = Array.from(tbody.querySelectorAll('tr[data-row] input, tr[data-row] select')).filter(el => !el.closest('.hide-sm'));
+        const idx = inputs.indexOf(e.target);
+        if (idx >= 0 && idx < inputs.length - 1) inputs[idx + 1].focus();
+        else { const n = addRow(); n.querySelector('[name="item_name[]"]').focus(); }
+      });
+
+      // 버튼: 위/아래/삭제
+      tr.querySelector('[data-up]')?.addEventListener('click', (e)=>{ e.stopPropagation(); moveRow(tr, -1); });
+      tr.querySelector('[data-down]')?.addEventListener('click', (e)=>{ e.stopPropagation(); moveRow(tr, +1); });
+      tr.querySelector('[data-remove]')?.addEventListener('click', (e)=>{ e.stopPropagation(); removeRow(e.currentTarget); });
+    }
+
+    // 초기 행 바인딩
+    tbody.querySelectorAll('tr[data-row]').forEach(tr => bindRowEvents(tr));
+
+    function addRow(focusFirst=true){
+      const tr = createRow();
+      tbody.appendChild(tr);
+      bindRowEvents(tr);
+      if (focusFirst) tr.querySelector('[name="item_name[]"]').focus();
+      recalcTotals();
+      return tr;
+    }
+
+    btnAdd.addEventListener('click', () => addRow());
+    recalcTotals();
+  })();
+  </script>
+  <script>
+  (function(){
+    // yyyy-mm-dd 포맷
+    const pad = n => (n<10?'0':'') + n;
+    const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+    // 달력 DOM 만들기
+    function buildPicker(){
+      const wrap = document.createElement('div');
+      wrap.className = 'dj-datepicker dj-hidden';
+      wrap.innerHTML = `
+        <div class="dj-dp-head">
+          <button type="button" class="dj-dp-btn" data-prev aria-label="이전달">◀</button>
+          <div class="dj-dp-title"></div>
+          <button type="button" class="dj-dp-btn" data-next aria-label="다음달">▶</button>
+        </div>
+        <div class="dj-dp-grid">
+          <div class="dj-dp-dow">
+            <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+          </div>
+          <div class="dj-dp-day"></div>
+        </div>`;
+      document.body.appendChild(wrap);
+      return wrap;
+    }
+    const picker = buildPicker();
+    const titleEl = picker.querySelector('.dj-dp-title');
+    const daysEl  = picker.querySelector('.dj-dp-day');
+
+    let activeInput = null;
+    let viewYear = 0, viewMonth = 0; // month: 0-11
+
+    function render(year, month){
+      viewYear = year; viewMonth = month;
+      titleEl.textContent = `${year}년 ${String(month+1).padStart(2,'0')}월`;
+      daysEl.innerHTML = '';
+
+      const first = new Date(year, month, 1);
+      const startDay = first.getDay();                 // 0=Sun
+      const lastDate = new Date(year, month+1, 0).getDate();
+
+      // 그리드 채우기: 앞쪽 공백 → 1..lastDate → 뒷쪽 공백
+      const frag = document.createDocumentFragment();
+
+      // 앞 공백(이전달 숫자 표시 X)
+      for (let i=0; i<startDay; i++){
+        const div = document.createElement('div');
+        div.className = 'blank';                       // 공백 셀
+        frag.appendChild(div);
+      }
+
+      // 이번달 날짜만 생성 (1 ~ lastDate)
+      const todayStr = fmt(new Date());
+      for (let d=1; d<=lastDate; d++){
+        const btn = document.createElement('button');
+        btn.type='button';
+        btn.textContent = d;
+        btn.className = 'day-btn';
+        const thisStr = fmt(new Date(year, month, d));
+        if(thisStr === todayStr) btn.classList.add('is-today');
+
+        // 클릭/더블클릭 동작
+        btn.addEventListener('click', ()=> {
+          if (!activeInput) return;
+          activeInput.value = thisStr;
+        });
+        btn.addEventListener('dblclick', ()=> {
+          if (!activeInput) return;
+          activeInput.value = thisStr;
+          closePicker();
+        });
+        frag.appendChild(btn);
+      }
+
+      // 마지막 주 채우기(레이아웃 유지용 공백)
+      const filled = startDay + lastDate;
+      const tail = (7 - (filled % 7)) % 7;
+      for (let i=0; i<tail; i++){
+        const div = document.createElement('div');
+        div.className = 'blank';
+        frag.appendChild(div);
+      }
+
+      daysEl.innerHTML = '';           // 안전 초기화
+      daysEl.appendChild(frag);
+    }
+
+    function openPicker(input){
+      activeInput = input;
+      const val = input.value && /^\d{4}-\d{2}-\d{2}$/.test(input.value) ? new Date(input.value) : new Date();
+      render(val.getFullYear(), val.getMonth());
+
+      // 위치 계산
+      const rect = input.getBoundingClientRect();
+      picker.style.left = (window.scrollX + rect.left) + 'px';
+      picker.style.top  = (window.scrollY + rect.bottom + 6) + 'px';
+      picker.classList.remove('dj-hidden');
+    }
+    function closePicker(){
+      picker.classList.add('dj-hidden');
+      activeInput = null;
+    }
+
+    // 이전/다음 달
+    picker.querySelector('[data-prev]').addEventListener('click', ()=>{
+      const m = viewMonth===0?11:viewMonth-1;
+      const y = viewMonth===0?viewYear-1:viewYear;
+      render(y,m);
+    });
+    picker.querySelector('[data-next]').addEventListener('click', ()=>{
+      const m = viewMonth===11?0:viewMonth+1;
+      const y = viewMonth===11?viewYear+1:viewYear;
+      render(y,m);
+    });
+
+    // 외부 클릭/ESC 닫기
+    document.addEventListener('mousedown', (e)=>{
+      if(!picker.classList.contains('dj-hidden') &&
+        !picker.contains(e.target) &&
+        e.target !== activeInput){
+        closePicker();
+      }
+    });
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape') closePicker();
+    });
+
+    // 페이지의 모든 type="date" 대상을 커스텀으로 교체
+    const dateInputs = Array.from(document.querySelectorAll('input[type="date"]'));
+    dateInputs.forEach(inp=>{
+      // 브라우저 기본 팝업 방지 + 포맷 유지
+      inp.setAttribute('data-original-type','date');
+      inp.type = 'text';
+      inp.placeholder = 'YYYY-MM-DD';
+      inp.inputMode = 'numeric';
+
+      // 포커스/아이콘 클릭 시 열기
+      inp.addEventListener('focus', ()=> openPicker(inp));
+      inp.addEventListener('click', ()=> openPicker(inp));
+    });
+  })();
+  </script>
+
 </body>
 </html>
