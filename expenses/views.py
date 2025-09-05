@@ -1,4 +1,6 @@
 # expenses/views.py
+# expenses/views.py (top)
+from decimal import Decimal, InvalidOperation
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
@@ -7,10 +9,9 @@ from django.views.decorators.http import require_POST
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.contrib import messages
+
 from .forms import ExpenseReportForm, ExpenseItemFormSet, ContractForm
-from .models import ExpenseReport, Contract, ContractImage
-from decimal import Decimal, InvalidOperation
-from .models import ExpenseReport, Contract, ContractImage, ContractItem 
+from .models import ExpenseReport, Contract, ContractImage, ContractItem
 
 def _is_approver(user) -> bool:
     """approver 그룹 또는 superuser라면 True"""
@@ -116,18 +117,16 @@ def add_contract(request):
         form = ContractForm(request.POST)
         if form.is_valid():
             with transaction.atomic():
-                # ① Save the contract first (needs PK for FK below)
+              
                 contract = form.save(commit=False)
                 contract.writer = request.user
                 contract.status = status
                 contract.title = contract.customer_company or "무제 계약"
                 contract.save()
 
-                # ② (optional) attach new images
                 for f in request.FILES.getlist("images"):
                     ContractImage.objects.create(contract=contract, original=f)
-
-                # ③ ✅ ADD ITEMS HERE (this is “2-A”)
+                
                 names = request.POST.getlist("item_name[]")
                 qtys  = request.POST.getlist("qty[]")
                 specs = request.POST.getlist("spec[]")
@@ -138,24 +137,40 @@ def add_contract(request):
                 vend  = request.POST.getlist("vendor[]")
                 vat   = request.POST.getlist("item_vat_mode[]")
 
+                def get(lst, i, default=""):
+                    return lst[i] if i < len(lst) else default
+                
                 for i in range(len(names)):
-                    name = (names[i] or "").strip()
-                    if not name:
-                        continue
+                    name = (get(names, i, "") or "").strip()
+                    qty  = qty=int(get(qtys, i, 0) or 0)
+                    if not name or qty <= 0:
+                        continue  # 서버에서도 최소 검증
+
+                    sell_unit  = _d(get(su, i, 0))
+                    buy_unit   = _d(get(bu, i, 0))
+                    sell_total = _d(get(st, i, 0))
+                    buy_total  = _d(get(bt, i, 0))
+
+                    # 서버에서 금액 재계산(신뢰성 향상): 단가/수량이 있으면 금액 덮어쓰기
+                    if qty and sell_unit:
+                        sell_total = (sell_unit * qty).quantize(Decimal("1."))  # 반올림 규칙은 필요시 변경
+                    if qty and buy_unit:
+                        buy_total  = (buy_unit * qty).quantize(Decimal("1."))
+
                     ContractItem.objects.create(
                         contract=contract,
                         name=name,
-                        qty=int(qtys[i] or 0),
-                        spec=(specs[i] or ""),
-                        sell_unit=_d(su[i]),
-                        sell_total=_d(st[i]),
-                        buy_unit=_d(bu[i]),
-                        buy_total=_d(bt[i]),
-                        vendor=(vend[i] or ""),
-                        vat_mode=(vat[i] or "separate"),
+                        qty=qty,
+                        spec=get(specs, i, "") or "",
+                        sell_unit=sell_unit,
+                        sell_total=sell_total,
+                        buy_unit=buy_unit,
+                        buy_total=buy_total,
+                        vendor=get(vend, i, "") or "",
+                        vat_mode=(get(vat, i, "separate") or "separate"),
                     )
 
-            return redirect(reverse("contract_detail", args=[contract.id]))
+            return redirect("contract_detail", pk=contract.pk)
         else:
             # 폼 에러를 템플릿에서 표시할 수 있게 넘김
             ctx = {
@@ -168,18 +183,6 @@ def add_contract(request):
     # GET
     ctx = {"sales_people": sales_people, "customer_managers": []}
     return render(request, "add_contract.html", ctx)
-
-@login_required
-def contract_list(request):
-    """계약 목록 (최신순)"""
-    contracts = (
-        Contract.objects
-        .select_related("writer", "sales_owner")
-        .prefetch_related("images")
-        .order_by("-created_at")
-    )
-    return render(request, "contract_list.html", {"contracts": contracts})
-
 
 @login_required
 def contract_detail(request, pk):
@@ -230,8 +233,7 @@ def contract_edit(request, pk):
                 for f in request.FILES.getlist("images"):
                     ContractImage.objects.create(contract=contract, original=f)
 
-                # 3) ✅ 거래내역(품목) 전체 교체 저장 — 2-B
-                # 기존 항목 제거
+            
                 contract.items.all().delete()   # related_name='items'인 경우
 
                 # 새 항목 읽기
@@ -251,12 +253,22 @@ def contract_edit(request, pk):
 
                 for i in range(len(names)):
                     name = (get(names, i, "") or "").strip()
-                    if not name:
+                    qty  = int(get(qtys, i, 0) or 0)
+                    if not name or qty <= 0:
                         continue
+
+                    sell_unit  = _d(get(su, i, 0))
+                    buy_unit   = _d(get(bu, i, 0))
+                    sell_total = _d(get(st, i, 0))
+                    buy_total  = _d(get(bt, i, 0))
+
+                    if qty and sell_unit: sell_total = (sell_unit * qty).quantize(Decimal("1."))
+                    if qty and buy_unit:  buy_total  = (buy_unit  * qty).quantize(Decimal("1."))
+                    
                     ContractItem.objects.create(
                         contract=contract,
                         name=name,
-                        qty=int(get(qtys, i, 0) or 0),
+                        qty=_i(get(qtys, i, 0)),
                         spec=get(specs, i, "") or "",
                         sell_unit=_d(get(su, i, 0)),
                         sell_total=_d(get(st, i, 0)),
@@ -328,3 +340,10 @@ def _d(v):
         return Decimal(s) if s else Decimal("0")
     except InvalidOperation:
         return Decimal("0")
+    
+def _i(v):
+    """int parser that tolerates commas/blank"""
+    try:
+        return int(_d(v))
+    except Exception:
+        return 0

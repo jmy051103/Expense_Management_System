@@ -141,7 +141,12 @@ body {
 .dropdown a:hover { background: #f3f4f6; }
 
 /* 컨테이너 */
-.page-wrap { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+.page-wrap {
+  max-width: 1200px; 
+  margin: 0 auto; 
+  padding: 40px 20px; 
+  width: 100%;
+}
 .page-title { font-size: 32px; font-weight: 700; text-align: center; margin: 16px 0 8px; }
 .page-sub { color: #666; text-align: center; margin-bottom: 28px; }
 
@@ -175,6 +180,8 @@ body {
   border-radius: 8px;
   background: #fff;
 }
+.table-list tbody tr[data-href] { cursor: pointer; }
+.table-list tbody tr[data-href]:hover { background: #fafafa; }
 
 /* 버튼 & Pill (add_contract와 동일) */
 .btn {

@@ -116,20 +116,14 @@
         <table class="form-table table-list">
           <thead>
             <tr>
-              <!-- <th style="width:70px">번호</th>
-              <th>회사명</th>
-              <th class="hide-sm" style="width:180px;">영업담당자</th>
-              <th style="width:120px;">상태</th>
-              <th class="hide-sm" style="width:160px;">작성일</th>
-              <th style="width:180px;">이미지</th>  -->
-              <th style="width:140px">계약번호<br><small class="muted">계약상태</small></th>
-              <th style="width:200px">매출처<br><small class="muted">담당자</small></th>
+              <th style="width:80px">계약번호<br><small class="muted">계약상태</small></th>
+              <th style="width:120px">매출처<br><small class="muted">담당자</small></th>
               <th>품목</th>
-              <th style="width:120px">이익금액</th>
-              <th style="width:100px">이익율</th>
+              <th style="width:80px">이익금액</th>
+              <th style="width:80px">이익율</th>
               <th style="width:80px">마감월</th>
-              <th style="width:120px">작성자<br><small class="muted">작성일</small></th>
-              <th style="width:120px">관리</th>
+              <th style="width:80px">작성자<br><small class="muted">작성일</small></th>
+              <th style="width:100px">관리</th>
             </tr>
           </thead>
           <!-- <tbody>
@@ -249,17 +243,10 @@
                               <td class="num buy">
                                 <span data-krw="{{ it.buy_total|default:0 }}">{{ it.buy_total|default:0 }}</span>
                               </td>
-
                               <td class="txt vendor">{{ it.vendor }}</td>
-                              <td class="txt">
-                                {% if it.vat_mode == 'separate' %}VAT별도
-                                {% elif it.vat_mode == 'included' %}VAT포함
-                                {% elif it.vat_mode == 'exempt' %}면세
-                                {% else %}-{% endif %}
-                              </td>
                             </tr>
                           {% empty %}
-                            <tr><td class="empty-row" colspan="9">품목 없음</td></tr>
+                            <tr><td class="empty-row" colspan="7">품목 없음</td></tr>
                           {% endfor %}
                         </tbody>
                       </table>
@@ -313,7 +300,7 @@
                 {% endwith %}
               {% endwith %}
             {% empty %}
-              <tr><td colspan="9" class="empty">등록된 계약이 없습니다.</td></tr>
+              <tr><td colspan="7" class="empty">등록된 계약이 없습니다.</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -360,12 +347,15 @@
 
   <script>
     // 행 클릭 → 상세로 이동 (이미지 클릭은 라이트박스 처리)
-    document.querySelectorAll('.row-click').forEach(tr => {
-      tr.addEventListener('click', (e) => {
-        if (e.target.closest('.preview')) return;
-        const href = tr.getAttribute('data-href');
-        if (href) window.location.href = href;
-      });
+    document.querySelector('.table-list')?.addEventListener('click', (e) => {
+    // ignore clicks on interactive elements or inside the mini table
+      if (e.target.closest('a,button,form,input,select,textarea,.mini-items')) return;
+
+      const tr = e.target.closest('tr[data-href]');
+      if (!tr) return;
+
+      const href = tr.getAttribute('data-href');
+      if (href) window.location.href = href;
     });
 
     const lb = document.getElementById('lightbox');

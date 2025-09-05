@@ -204,40 +204,98 @@
                 </tr>
               </thead>
               <tbody id="items-body">
-                <tr data-row>
-                  <td><input class="inp" name="item_name[]" placeholder="검색어 입력 후 Enter" required></td>
-                  <td><input class="inp right" name="qty[]" inputmode="numeric"></td>
+                {% if is_edit %}
+                  {% for it in contract.items.all %}
+                    <tr data-row>
+                      <td><input class="inp" name="item_name[]" value="{{ it.name }}" required></td>
+                      <td><input class="inp right" name="qty[]" value="{{ it.qty|default_if_none:'' }}" inputmode="numeric"></td>
 
-                  <!-- 규격 -->
-                  <td class="center"><input class="inp right" name="spec[]"></td>
+                      <td class="center"><input class="inp right" name="spec[]" value="{{ it.spec }}"></td>
 
-                  <td class="hide-sm"><input class="inp right" name="sell_unit[]" inputmode="decimal" placeholder="0"></td>
-                  <td><input class="inp right" name="sell_total[]" inputmode="decimal" placeholder="0"></td>
-                  <td class="hide-sm"><input class="inp right" name="buy_unit[]" inputmode="decimal" placeholder="0"></td>
-                  <td><input class="inp right" name="buy_total[]" inputmode="decimal" placeholder="0"></td>
-                  <td><input class="inp" name="vendor[]" placeholder="매입처"></td>
+                      <td class="hide-sm"><input class="inp right" name="sell_unit[]" value="{{ it.sell_unit|default_if_none:'' }}" inputmode="decimal"></td>
+                      <td><input class="inp right" name="sell_total[]" value="{{ it.sell_total|default_if_none:'' }}" inputmode="decimal"></td>
+                      <td class="hide-sm"><input class="inp right" name="buy_unit[]" value="{{ it.buy_unit|default_if_none:'' }}" inputmode="decimal"></td>
+                      <td><input class="inp right" name="buy_total[]" value="{{ it.buy_total|default_if_none:'' }}" inputmode="decimal"></td>
+                      <td><input class="inp" name="vendor[]" value="{{ it.vendor }}"></td>
 
-                  <!-- 품목관리 = VAT 모드 -->
-                  <td>
-                    <select class="sel" name="item_vat_mode[]">
-                      <option value="separate">VAT별도</option>
-                      <option value="included">VAT포함</option>
-                      <option value="exempt">면세</option>
-                    </select>
-                  </td>
+                      <td>
+                        <select class="sel" name="item_vat_mode[]">
+                          <option value="separate" {% if it.vat_mode == 'separate' %}selected{% endif %}>VAT별도</option>
+                          <option value="included" {% if it.vat_mode == 'included' %}selected{% endif %}>VAT포함</option>
+                          <option value="exempt"   {% if it.vat_mode == 'exempt' %}selected{% endif %}>면세</option>
+                        </select>
+                      </td>
 
-                  <!-- 과세여부 = 화살표(세로) + 삭제 -->
-                  <td class="center">
-                    <div class="row-actions" style="display:flex; gap:8px; justify-content:flex-start; align-items:center;">
-                      <div class="arrows-col">
-                        <button type="button" class="mini" data-up>▲</button>
-                        <button type="button" class="mini" data-down>▼</button>
+                      <td class="center">
+                        <div class="row-actions" style="display:flex; gap:8px; justify-content:flex-start; align-items:center;">
+                          <div class="arrows-col">
+                            <button type="button" class="mini" data-up>▲</button>
+                            <button type="button" class="mini" data-down>▼</button>
+                          </div>
+                          <button type="button" class="btn danger" data-remove>품목삭제</button>
+                        </div>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <!-- 저장된 품목이 없으면 기본 한 줄 -->
+                    <tr data-row>
+                      <td><input class="inp" name="item_name[]" placeholder="검색어 입력 후 Enter" required></td>
+                      <td><input class="inp right" name="qty[]" inputmode="numeric"></td>
+                      <td class="center"><input class="inp right" name="spec[]"></td>
+                      <td class="hide-sm"><input class="inp right" name="sell_unit[]" inputmode="decimal" placeholder="0"></td>
+                      <td><input class="inp right" name="sell_total[]" inputmode="decimal" placeholder="0"></td>
+                      <td class="hide-sm"><input class="inp right" name="buy_unit[]" inputmode="decimal" placeholder="0"></td>
+                      <td><input class="inp right" name="buy_total[]" inputmode="decimal" placeholder="0"></td>
+                      <td><input class="inp" name="vendor[]" placeholder="매입처"></td>
+                      <td>
+                        <select class="sel" name="item_vat_mode[]">
+                          <option value="separate">VAT별도</option>
+                          <option value="included">VAT포함</option>
+                          <option value="exempt">면세</option>
+                        </select>
+                      </td>
+                      <td class="center">
+                        <div class="row-actions" style="display:flex; gap:8px; justify-content:flex-start; align-items:center;">
+                          <div class="arrows-col">
+                            <button type="button" class="mini" data-up>▲</button>
+                            <button type="button" class="mini" data-down>▼</button>
+                          </div>
+                          <button type="button" class="btn danger" data-remove>품목삭제</button>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <!-- 신규 등록일 때 기본 한 줄 -->
+                  <tr data-row>
+                    <td><input class="inp" name="item_name[]" placeholder="검색어 입력 후 Enter" required></td>
+                    <td><input class="inp right" name="qty[]" inputmode="numeric"></td>
+                    <td class="center"><input class="inp right" name="spec[]"></td>
+                    <td class="hide-sm"><input class="inp right" name="sell_unit[]" inputmode="decimal" placeholder="0"></td>
+                    <td><input class="inp right" name="sell_total[]" inputmode="decimal" placeholder="0"></td>
+                    <td class="hide-sm"><input class="inp right" name="buy_unit[]" inputmode="decimal" placeholder="0"></td>
+                    <td><input class="inp right" name="buy_total[]" inputmode="decimal" placeholder="0"></td>
+                    <td><input class="inp" name="vendor[]" placeholder="매입처"></td>
+                    <td>
+                      <select class="sel" name="item_vat_mode[]">
+                        <option value="separate">VAT별도</option>
+                        <option value="included">VAT포함</option>
+                        <option value="exempt">면세</option>
+                      </select>
+                    </td>
+                    <td class="center">
+                      <div class="row-actions" style="display:flex; gap:8px; justify-content:flex-start; align-items:center;">
+                        <div class="arrows-col">
+                          <button type="button" class="mini" data-up>▲</button>
+                          <button type="button" class="mini" data-down>▼</button>
+                        </div>
+                        <button type="button" class="btn danger" data-remove>품목삭제</button>
                       </div>
-                      <button type="button" class="btn danger" data-remove>품목삭제</button>
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+                  </tr>
+                {% endif %}
               </tbody>
+
             <tfoot>
               <tr class="tfoot">
                 <!-- 품목/수량/규격 3칸을 묶어서 "합계" -->
