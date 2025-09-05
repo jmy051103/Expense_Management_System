@@ -111,3 +111,27 @@ class ContractImage(models.Model):
 
     def __str__(self):
         return self.filename or self.original.name
+    
+class ContractItem(models.Model):
+    VAT_CHOICES = [
+        ("separate", "VAT별도"),
+        ("included", "VAT포함"),
+        ("exempt",   "면세"),
+    ]
+
+    contract   = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name="items")
+    name       = models.CharField(max_length=200)
+    qty        = models.PositiveIntegerField(default=0)
+    spec       = models.CharField(max_length=100, blank=True)
+    sell_unit  = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    sell_total = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    buy_unit   = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    buy_total  = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    vendor     = models.CharField(max_length=200, blank=True)
+    vat_mode   = models.CharField(max_length=10, choices=VAT_CHOICES, default="separate")
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.name} x{self.qty}"

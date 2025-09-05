@@ -354,3 +354,35 @@ body {
 .toolbar-actions .btn{
   height:34px;
 }
+
+/* ===== 품목 셀 안의 '거래내역' 미니 테이블 ===== */
+.items-cell{ padding:0 !important; }
+.mini-items{
+  width:100%; border-collapse:collapse; table-layout:fixed;
+  font-size:12px; background:#fff;
+}
+.mini-items thead th{
+  position:sticky; top:0; background:#f3f4f6; z-index:1;
+  border-bottom:1px solid var(--line); padding:6px 8px; text-align:center;
+}
+.mini-items td{ border-top:1px solid var(--line); padding:6px 8px; }
+.mini-items tbody tr:hover{ background:#fafafa; }
+
+.mini-items .txt{ text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
+.mini-items .num{ text-align:right; }
+.mini-items .strong{ font-weight:700; }
+.mini-items .sell{ color:#b91c1c; }  /* 매출금액: red */
+.mini-items .buy { color:#2563eb; }  /* 매입금액: blue */
+.mini-items .vendor{ color:#4b5563; }
+
+.mini-items .w-item{ width:28%; }
+.mini-items .w-qty { width:7%; }
+.mini-items .w-spec{ width:10%; }
+.mini-items .w-num { width:12%; }
+.mini-items .w-vendor{ width:15%; }
+.mini-items .w-vat{ width:8%; text-align:center; }
+
+@media (max-width: 980px){
+  .mini-items .hide-sm{ display:none; }
+  .mini-items .w-item{ width:35%; }
+}

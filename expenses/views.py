@@ -9,6 +9,8 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from .forms import ExpenseReportForm, ExpenseItemFormSet, ContractForm
 from .models import ExpenseReport, Contract, ContractImage
+from decimal import Decimal, InvalidOperation
+from .models import ExpenseReport, Contract, ContractImage, ContractItem 
 
 def _is_approver(user) -> bool:
     """approver 그룹 또는 superuser라면 True"""
@@ -114,14 +116,44 @@ def add_contract(request):
         form = ContractForm(request.POST)
         if form.is_valid():
             with transaction.atomic():
+                # ① Save the contract first (needs PK for FK below)
                 contract = form.save(commit=False)
                 contract.writer = request.user
                 contract.status = status
                 contract.title = contract.customer_company or "무제 계약"
                 contract.save()
 
+                # ② (optional) attach new images
                 for f in request.FILES.getlist("images"):
                     ContractImage.objects.create(contract=contract, original=f)
+
+                # ③ ✅ ADD ITEMS HERE (this is “2-A”)
+                names = request.POST.getlist("item_name[]")
+                qtys  = request.POST.getlist("qty[]")
+                specs = request.POST.getlist("spec[]")
+                su    = request.POST.getlist("sell_unit[]")
+                st    = request.POST.getlist("sell_total[]")
+                bu    = request.POST.getlist("buy_unit[]")
+                bt    = request.POST.getlist("buy_total[]")
+                vend  = request.POST.getlist("vendor[]")
+                vat   = request.POST.getlist("item_vat_mode[]")
+
+                for i in range(len(names)):
+                    name = (names[i] or "").strip()
+                    if not name:
+                        continue
+                    ContractItem.objects.create(
+                        contract=contract,
+                        name=name,
+                        qty=int(qtys[i] or 0),
+                        spec=(specs[i] or ""),
+                        sell_unit=_d(su[i]),
+                        sell_total=_d(st[i]),
+                        buy_unit=_d(bu[i]),
+                        buy_total=_d(bt[i]),
+                        vendor=(vend[i] or ""),
+                        vat_mode=(vat[i] or "separate"),
+                    )
 
             return redirect(reverse("contract_detail", args=[contract.id]))
         else:
@@ -129,8 +161,7 @@ def add_contract(request):
             ctx = {
                 "sales_people": sales_people,
                 "customer_managers": [],
-                "form_errors": form.errors,   # {{ form_errors }} 로 출력 가능
-                "is_edit": True,
+                "form_errors": form.errors,
             }
             return render(request, "add_contract.html", ctx)
 
@@ -164,13 +195,12 @@ def contract_detail(request, pk):
 
 @login_required
 def contract_edit(request, pk):
-    """계약 수정: add_contract.html 폼 재사용, 이미지 업로드 시 기존에 추가로 붙음"""
     contract = get_object_or_404(
         Contract.objects.select_related("writer", "sales_owner").prefetch_related("images"),
         pk=pk
     )
 
-    # (선택) 권한 정책: 작성자만 수정 가능. 필요 없으면 이 블록 제거.
+    # (선택) 작성자만 수정 가능
     if not (request.user.is_superuser or request.user == contract.writer):
         messages.error(request, "수정 권한이 없습니다. (작성자만 수정 가능)")
         return redirect("contract_detail", pk=contract.pk)
@@ -186,35 +216,69 @@ def contract_edit(request, pk):
         form = ContractForm(request.POST, instance=contract)
         if form.is_valid():
             with transaction.atomic():
+                # 1) 계약 저장
                 contract = form.save(commit=False)
-                contract.writer = contract.writer  # 유지
-                # 버튼 분기: 품의요청만 submitted로 바꾸고, 아니면 draft로 저장
                 contract.status = "submitted" if is_submit else "draft"
-                contract.title = contract.customer_company or (contract.title or "무제 계약")
+                contract.title  = contract.customer_company or (contract.title or "무제 계약")
                 contract.save()
 
-                # 새로 업로드된 이미지는 기존에 추가로 붙음
-                for f in request.FILES.getlist("images"):
-                    ContractImage.objects.create(contract=contract, original=f)
-
+                # 2) 이미지 삭제/추가
                 del_ids = request.POST.getlist("del_image_ids[]")
                 if del_ids:
                     ContractImage.objects.filter(contract=contract, id__in=del_ids).delete()
 
+                for f in request.FILES.getlist("images"):
+                    ContractImage.objects.create(contract=contract, original=f)
+
+                # 3) ✅ 거래내역(품목) 전체 교체 저장 — 2-B
+                # 기존 항목 제거
+                contract.items.all().delete()   # related_name='items'인 경우
+
+                # 새 항목 읽기
+                names = request.POST.getlist("item_name[]") or []
+                qtys  = request.POST.getlist("qty[]") or []
+                specs = request.POST.getlist("spec[]") or []
+                su    = request.POST.getlist("sell_unit[]") or []
+                st    = request.POST.getlist("sell_total[]") or []
+                bu    = request.POST.getlist("buy_unit[]") or []
+                bt    = request.POST.getlist("buy_total[]") or []
+                vend  = request.POST.getlist("vendor[]") or []
+                vat   = request.POST.getlist("item_vat_mode[]") or []
+
+                # 안전 인덱싱 helper (리스트 길이가 달라도 IndexError 방지)
+                def get(lst, i, default=""):
+                    return lst[i] if i < len(lst) else default
+
+                for i in range(len(names)):
+                    name = (get(names, i, "") or "").strip()
+                    if not name:
+                        continue
+                    ContractItem.objects.create(
+                        contract=contract,
+                        name=name,
+                        qty=int(get(qtys, i, 0) or 0),
+                        spec=get(specs, i, "") or "",
+                        sell_unit=_d(get(su, i, 0)),
+                        sell_total=_d(get(st, i, 0)),
+                        buy_unit=_d(get(bu, i, 0)),
+                        buy_total=_d(get(bt, i, 0)),
+                        vendor=get(vend, i, "") or "",
+                        vat_mode=(get(vat, i, "separate") or "separate"),
+                    )
+
             return redirect("contract_detail", pk=contract.pk)
-        else:
-            ctx = {
-                "sales_people": sales_people,
-                "customer_managers": [],
-                "form_errors": form.errors,
-                "contract": contract,     # 템플릿에서 기존 값/이미지 접근용(선택)
-                "is_edit": True,
-            }
-            return render(request, "add_contract.html", ctx)
+
+        # 폼 에러 → 다시 렌더
+        ctx = {
+            "sales_people": sales_people,
+            "customer_managers": [],
+            "form_errors": form.errors,
+            "contract": contract,
+            "is_edit": True,
+        }
+        return render(request, "add_contract.html", ctx)
 
     # GET
-    # 폼 자체는 add_contract.html에서 input name으로 받으니,
-    # 여기선 드롭다운 등 컨텍스트만 넘겨도 됨(필요시 initial을 템플릿 value로 매핑)
     ctx = {
         "sales_people": sales_people,
         "customer_managers": [],
@@ -222,7 +286,6 @@ def contract_edit(request, pk):
         "is_edit": True,
     }
     return render(request, "add_contract.html", ctx)
-
 
 @login_required
 @require_POST
@@ -239,3 +302,29 @@ def contract_delete(request, pk):
     messages.success(request, "계약이 성공적으로 삭제되었습니다.")
     return redirect("contract_list")
 
+
+@login_required
+def contract_list(request):
+    sales_people = (
+        User.objects.filter(is_active=True)
+        .select_related("profile")
+        .order_by("first_name", "username")
+    )
+    contracts = (
+        Contract.objects
+        .select_related("writer", "sales_owner")
+        .prefetch_related("images", "items")   # ✅ works now
+        .order_by("-created_at")
+    )
+    return render(request, "contract_list.html", {
+        "contracts": contracts,
+        "sales_people": sales_people,
+    })
+
+def _d(v):
+    """'1,234' -> Decimal('1234'); blanks -> Decimal('0')"""
+    s = (str(v) if v is not None else "").replace(",", "").strip()
+    try:
+        return Decimal(s) if s else Decimal("0")
+    except InvalidOperation:
+        return Decimal("0")
