@@ -137,7 +137,13 @@
                   </div>
                 </td>
 
-                <td class="hide-sm">{{ c.sales_owner.first_name|default:c.sales_owner.username|default:"-" }}</td>
+                <td class="hide-sm">
+                  {% if c.sales_owner %}
+                    {{ c.sales_owner.first_name|default:c.sales_owner.username }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
 
                 <td>
                   {% with s=c.status %}

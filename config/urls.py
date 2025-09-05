@@ -30,9 +30,10 @@ urlpatterns = [
     path("accounts/view/", view_profile, name="view_profile"),
     path("accounts/<int:user_id>/edit/", edit_account, name="edit_account"),
 
+
     # expenses 앱
     path("expenses/", include("expenses.urls")),
-]
+    ]
 
 # 개발 환경에서 media 파일 제공
 if settings.DEBUG:

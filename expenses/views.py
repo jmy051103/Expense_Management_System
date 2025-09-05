@@ -130,6 +130,7 @@ def add_contract(request):
                 "sales_people": sales_people,
                 "customer_managers": [],
                 "form_errors": form.errors,   # {{ form_errors }} 로 출력 가능
+                "is_edit": True,
             }
             return render(request, "add_contract.html", ctx)
 
@@ -195,6 +196,10 @@ def contract_edit(request, pk):
                 # 새로 업로드된 이미지는 기존에 추가로 붙음
                 for f in request.FILES.getlist("images"):
                     ContractImage.objects.create(contract=contract, original=f)
+
+                del_ids = request.POST.getlist("del_image_ids[]")
+                if del_ids:
+                    ContractImage.objects.filter(contract=contract, id__in=del_ids).delete()
 
             return redirect("contract_detail", pk=contract.pk)
         else:

@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-03-07">
+  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-05-07">
   <style>
     /* 거래내역 표 내부 전용(버튼 크기/배치) */
     #items-table .arrows-col{
@@ -84,7 +84,7 @@
           </div>
         {% endif %}
 
-        <h1 class="page-title">계약정보 등록</h1>
+        <h1 class="page-title">{% if is_edit %}계약정보 수정{% else %}계약정보 등록{% endif %}</h1>
         <p class="page-sub">하기와 같이 납품코자 하오니 결재 바랍니다.</p>
 
         <div class="form-head">
@@ -107,6 +107,23 @@
         <div class="contents">
 
           <h2 class="section-title">| 첨부 이미지</h2>
+          {% if is_edit and contract.images.all %}
+            <div class="muted" style="margin:8px 0 6px">기존 이미지</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;">
+              {% for img in contract.images.all %}
+                <label style="border:1px solid #e5e7eb;border-radius:10px;padding:8px;display:block;background:#fff;">
+                  <img src="{{ img.thumb.url|default:img.original.url }}" alt="{{ img.filename }}"
+                      style="width:100%;height:100px;object-fit:cover;border-radius:6px">
+                  <div style="font-size:12px;color:#6b7280;margin-top:6px;word-break:break-all">
+                    {{ img.filename }}
+                  </div>
+                  <div style="margin-top:6px">
+                    <input type="checkbox" name="del_image_ids[]" value="{{ img.id }}"> 삭제
+                  </div>
+                </label>
+              {% endfor %}
+            </div>
+          {% endif %}
           <section class="panel">
             <div class="muted" style="margin-bottom:8px;">JPG/PNG 최대 10장까지 업로드 가능합니다. (드래그 앤 드롭 지원)</div>
 
@@ -132,7 +149,9 @@
                 <tr>
                   <th>회사&nbsp;*</th>
                   <td>
-                    <input class="inp" name="customer_company" placeholder="회사명 입력 후 Enter로 검색이 가능합니다" required>
+                    <input class="inp" name="customer_company"
+                    value="{% if is_edit %}{{ contract.customer_company }}{% endif %}" 
+                    placeholder="회사명 입력 후 Enter로 검색이 가능합니다" required>
                     <div class="help-row">*텍스트 박스에서 Enter키를 치시면 매출처를 검색할 수 있습니다</div>
                   </td>
                   <th>담당자</th>
@@ -148,9 +167,12 @@
                 </tr>
                 <tr>
                   <th>전화번호</th>
-                  <td><input class="inp" name="customer_phone" placeholder="010-0000-0000"></td>
+                  <td><input class="inp" name="customer_phone" 
+                    value="{% if is_edit %}{{ contract.customer_phone }}{% endif %}"
+                    placeholder="010-0000-0000"></td>
                   <th>이메일</th>
-                  <td><input class="inp" type="email" name="customer_email" placeholder="name@example.com"></td>
+                  <td><input class="inp" type="email" name="customer_email" value="{% if is_edit %}{{ contract.customer_email }}{% endif %}"
+                    placeholder="name@example.com"></td>
                 </tr>
               </tbody>
             </table>
@@ -249,15 +271,15 @@
             <tbody>
               <tr>
                 <th>종목</th>
-                <td><input class="inp" name="ship_item"></td>
+                <td><input class="inp" name="ship_item" value="{% if is_edit %}{{ contract.ship_item }}{% endif %}"></td>
                 <th>배송일</th>
-                <td><input class="inp" type="date" name="ship_date"></td>
+                <td><input class="inp" type="date" name="ship_date" value="{% if is_edit and contract.ship_date %}{{ contract.ship_date|date:'Y-m-d' }}{% endif %}"></td>
               </tr>
               <tr>
                 <th>배송지주소</th>
-                <td><input class="inp" name="ship_addr"></td>
+                <td><input class="inp" name="ship_addr" value="{% if is_edit %}{{ contract.ship_addr }}{% endif %}"></td>
                 <th>배송지연락처</th>
-                <td><input class="inp" name="ship_phone"></td>
+                <td><input class="inp" name="ship_phone" value="{% if is_edit %}{{ contract.ship_phone }}{% endif %}"></td>
               </tr>
             </tbody>
           </table>
@@ -271,13 +293,13 @@
             <tbody>
               <tr>
                 <th>세금계산서발행</th>
-                <td><input class="inp" type="date" name="collect_invoice_date"></td>
+                <td><input class="inp" type="date" name="collect_invoice_date" value="{% if is_edit and contract.collect_invoice_date %}{{ contract.collect_invoice_date|date:'Y-m-d' }}{% endif %}"></td>
                 <th>수금일자</th>
-                <td><input class="inp" type="date" name="collect_date"></td>
+                <td><input class="inp" type="date" name="collect_date" value="{% if is_edit and contract.collect_date %}{{ contract.collect_date|date:'Y-m-d' }}{% endif %}"></td>
               </tr>
               <tr>
                 <th>비고</th>
-                <td colspan="3"><input class="inp" name="collect_note"></td>
+                <td colspan="3"><input class="inp" name="collect_note" value="{% if is_edit %}{{ contract.collect_note }}{% endif %}"></td>
               </tr>
             </tbody>
           </table>
@@ -291,7 +313,7 @@
             <tbody>
               <tr>
                 <th>특이사항</th>
-                <td><input class="inp" name="special_note"></td>
+                <td><input class="inp" name="special_note" value="{% if is_edit %}{{ contract.special_note }}{% endif %}"></td>
               </tr>
             </tbody>
           </table>
