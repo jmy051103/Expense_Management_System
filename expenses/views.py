@@ -127,22 +127,22 @@ def add_contract(request):
                 for f in request.FILES.getlist("images"):
                     ContractImage.objects.create(contract=contract, original=f)
                 
-                names = request.POST.getlist("item_name[]")
-                qtys  = request.POST.getlist("qty[]")
-                specs = request.POST.getlist("spec[]")
-                su    = request.POST.getlist("sell_unit[]")
-                st    = request.POST.getlist("sell_total[]")
-                bu    = request.POST.getlist("buy_unit[]")
-                bt    = request.POST.getlist("buy_total[]")
-                vend  = request.POST.getlist("vendor[]")
-                vat   = request.POST.getlist("item_vat_mode[]")
+                names = request.POST.getlist("item_name[]") or []
+                qtys  = request.POST.getlist("qty[]") or []
+                specs = request.POST.getlist("spec[]") or []
+                su    = request.POST.getlist("sell_unit[]") or []
+                st    = request.POST.getlist("sell_total[]") or []
+                bu    = request.POST.getlist("buy_unit[]") or []
+                bt    = request.POST.getlist("buy_total[]") or []
+                vend  = request.POST.getlist("vendor[]") or []
+                vat   = request.POST.getlist("item_vat_mode[]") or []
 
                 def get(lst, i, default=""):
                     return lst[i] if i < len(lst) else default
                 
                 for i in range(len(names)):
                     name = (get(names, i, "") or "").strip()
-                    qty  = qty=int(get(qtys, i, 0) or 0)
+                    qty  = _i(get(qtys, i, 0))
                     if not name or qty <= 0:
                         continue  # 서버에서도 최소 검증
 
