@@ -141,8 +141,7 @@ body {
 .dropdown a:hover { background: #f3f4f6; }
 
 /* 컨테이너 */
-.page-wrap {
-  max-width: 1200px; 
+.page-wrap { 
   margin: 0 auto; 
   padding: 40px 20px; 
   width: 100%;
@@ -163,23 +162,47 @@ body {
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 16px;
+  gap: 10px 10px;
   align-items: end;
 }
 .toolbar .field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-width: 180px;
+  /* min-width: 180px; */
 }
 .inp, .sel {
-  width: 100%;
+  width: 80%;
   height: 34px;
   padding: 6px 10px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   background: #fff;
 }
+/* 툴바 오른쪽 버튼 영역: 줄어들지 않게 */
+.toolbar-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  flex: 0 0 auto;          /* shrink 방지 */
+  min-width: max-content;  /* 내용 폭만큼 확보 */
+}
+
+/* 버튼은 가로(수평) 표시 고정 */
+.toolbar-actions .btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height:34px;
+  padding:0 12px;          /* 가로 패딩 */
+  white-space: nowrap;     /* 줄바꿈 금지 */
+  flex: 0 0 auto;          /* shrink 방지 */
+  text-decoration: none;   /* 밑줄 방지(링크 버튼 포함) */
+}
+
 .table-list tbody tr[data-href] { cursor: pointer; }
 .table-list tbody tr[data-href]:hover { background: #fafafa; }
 
@@ -361,6 +384,38 @@ body {
 .toolbar-actions .btn{
   height:34px;
 }
+
+/* 관리 칼럼: 버튼 세로 배치 */
+.table-list .actions{
+  display:flex;
+  flex-direction:column;   /* ⬅️ 세로 정렬 */
+  align-items:stretch;
+  gap:8px;
+}
+
+/* 버튼 크기/밑줄 제거(수정/삭제 공통) */
+.table-list .actions .btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:34px;
+  width:100%;      /* 칼럼 너비에 꽉 차게 */
+  min-width:0;
+  text-decoration:none;   /* 밑줄 제거 */
+}
+
+/* 폼 여백 제거(삭제 버튼) */
+.table-list .actions form{ margin:0; }
+
+/* 버튼형 링크 밑줄 제거 */
+.btn,
+.btn:link,
+.btn:visited,
+.btn:hover,
+.btn:active{
+  text-decoration:none;
+}
+
 
 /* ===== 품목 셀 안의 '거래내역' 미니 테이블 ===== */
 .items-cell{ padding:0 !important; }

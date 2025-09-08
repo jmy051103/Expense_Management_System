@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-04-00">
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-08-03">
 </head>
 <body>
 
@@ -73,16 +73,16 @@
     <!-- 툴바(검색/필터) -->
     <form class="panel toolbar compact" method="get" action="">
       <!-- 작성일 범위 -->
-      <input class="inp w-140" type="date" name="date_from" value="{{ request.GET.date_from }}" placeholder="작성일">
+      <input class="inp w-100" type="date" name="date_from" value="{{ request.GET.date_from }}" placeholder="작성일">
       <span class="dash">~</span>
-      <input class="inp w-140" type="date" name="date_to" value="{{ request.GET.date_to }}" placeholder="작성일">
+      <input class="inp w-100" type="date" name="date_to" value="{{ request.GET.date_to }}" placeholder="작성일">
 
       <!-- 매출처 / 매입처 -->
-      <input class="inp w-180" type="text" name="q_customer" value="{{ request.GET.q_customer }}" placeholder="매출처">
-      <input class="inp w-180" type="text" name="q_vendor"   value="{{ request.GET.q_vendor }}"   placeholder="매입처">
+      <input class="inp w-100" type="text" name="q_customer" value="{{ request.GET.q_customer }}" placeholder="매출처">
+      <input class="inp w-100" type="text" name="q_vendor"   value="{{ request.GET.q_vendor }}"   placeholder="매입처">
 
       <!-- 작성자(영업담당자) / 상품명 / 계약번호 / 상태 -->
-      <select class="sel w-140" name="owner">
+      <select class="sel w-50" name="owner">
         <option value="">작성자</option>
         {% for u in sales_people %}
           <option value="{{ u.id }}" {% if request.GET.owner == u.id|stringformat:'s' %}selected{% endif %}>
@@ -91,10 +91,10 @@
         {% endfor %}
       </select>
 
-      <input class="inp w-180" type="text" name="q_item" value="{{ request.GET.q_item }}" placeholder="상품명">
-      <input class="inp w-160" type="text" name="contract_no" value="{{ request.GET.contract_no }}" placeholder="계약번호">
+      <input class="inp w-100" type="text" name="q_item" value="{{ request.GET.q_item }}" placeholder="상품명">
+      <input class="inp w-100" type="text" name="contract_no" value="{{ request.GET.contract_no }}" placeholder="계약번호">
 
-      <select class="sel w-120" name="status">
+      <select class="sel w-100" name="status">
         <option value="">상태</option>
         <option value="draft"     {% if request.GET.status == 'draft' %}selected{% endif %}>임시저장</option>
         <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>품의요청</option>
@@ -104,9 +104,9 @@
 
       <!-- 버튼들 -->
       <div class="toolbar-actions">
-        <button class="btn gray" type="submit">검색하기</button>
+        <button class="btn gray" type="submit">검색</button>
 
-        <a class="btn primary" href="{% url 'add_contract' %}">등록하기</a>
+        <a class="btn primary" href="{% url 'add_contract' %}">등록</a>
       </div>
     </form>
 
@@ -126,64 +126,8 @@
               <th style="width:100px">관리</th>
             </tr>
           </thead>
-          <!-- <tbody>
-            {% for c in contracts %}
-              <tr class="row-click" data-href="{% url 'contract_detail' c.id %}">
-                <td class="num-cell">{{ c.id }}</td>
-
-                <td class="multiline">
-                  <div class="cell-stack">
-                    <strong class="cell-title">{{ c.customer_company|default:c.title }}</strong>
-                    <small class="muted">{{ c.customer_email }}</small>
-                  </div>
-                </td>
-
-                <td class="hide-sm">
-                  {% if c.sales_owner %}
-                    {{ c.sales_owner.first_name|default:c.sales_owner.username }}
-                  {% else %}
-                    -
-                  {% endif %}
-                </td>
-
-                <td>
-                  {% with s=c.status %}
-                    <span class="status-pill status-{{ s }}">{{ c.get_status_display }}</span>
-                  {% endwith %}
-                </td>
-
-                <td class="hide-sm">{{ c.created_at|date:"Y.m.d H:i" }}</td>
-
-                <td>
-                  <div class="thumbs-mini">
-                    {% for img in c.images.all|slice:":3" %}
-                      <a href="{{ img.medium.url }}" class="preview" data-large="{{ img.medium.url }}">
-                        <img src="{{ img.thumb.url }}" alt="{{ img.filename }}" loading="lazy">
-                      </a>
-                    {% empty %}
-                      <span class="muted">-</span>
-                    {% endfor %}
-                  </div>
-                </td>
-
-                <td>
-                  <div class="actions">
-                    <a class="btn" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
-                    <form method="post" action="{% url 'contract_delete' c.id %}"
-                          onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
-                      {% csrf_token %}
-                      <button type="submit" class="btn danger">삭제</button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="7" class="empty">등록된 계약이 없습니다.</td>
-              </tr>
-            {% endfor %}
-          </tbody> -->
-
+          
+          
           <tbody>
             {% for c in contracts %}
               {% with items=c.items.all %}
@@ -209,22 +153,23 @@
                       </div>
                     </td>
 
-                    <!-- 품목 1행 -->
                     <td class="items-cell">
                       <table class="mini-items">
                         <thead>
                           <tr>
                             <th class="w-item">품목</th>
                             <th class="w-qty">수량</th>
+                            <th class="w-spec">규격</th>
                             <th class="w-num hide-sm">매출단가</th>
                             <th class="w-num">매출금액</th>
                             <th class="w-num hide-sm">매입단가</th>
                             <th class="w-num">매입금액</th>
                             <th class="w-vendor">매입처</th>
+                            <th class="w-vat">과세</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {% for it in c.items.all %}
+                          {% for it in items %}
                             <tr>
                               <td class="txt">{{ it.name }}</td>
                               <td class="num">{{ it.qty|default:0 }}</td>
@@ -243,14 +188,24 @@
                               <td class="num buy">
                                 <span data-krw="{{ it.buy_total|default:0 }}">{{ it.buy_total|default:0 }}</span>
                               </td>
+
                               <td class="txt vendor">{{ it.vendor }}</td>
+                              <td class="w-vat">
+                                {% if it.vat_mode == 'separate' %}VAT별도
+                                {% elif it.vat_mode == 'included' %}VAT포함
+                                {% elif it.vat_mode == 'exempt' %}면세
+                                {% else %}-{% endif %}
+                              </td>
                             </tr>
                           {% empty %}
-                            <tr><td class="empty-row" colspan="7">품목 없음</td></tr>
+                            <tr><td class="empty-row" colspan="9">품목 없음</td></tr>
                           {% endfor %}
                         </tbody>
                       </table>
                     </td>
+
+
+
 
                     <!-- 오른쪽 고정 컬럼들 -->
                     <td class="right strong" rowspan="{{ rows }}">
@@ -278,7 +233,7 @@
                     </td>
                   </tr>
 
-                  <!-- 추가 품목 라인들 -->
+                 
                   {% if items and items|length > 1 %}
                     {% for it in items|slice:"1:" %}
                       <tr class="row-sub" data-href="{% url 'contract_detail' c.id %}">
@@ -296,7 +251,7 @@
                         </td>
                       </tr>
                     {% endfor %}
-                  {% endif %}
+                  {% endif %} 
                 {% endwith %}
               {% endwith %}
             {% empty %}
