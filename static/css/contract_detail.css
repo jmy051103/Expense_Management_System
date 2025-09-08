@@ -196,3 +196,45 @@ body {
   border-radius: 6px;
   border: 1px solid #ddd;
 }
+
+/* ===== 품목 미니 테이블 ===== */
+.table-wrap { width: 100%; overflow-x: auto; }
+.mini-items{
+  width:100%; border-collapse:collapse; table-layout:fixed;
+  font-size:12.5px; background:#fff;
+  border:1px solid var(--line); border-radius:10px; overflow:hidden;
+}
+.mini-items thead th{
+  background:#f3f4f6; font-weight:700; text-align:center;
+  border-bottom:1px solid var(--line); padding:8px 10px;
+}
+.mini-items td{ border-top:1px solid var(--line); padding:8px 10px; }
+.mini-items tbody tr:hover{ background:#fafafa; }
+
+.mini-items .txt{ text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
+.mini-items .num{ text-align:right; font-variant-numeric: tabular-nums; }
+.mini-items .strong{ font-weight:700; }
+.mini-items .sell{ color:#b91c1c; }
+.mini-items .buy { color:#2563eb; }
+.mini-items .vendor{ color:#4b5563; }
+.mini-items .vat{ white-space:nowrap; }
+
+.mini-items .w-item{ width:26%; }
+.mini-items .w-qty { width:7%;  text-align:center; }
+.mini-items .w-spec{ width:10%; }
+.mini-items .w-num { width:12%; }
+.mini-items .w-vendor{ width:15%; }
+.mini-items .w-vat{ width:8%;  text-align:center; }
+
+.empty-row{ text-align:center; color:#6b7280; }
+
+/* ===== 특이사항 박스 ===== */
+.note-box{
+  margin-top:14px; border:1px solid var(--line); border-radius:10px; background:#fff;
+}
+.note-title{
+  padding:10px 12px; font-weight:700; background:#f9fafb; border-bottom:1px solid var(--line);
+}
+.note-body{
+  padding:12px; line-height:1.6; white-space:pre-wrap;
+}

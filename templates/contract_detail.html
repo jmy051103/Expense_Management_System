@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/contract_detail.css' %}?v=2025-09-08-10">
+  <link rel="stylesheet" href="{% static 'css/contract_detail.css' %}?v=2025-09-08-11">
 </head>
 <body>
 
@@ -85,6 +85,73 @@
       {% endfor %}
     </div>
 
+        <h2>거래내역</h2>
+        <div class="table-wrap">
+          <table class="mini-items">
+            <thead>
+              <tr>
+                <th class="w-item">품목</th>
+                <th class="w-qty">수량</th>
+                <th class="w-spec">규격</th>
+                <th class="w-num hide-sm">매출단가</th>
+                <th class="w-num">매출금액</th>
+                <th class="w-num hide-sm">매입단가</th>
+                <th class="w-num">매입금액</th>
+                <th class="w-vendor">매입처</th>
+                <th class="w-vat">과세</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in contract.items.all %}
+                <tr>
+                  <td class="txt">{{ it.name }}</td>
+                  <td class="num">{{ it.qty|default:0 }}</td>
+                  <td class="txt">{{ it.spec }}</td>
+
+                  <td class="num hide-sm">
+                    <span data-krw="{{ it.sell_unit|default:0 }}">{{ it.sell_unit|default:0 }}</span>
+                  </td>
+                  <td class="num strong sell">
+                    <span data-krw="{{ it.sell_total|default:0 }}">{{ it.sell_total|default:0 }}</span>
+                  </td>
+
+                  <td class="num hide-sm">
+                    <span data-krw="{{ it.buy_unit|default:0 }}">{{ it.buy_unit|default:0 }}</span>
+                  </td>
+                  <td class="num buy">
+                    <span data-krw="{{ it.buy_total|default:0 }}">{{ it.buy_total|default:0 }}</span>
+                  </td>
+
+                  <td class="txt vendor">{{ it.vendor }}</td>
+                  <td class="center vat">
+                    {% if it.vat_mode == 'separate' %}VAT 별도
+                    {% elif it.vat_mode == 'included' %}VAT 포함
+                    {% elif it.vat_mode == 'exempt' %}면세
+                    {% else %}-{% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td class="empty-row" colspan="9">품목 없음</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if contract.special_note %}
+          <div class="note-box">
+            <div class="note-title">특이사항</div>
+            <div class="note-body">{{ contract.special_note|linebreaksbr }}</div>
+          </div>
+        {% endif %}
+
+
     <p><a href="{% url 'contract_list' %}">← 목록으로</a></p>
 </div>
+
+<script>
+  document.querySelectorAll('[data-krw]').forEach(el => {
+    const v = parseFloat(el.getAttribute('data-krw') || '0');
+    el.textContent = new Intl.NumberFormat('ko-KR').format(v);
+  });
+</script>
 
