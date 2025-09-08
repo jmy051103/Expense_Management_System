@@ -371,8 +371,12 @@
             <tbody>
               <tr>
                 <th>특이사항</th>
-                <td><input class="inp" name="special_note" value="{% if is_edit %}{{ contract.special_note }}{% endif %}"></td>
+                <td>
+                  <textarea class="ta" name="special_note" rows="5" placeholder="특이사항을 입력하세요."
+                    >{% if is_edit %}{{ contract.special_note }}{% endif %}</textarea>
+                </td>
               </tr>
+
             </tbody>
           </table>
         </section>
