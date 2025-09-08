@@ -1,34 +1,3 @@
-<!-- {% load static %}
-<!doctype html>
-<html lang="ko">
-<head>
-  <meta charset="utf-8" />
-  <title>계약 상세</title>
-  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-03-08">
-</head>
-<body>
-  <h1>계약 상세</h1>
-
-  <p><strong>회사명:</strong> {{ contract.customer_company }}</p>
-  <p><strong>작성자:</strong> {{ contract.writer.first_name|default:contract.writer.username }}</p>
-  <p><strong>상태:</strong> {{ contract.get_status_display }}</p>
-  <p><strong>작성일:</strong> {{ contract.created_at|date:"Y-m-d H:i" }}</p>
-
-  <h2>첨부 이미지</h2>
-  <div style="display:flex; gap:10px; flex-wrap:wrap;">
-    {% for img in contract.images.all %}
-      <a href="{{ img.medium.url }}" target="_blank">
-        <img src="{{ img.thumb.url }}" style="width:120px; height:90px; object-fit:cover;">
-      </a>
-    {% empty %}
-      <p>첨부 이미지가 없습니다.</p>
-    {% endfor %}
-  </div>
-
-  <p><a href="{% url 'contract_list' %}">← 목록으로</a></p>
-</body>
-</html> -->
-
 {% load static %}
 <!doctype html>
 <html lang="ko">
@@ -36,18 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/contract_detail.css' %}?v=2025-09-05-07">
-  <style>
-    /* 거래내역 표 내부 전용(버튼 크기/배치) */
-    #items-table .arrows-col{
-      display:flex; flex-direction:column; gap:4px; align-items:stretch;
-    }
-    #items-table .mini{
-      height:16px; padding:0 6px; font-size:10px; line-height:1;
-      border:1px solid #d1d5db; border-radius:4px; background:#f3f4f6; cursor:pointer;
-    }
-    #items-table .mini:hover{ filter:brightness(0.98); }
-  </style>
+  <link rel="stylesheet" href="{% static 'css/contract_detail.css' %}?v=2025-09-08-09">
 </head>
 <body>
 
@@ -73,11 +31,14 @@
       </form>
     </div>
 
+    <!-- 탭 -->
     <nav class="tabs" role="tablist" aria-label="상단 메뉴">
       {% with acc=request.user.profile.access|default_if_none:"" %}
         {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
           <div class="tab-group has-dropdown">
-            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">계정관리</a>
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">
+              계정관리
+            </a>
             <ul id="menu-accounts" class="dropdown" role="menu" aria-label="계정관리 메뉴">
               <li role="none"><a role="menuitem" href="{% url 'create_profile' %}">계정 만들기</a></li>
               <li role="none"><a role="menuitem" href="{% url 'view_profile' %}">계정 보기</a></li>
@@ -86,10 +47,14 @@
         {% else %}
           <span class="tab tab-disabled" aria-disabled="true">계정관리</span>
         {% endif %}
-      {% endwith %}
+      {% endwith %} 
+
       <button class="tab" role="tab">업무관리</button>
-      <div class="tab-group has-dropdown">
-        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">계약정보</a>
+      <!-- <button type="submit" class="tab" role="tab">계약정보</button> -->
+       <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">
+          계약정보
+        </a>
         <ul id="menu-contract" class="dropdown" role="menu" aria-label="계약정보 메뉴">
           <li role="none"><a role="menuitem" href="{% url 'add_contract' %}">계약정보 등록</a></li>
           <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>

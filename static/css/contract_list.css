@@ -389,7 +389,3 @@ body {
 .mini-items .w-vendor{ width:15%; }
 .mini-items .w-vat{ width:8%; text-align:center; }
 
-@media (max-width: 980px){
-  .mini-items .hide-sm{ display:none; }
-  .mini-items .w-item{ width:35%; }
-}
