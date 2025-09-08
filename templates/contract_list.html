@@ -200,8 +200,12 @@
                           {% empty %}
                             <tr><td class="empty-row" colspan="9">품목 없음</td></tr>
                           {% endfor %}
+                          
                         </tbody>
                       </table>
+                      {% if c.special_note %}
+                        <div class="special-note"><strong>특이사항:</strong> {{ c.special_note }}</div>
+                      {% endif %}
                     </td>
 
 
