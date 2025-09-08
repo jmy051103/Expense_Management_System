@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.humanize",
     "accounts",
     "expenses.apps.ExpensesConfig",
+    "partners",
 ]
 
 # --- Middleware ---

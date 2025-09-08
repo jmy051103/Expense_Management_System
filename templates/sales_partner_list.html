@@ -4,8 +4,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>프로필 관리</title>
-  <link rel="stylesheet" href="{% static 'css/create_profile.css' %}?v=2025-09-01-02">
+  <title>업무지원 시스템</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-09-00">
 </head>
 <body>
 
@@ -13,7 +13,6 @@
   <div class="topbar">
     <strong>시험운영</strong>
     <span class="sep">|</span>
-    <!-- 날짜: today 컨텍스트 없이도 보이도록 now 태그 사용 -->
     <small>Today {% now "Y.m.d (D)" %}</small>
     <span class="ip" style="margin-left:auto;">현재접속 IP : {{ request.META.REMOTE_ADDR|default:"-" }}</span>
   </div>
@@ -76,60 +75,3 @@
       <button class="tab" role="tab">통계</button>
     </nav>
   </div>
-
-  <div id="container" class="container">
-    <h1>New Profile</h1>
-
-    <form method="post" class="post">
-      {% csrf_token %}
-      
-      <input type="text" id="username" name="username"
-            placeholder="아이디" required autocomplete="username"><br>
-
-      <input type="password" id="password" name="password"
-        required autocomplete="current-password" placeholder="패스워드"><br>
-
-      <input type="text" id="name" name="name" placeholder="이름"><br>
-
-      <select id="position" name="position" required>
-        <option value="" selected disabled>직책</option>
-        <option>사장</option>
-        <option>부장</option>
-        <option>팀장</option>
-      </select><br>
-    
-      <select id="department" name="department" required>
-        <option value="" selected disabled>부서</option>
-        <option>홍보팀</option>
-        <option>기획팀</option>
-        <option>회장단</option>
-      </select><br>
-
-      <select id="access" name="access" required>
-        <option value="" selected disabled>관리자 권한 설정</option>
-        <option>관리자모드</option>
-        <option>사장모드</option>
-        <option>직원모드</option>
-      </select><br>
-
-      <div class="actions">
-        <button type="submit">프로필 생성</button>
-      </div>
-    </form>
-
-  </div>
-
-  <!-- 푸터 -->
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div class="footer-left"><strong>(주)대진아이엔티</strong></div>
-      <div class="footer-right">
-        <div>경기도 남양주시 다산중앙로19번길 25-23, F동 712호</div>
-        <div>대표명 : 양정안&nbsp;&nbsp;사업자번호 : 637-81-00010</div>
-        <div>기술문의 : 양재민 (jmy051103@gmail.com), 홍지원 (jiwonh37@gmail.com)</div>
-      </div>
-    </div>
-  </footer>
-
-</body>
-</html>
