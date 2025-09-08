@@ -107,6 +107,19 @@ body {
   border: none;
   cursor: pointer;
 }
+
+/* Tabs: never show link underline */
+.tabs a.tab,
+.tabs a.tab:link,
+.tabs a.tab:visited,
+.tabs a.tab:hover,
+.tabs a.tab:focus,
+.tabs a.tab:active {
+  text-decoration: none !important;
+  color: inherit; /* keep your tab color */
+}
+
+
 .tab:hover { background: #f3f4f6; }
 .tab.active { color: var(--brand-ink); }
 .tab.active::after {
