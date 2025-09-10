@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-08-03">
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-10-11">
 </head>
 <body>
 
@@ -142,7 +142,7 @@
           <tbody>
             {% for c in contracts %}
               {% with items=c.items.all %}
-                {% with rows=items|length|default:1 %}
+                {% with rows=1 %}
                   <!-- first row (left/right columns use rowspan) -->
                   <tr class="row-block" data-href="{% url 'contract_detail' c.id %}">
                     <!-- 계약번호/상태 -->
@@ -219,9 +219,6 @@
                       {% endif %}
                     </td>
 
-
-
-
                     <!-- 오른쪽 고정 컬럼들 -->
                     <td class="right strong" rowspan="{{ rows }}">
                       {% if c.profit != None %}
@@ -247,26 +244,6 @@
                       </form>
                     </td>
                   </tr>
-
-                 
-                  {% if items and items|length > 1 %}
-                    {% for it in items|slice:"1:" %}
-                      <tr class="row-sub" data-href="{% url 'contract_detail' c.id %}">
-                        <td class="items-cell">
-                          <div class="item-row">
-                            <span class="badge">일시</span>
-                            <span class="item-name">{{ it.name }}</span>
-                            <span class="qty">{{ it.qty|default:0 }}</span>
-                            <span class="price unit" data-krw="{{ it.sell_unit|default:0 }}">{{ it.sell_unit|default:0 }}</span>
-                            <span class="price sell pos" data-krw="{{ it.sell_total|default:0 }}">{{ it.sell_total|default:0 }}</span>
-                            <span class="price unit muted" data-krw="{{ it.buy_unit|default:0 }}">{{ it.buy_unit|default:0 }}</span>
-                            <span class="price buy neg" data-krw="{{ it.buy_total|default:0 }}">{{ it.buy_total|default:0 }}</span>
-                            <span class="vendor">{{ it.vendor }}</span>
-                          </div>
-                        </td>
-                      </tr>
-                    {% endfor %}
-                  {% endif %} 
                 {% endwith %}
               {% endwith %}
             {% empty %}
