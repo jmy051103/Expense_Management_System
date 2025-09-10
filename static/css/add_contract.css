@@ -8,13 +8,14 @@
   --brand: #2d333b;
   --brand-ink: #0b13eb;
   --title-bg: #2e7192;
-  --footer-bg: #2e7192;  /* fix: --footer-bg */
+  --footer-bg: #2e7192;  
   --footer-ink: #e5e7eb;
 }
 
 /* 바디 */
 * { box-sizing: border-box; }
 html, body { height: 100%; }
+
 
 body {
   margin: 0;
@@ -26,7 +27,10 @@ body {
   background: var(--bg);
 }
 
-.num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.num { 
+  font-variant-numeric: tabular-nums; 
+  font-feature-settings: "tnum"; 
+}
 .big { font-size: 44px; font-weight: 800; }
 .strong { font-weight: 700; }
 .right { text-align: right; }
@@ -103,7 +107,12 @@ body {
   align-items: stretch;
   justify-items: stretch;
 }
-.tab-group, .tab { width: 100%; text-align: center; }
+.tab-group, 
+.tab { 
+  width: 100%; 
+  text-align: center; 
+}
+
 .tab {
   position: relative;
   display: block;
@@ -140,6 +149,7 @@ body {
   border-radius: 10px;
   box-shadow: 0 10px 24px rgba(0,0,0,.10);
   z-index: 100;
+  
   opacity: 0;
   visibility: hidden;
   transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
