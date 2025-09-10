@@ -149,7 +149,6 @@ body {
   border-radius: 10px;
   box-shadow: 0 10px 24px rgba(0,0,0,.10);
   z-index: 100;
-  
   opacity: 0;
   visibility: hidden;
   transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
