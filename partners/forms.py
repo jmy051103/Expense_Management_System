@@ -30,11 +30,19 @@ class SalesPartnerContactForm(forms.ModelForm):
         }
 
 
-# inline formset: SalesPartner 아래 담당자 여러 명 입력
-SalesPartnerContactFormSet = inlineformset_factory(
+SalesPartnerContactFormSetCreate = inlineformset_factory(
     SalesPartner,
     SalesPartnerContact,
     form=SalesPartnerContactForm,
-    extra=1,       
-    can_delete=True
+    extra=1,
+    can_delete=True,
+)
+
+# ✅ 수정 화면용: 추가 빈 줄 없음
+SalesPartnerContactFormSetEdit = inlineformset_factory(
+    SalesPartner,
+    SalesPartnerContact,
+    form=SalesPartnerContactForm,
+    extra=0,
+    can_delete=True,
 )

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>매출처정보</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-10-11">
-  <link rel="stylesheet" href="{% static 'css/sales_partner_list.css' %}?v=2025-09-10-11">
+  <link rel="stylesheet" href="{% static 'css/sales_partner_list.css' %}?v=2025-09-12-01">
 </head>
 <body>
 
@@ -73,23 +73,23 @@
     <h2 class="page-title">매출처정보</h2>
 
     <!-- 검색/툴바 -->
-    <form class="toolbar" method="get" action="">
-      <select class="sel" name="per_page">
+    <form class="toolbar" method="get" id="searchForm">
+      <select name="per_page" class="sel" onchange="document.getElementById('searchForm').submit()">
         {% for n in per_page_options %}
-          <option value="{{ n }}" {% if request.GET.per_page == n|stringformat:"s" %}selected{% endif %}>목록수 {{ n }}</option>
+          <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>목록수 {{ n }}</option>
         {% endfor %}
       </select>
 
-      <input class="inp" type="text" name="q_name"  value="{{ request.GET.q_name }}"  placeholder="매출처명">
-      <input class="inp" type="text" name="q_owner" value="{{ request.GET.q_owner }}" placeholder="담당자명">
-      <button class="btn gray" type="submit">검색하기</button>
+      <input class="inp" type="text" name="q_name" value="{{ q_name }}" placeholder="매출처명">
+      <input class="inp" type="text" name="q_contact" value="{{ q_contact }}" placeholder="담당자명">
 
+      <button class="btn gray" type="submit">검색하기</button>
       <a class="btn primary" href="{% url 'sales_partner_create' %}">등록하기</a>
 
-      <div style="margin-left:auto; font-size:13px; color:var(--muted);">
-        검색 <strong class="num">{{ page_obj.paginator.count|default:0 }}</strong>건
-      </div>
+      <!-- 페이지 바꿀 때 1페이지부터 보이게 하려면 JS 없이 서버가 처리하므로 hidden은 필요 없음 -->
     </form>
+
+    <p class="page-sub">검색 {{ page_obj.paginator.count }}건</p>
 
     <!-- 목록 + 일괄삭제 폼 -->
     <section class="panel" style="margin-top:12px;">
@@ -121,7 +121,15 @@
                   <td class="left">{{ p.name }}</td>
 
                   <td class="num">{{ p.biz_no|default:"-" }}</td>
-                  <td class="left">{% if p.contacts.first %}{{ p.contacts.first.name }}{% else %}-{% endif %}</td>
+                  <td class="left">
+                    {% with total=p.contacts.all|length %}
+                      {% if total > 0 %}
+                        {{ p.contacts.all.0.name }}{% if total > 1 %} 외 {{ total|add:"-1" }}명{% endif %}
+                      {% else %}
+                        -
+                      {% endif %}
+                    {% endwith %}
+                  </td>
                   <td class="left">{{ p.email|default:"-" }}</td>
 
                   <!-- 관리: 수정/삭제 버튼 정렬 통일 -->
@@ -159,30 +167,22 @@
       {% endfor %}
 
       <!-- ✅ 숫자 페이지네이션 -->
-      <div class="pagination" style="margin: 12px auto 18px; display:flex; gap:6px; justify-content:center; align-items:center;">
-        {% with qs=request.GET.urlencode|cut:'page='|cut:'&page=' %}
-          {% if page_obj.has_previous %}
-            <a class="page-btn" href="?page={{ page_obj.previous_page_number }}{% if qs %}&{{ qs }}{% endif %}">‹</a>
-          {% else %}
-            <span class="page-btn disabled">‹</span>
-          {% endif %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a class="page-btn" href="?page={{ page_obj.previous_page_number }}{% if qs %}&{{ qs }}{% endif %}">‹</a>
+        {% else %}<span class="page-btn disabled">‹</span>{% endif %}
 
-          {% for num in page_obj.paginator.page_range %}
-            {% if num >= page_obj.number|add:'-4' and num <= page_obj.number|add:'4' %}
-              {% if num == page_obj.number %}
-                <span class="page current">{{ num }}</span>
-              {% else %}
-                <a class="page" href="?page={{ num }}{% if qs %}&{{ qs }}{% endif %}">{{ num }}</a>
-              {% endif %}
-            {% endif %}
-          {% endfor %}
-
-          {% if page_obj.has_next %}
-            <a class="page-btn" href="?page={{ page_obj.next_page_number }}{% if qs %}&{{ qs }}{% endif %}">›</a>
+        {% for num in page_obj.paginator.page_range %}
+          {% if num == page_obj.number %}
+            <span class="page current">{{ num }}</span>
           {% else %}
-            <span class="page-btn disabled">›</span>
+            <a class="page" href="?page={{ num }}{% if qs %}&{{ qs }}{% endif %}">{{ num }}</a>
           {% endif %}
-        {% endwith %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+          <a class="page-btn" href="?page={{ page_obj.next_page_number }}{% if qs %}&{{ qs }}{% endif %}">›</a>
+        {% else %}<span class="page-btn disabled">›</span>{% endif %}
       </div>
     </section>
   </main>

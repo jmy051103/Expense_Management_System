@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>매출처정보 등록</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-10-11">
-  <link rel="stylesheet" href="{% static 'css/sales_partner_list.css' %}?v=2025-09-10-11">
+  <link rel="stylesheet" href="{% static 'css/sales_partner_list.css' %}?v=2025-09-12-02">
 </head>
 <body>
 
@@ -73,27 +73,47 @@
       <form method="post" action="">
         {% csrf_token %}
 
+        {# --- 에러 보이기(선택) --- #}
+        {% if form.errors or form.non_field_errors or formset.non_form_errors or formset.errors %}
+          <div class="err" style="color:#b91c1c; margin:10px 26px;">
+            {{ form.non_field_errors }}
+            {{ form.errors }}
+            {{ formset.non_form_errors }}
+            {% for sf in formset %}
+              {{ sf.errors }}
+            {% endfor %}
+          </div>
+        {% endif %}
+
         <!-- 기본정보 -->
         <div style="padding: 18px 26px; font-weight:800;">| 기본정보</div>
         <table>
           <tbody>
             <tr>
-              <td class="left" style="width:160px; background:#f3f4f6;">매출처명 *</td>
-              <td class="left" colspan="3">{{ form.name }}</td>
+              <td class="label-cell" style="width:160px; background:#f3f4f6;">매출처명 *</td>
+              <td colspan="3">{{ form.name }}</td>
             </tr>
             <tr>
-              <td class="left" style="background:#f3f4f6;">사업자번호</td>
-              <td class="left">{{ form.biz_no }}</td>
-              <td class="left" style="width:160px; background:#f3f4f6;">팩스번호</td>
-              <td class="left">{{ form.fax }}</td>
+              <td class="label-cell" style="background:#f3f4f6;">사업자번호</td>
+              <td>{{ form.biz_no }}</td>
+              <td class="label-cell" style="width:160px; background:#f3f4f6;">팩스번호</td>
+              <td>{{ form.fax }}</td>
             </tr>
             <tr>
-              <td class="left" style="background:#f3f4f6;">주소</td>
-              <td class="left" colspan="3">{{ form.address }}</td>
+              <td class="label-cell" style="background:#f3f4f6;">주소</td>
+              <td colspan="3">
+                <div class="addr-wrap">
+                  <button type="button"
+                          class="btn gray"
+                          style="flex:0 0 auto; min-width:70px;"
+                          onclick="execDaumPostcode()">검색</button>
+                  {{ form.address }}
+                </div>
+              </td>
             </tr>
             <tr>
-              <td class="left" style="background:#f3f4f6;">대표 이메일</td>
-              <td class="left" colspan="3">{{ form.email }}</td>
+              <td class="label-cell" style="background:#f3f4f6;">대표 이메일</td>
+              <td colspan="3">{{ form.email }}</td>
             </tr>
           </tbody>
         </table>
@@ -101,7 +121,15 @@
         <!-- 담당자정보 -->
         <div style="padding: 18px 26px; font-weight:800;">| 담당자정보</div>
         {{ formset.management_form }}
-        <table>
+        <table class="contacts-table">
+          <colgroup>
+            <col style="width:12%">  <!-- 담당자명: 작게 -->
+            <col style="width:12%">  <!-- 부서: 작게 -->
+            <col style="width:28%">  <!-- 연락처: 크게 -->
+            <col style="width:10%">  <!-- 내선: 작게 -->
+            <col style="width:28%">  <!-- 이메일: 크게 -->
+            <col style="width:10%">  <!-- 삭제: 작게 -->
+          </colgroup>
           <thead>
             <tr>
               <th>담당자명</th>
@@ -115,6 +143,7 @@
           <tbody id="contacts-tbody">
             {% for f in formset %}
               <tr class="contact-row">
+                {{ f.id }}  {# ✅ 기존 레코드 식별용 숨은 id 필수! #}
                 <td>{{ f.name }}</td>
                 <td>{{ f.department }}</td>
                 <td>{{ f.phone }}</td>
@@ -157,7 +186,7 @@
   <script>
     (function () {
       const addBtn = document.getElementById('add-contact-btn');
-      if (!addBtn || addBtn.dataset.bound === '1') return;
+      if (!addBtn || addBtn.dataset.bound === '1') return;  // 중복 바인딩 방지
       addBtn.dataset.bound = '1';
 
       const tbody   = document.getElementById('contacts-tbody');
@@ -167,18 +196,21 @@
         btn.addEventListener('click', function () {
           const row = this.closest('tr');
           const del = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
-          if (del) del.checked = true;
+          if (del) del.checked = true;   // 폼셋에서 삭제로 인식
           row.style.display = 'none';
         });
       }
 
+      // 기존 행들의 삭제 버튼 바인딩
       tbody.querySelectorAll('.btn-del').forEach(bindDelete);
 
+      // 추가 버튼 동작 (empty_form 사용)
       addBtn.addEventListener('click', function () {
         const idx = parseInt(totalEl.value, 10);
 
         const html = `
           <tr class="contact-row">
+            {{ formset.empty_form.id.as_widget|escapejs }}        <!-- ✅ 새 행에도 id 위젯 포함 -->
             <td>{{ formset.empty_form.name.as_widget|escapejs }}</td>
             <td>{{ formset.empty_form.department.as_widget|escapejs }}</td>
             <td>{{ formset.empty_form.phone.as_widget|escapejs }}</td>
@@ -194,10 +226,77 @@
         tbody.insertAdjacentHTML('beforeend', html);
         totalEl.value = idx + 1;
 
+        // 방금 추가된 행의 삭제 버튼 바인딩
         const lastDel = tbody.querySelector('tr.contact-row:last-child .btn-del');
         if (lastDel) bindDelete(lastDel);
       });
     })();
   </script>
+
+  <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <script>
+    function execDaumPostcode() {
+      new daum.Postcode({
+        oncomplete: function(data) {
+          // 사용자가 주소 선택하면 input 채우기
+          document.getElementById("id_address").value = data.address;
+        }
+      }).open();
+    }
+  </script>
+  <style>
+  /* 레이어 중앙 고정 */
+  #postcode-layer {
+    display:none; position:fixed; left:50%; top:50%;
+    width:360px; height:480px; transform:translate(-50%, -50%);
+    z-index:9999; border:1px solid #e5e7eb; border-radius:10px; background:#fff;
+    box-shadow:0 12px 28px rgba(0,0,0,.15);
+  }
+  #postcode-layer .close {
+    position:absolute; right:8px; top:8px; border:0; background:#f3f4f6; border-radius:8px; padding:6px 10px; cursor:pointer;
+  }
+  #postcode-dim {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:9998;
+  }
+</style>
+
+<div id="postcode-dim"></div>
+<div id="postcode-layer">
+  <button type="button" class="close" id="postcode-close">닫기</button>
+  <!-- 여기 안에 우편번호 위젯이 임베드됩니다 -->
+</div>
+
+<script>
+  (function () {
+    const btn = document.getElementById('btn-search-address');
+    const layer = document.getElementById('postcode-layer');
+    const dim = document.getElementById('postcode-dim');
+    const closeBtn = document.getElementById('postcode-close');
+    const addrInput = document.getElementById('id_address');
+
+    if (!btn || !layer) return;
+
+    function show() { layer.style.display = 'block'; dim.style.display = 'block'; }
+    function hide() { layer.style.display = 'none'; dim.style.display = 'none'; }
+
+    btn.addEventListener('click', function () {
+      show();
+      new daum.Postcode({
+        oncomplete: function (data) {
+          const addr = (data.userSelectedType === 'R') ? data.roadAddress : data.jibunAddress;
+          if (addrInput) { addrInput.value = addr || ''; addrInput.focus(); }
+          hide();
+        },
+        onresize: function (size) { layer.style.height = size.height + 'px'; },
+        width: '100%', height: '100%'
+      }).embed(layer);
+    });
+
+    closeBtn.addEventListener('click', hide);
+    dim.addEventListener('click', hide);
+  })();
+</script>
+
+  
 </body>
 </html>
