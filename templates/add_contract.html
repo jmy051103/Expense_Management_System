@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-10-11">
+  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-12-11">
   <style>
     /* 거래내역 표 내부 전용(버튼 크기/배치) */
     #items-table .arrows-col{
@@ -168,14 +168,14 @@
                 <tr>
                   <th>회사&nbsp;*</th>
                   <td>
-                    <input class="inp" name="customer_company"
-                    value="{% if is_edit %}{{ contract.customer_company }}{% endif %}" 
-                    placeholder="회사명 입력 후 Enter로 검색이 가능합니다" required>
+                    <input id="customer_company" class="inp" name="customer_company"
+                      value="{% if is_edit %}{{ contract.customer_company }}{% endif %}" 
+                      placeholder="회사명 입력 후 Enter로 검색이 가능합니다" required>
                     <div class="help-row">*텍스트 박스에서 Enter키를 치시면 매출처를 검색할 수 있습니다</div>
                   </td>
                   <th>담당자</th>
                   <td>
-                    <select class="sel" name="customer_manager">
+                    <select id="customer_manager" class="sel" name="customer_manager">
                       <option value="">선택</option>
                       {% for m in customer_managers %}
                         <option value="{{ m.id }}">{{ m.name }}</option>
@@ -186,12 +186,17 @@
                 </tr>
                 <tr>
                   <th>전화번호</th>
-                  <td><input class="inp" name="customer_phone" 
-                    value="{% if is_edit %}{{ contract.customer_phone }}{% endif %}"
-                    placeholder="010-0000-0000"></td>
+                  <td>
+                    <input id="customer_phone" class="inp" name="customer_phone"
+                      value="{% if is_edit %}{{ contract.customer_phone }}{% endif %}"
+                      placeholder="010-0000-0000">
+                  </td>
                   <th>이메일</th>
-                  <td><input class="inp" type="email" name="customer_email" value="{% if is_edit %}{{ contract.customer_email }}{% endif %}"
-                    placeholder="name@example.com"></td>
+                  <td>
+                    <input id="customer_email" class="inp" type="email" name="customer_email"
+                      value="{% if is_edit %}{{ contract.customer_email }}{% endif %}"
+                      placeholder="name@example.com">
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -240,7 +245,6 @@
                       <td>
                         <select class="sel" name="item_vat_mode[]">
                           <option value="separate" {% if it.vat_mode == 'separate' %}selected{% endif %}>VAT별도</option>
-                          <option value="included" {% if it.vat_mode == 'included' %}selected{% endif %}>VAT포함</option>
                           <option value="exempt"   {% if it.vat_mode == 'exempt' %}selected{% endif %}>면세</option>
                         </select>
                       </td>
@@ -269,7 +273,6 @@
                       <td>
                         <select class="sel" name="item_vat_mode[]">
                           <option value="separate">VAT별도</option>
-                          <option value="included">VAT포함</option>
                           <option value="exempt">면세</option>
                         </select>
                       </td>
@@ -298,7 +301,6 @@
                     <td>
                       <select class="sel" name="item_vat_mode[]">
                         <option value="separate">VAT별도</option>
-                        <option value="included">VAT포함</option>
                         <option value="exempt">면세</option>
                       </select>
                     </td>
@@ -533,7 +535,6 @@
         <td>
           <select class="sel" name="item_vat_mode[]">
             <option value="separate">VAT별도</option>
-            <option value="included">VAT포함</option>
             <option value="exempt">면세</option>
           </select>
         </td>
@@ -773,6 +774,83 @@
       inp.addEventListener('click', ()=> openPicker(inp));
     });
   })();
+  </script>
+
+  <script>
+    // 회사 검색 Enter → 팝업 열기 (이 리스너만 유지)
+    document.getElementById('customer_company').addEventListener('keydown', function(e){
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const q = this.value.trim();
+        if (q) {
+          window.open(
+            `/partners/sales/?popup=1&q_name=${encodeURIComponent(q)}`,
+            'partnerSearch',
+            'width=900,height=600'
+          );
+        }
+      }
+    });
+
+    // 전화/이메일 인풋
+    const phoneInput  = document.querySelector('input[name="customer_phone"]');
+    const emailInput  = document.querySelector('input[name="customer_email"]');
+    const managerSel  = document.getElementById('customer_manager');
+
+    // 담당자 선택 시 전화/이메일 자동 채우기 (핸들러 1회만)
+    if (managerSel) {
+      managerSel.addEventListener('change', function(){
+        const opt = this.selectedOptions[0];
+        if (!opt) return;
+        phoneInput.value = opt.dataset.phone || '';
+        emailInput.value = opt.dataset.email || '';
+      });
+    }
+
+    // 팝업에서 호출되는 함수: 회사 선택 후 담당자 목록을 API로 불러와 채움
+    window.selectPartnerFromPopup = function ({ id, name }) {
+      const companyInput = document.getElementById('customer_company');
+      companyInput.value = name;
+      companyInput.dataset.partnerId = id;
+
+      // 담당자 초기화 + 로딩 상태
+      managerSel.innerHTML = '<option value="">담당자 불러오는 중...</option>';
+      managerSel.disabled = true;
+
+      // 선택된 회사의 담당자 목록 불러오기
+      fetch(`/partners/api/partners/${id}/contacts/`)
+        .then(res => res.json())
+        .then(({ contacts }) => {
+          managerSel.innerHTML = '<option value="">선택</option>';
+
+          // 가나다 정렬(한국어)
+          contacts.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+          contacts.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            // 서버가 display를 내려주면 그대로 쓰고, 없으면 "이름 / 부서" 구성
+            opt.textContent = (c.display && c.display.trim())
+              ? c.display
+              : (c.department ? `${c.name} / ${c.department}` : c.name);
+            opt.dataset.phone = c.phone || '';
+            opt.dataset.email = c.email || '';
+            managerSel.appendChild(opt);
+          });
+
+          managerSel.disabled = contacts.length === 0;
+
+          if (contacts.length === 0) {
+            phoneInput.value = '';
+            emailInput.value = '';
+          }
+        })
+        .catch(() => {
+          managerSel.innerHTML = '<option value="">불러오기 실패</option>';
+          managerSel.disabled = true;
+          alert('담당자 정보를 불러오지 못했습니다.');
+        });
+    };
   </script>
 
 </body>

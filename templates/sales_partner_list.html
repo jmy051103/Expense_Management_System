@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>매출처정보</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-10-11">
-  <link rel="stylesheet" href="{% static 'css/sales_partner_list.css' %}?v=2025-09-12-01">
+  <link rel="stylesheet" href="{% static 'css/sales_partner_list.css' %}?v=2025-09-12-11">
 </head>
 <body>
 
@@ -108,7 +108,11 @@
                 <th style="width:170px">사업자번호</th>
                 <th style="width:180px">담당자 정보</th>
                 <th class="th-email">이메일</th>
-                <th class="th-actions">관리</th>
+                {% if is_popup %}
+                  <th style="width:80px">선택</th>
+                {% else %}
+                  <th class="th-actions">관리</th>
+                {% endif %}
               </tr>
             </thead>
             <tbody>
@@ -117,7 +121,7 @@
                   <td><input type="checkbox" class="row-chk" name="ids" value="{{ p.id }}"></td>
                   <td class="num">{{ p.id }}</td>
 
-                  <!-- 매출처명: 링크 제거(텍스트만) -->
+                  <!-- 매출처명: 링크 없이 텍스트 -->
                   <td class="left">{{ p.name }}</td>
 
                   <td class="num">{{ p.biz_no|default:"-" }}</td>
@@ -130,24 +134,38 @@
                       {% endif %}
                     {% endwith %}
                   </td>
-                  <td class="left">{{ p.email|default:"-" }}</td>
 
-                  <!-- 관리: 수정/삭제 버튼 정렬 통일 -->
-                  <td class="actions" style="white-space:nowrap;">
-                    <div style="display:flex; gap:8px; align-items:center; justify-content:center;">
-                      <a class="btn small" href="{% url 'sales_partner_edit' p.id %}">수정</a>
-                      <!-- 행 삭제: 외부 폼에 연결 -->
-                      <button type="submit"
-                              class="btn small gray"
-                              form="del-{{ p.id }}"
-                              onclick="return confirm('정말 삭제하시겠습니까?');">
-                        삭제
-                      </button>
-                    </div>
+                  <td class="left">
+                    {% with total=p.contacts.all|length %}
+                      {% if total > 0 %}
+                        {{ p.contacts.all.0.email|default:"-" }}
+                      {% else %}
+                        -
+                      {% endif %}
+                    {% endwith %}
                   </td>
+
+                  {# ▼ 여기부터 마지막 컬럼만 조건부로 #}
+                  {% if is_popup %}
+                    <td class="center">
+                      <button type="button" class="btn small primary"
+                              data-id="{{ p.id }}"
+                              data-name="{{ p.name|escape }}"   {# 브라우저가 엔티티를 원문으로 디코딩해줌 #}
+                              onclick="choosePartner(this)">선택</button>
+                    </td>
+                  {% else %}
+                    <td class="actions">
+                      <div class="action-group">
+                        <a class="btn small" href="{% url 'sales_partner_edit' p.id %}">수정</a>
+                        <form method="post" action="{% url 'sales_partner_delete' p.id %}" style="display:inline;">
+                          {% csrf_token %}
+                          <button type="submit" class="btn small gray"
+                                  onclick="return confirm('삭제하시겠습니까?')">삭제</button>
+                        </form>
+                      </div>
+                    </td>
+                  {% endif %}
                 </tr>
-              {% empty %}
-                <tr><td colspan="7" class="center muted">등록된 매출처가 없습니다.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -210,5 +228,22 @@
       });
     })();
   </script>
+
+  {% if is_popup %}
+  <script>
+    function choosePartner(btn){
+      const id   = parseInt(btn.dataset.id, 10);
+      const name = btn.dataset.name;  // "A & B"처럼 엔티티는 자동 복원됨
+
+      if (window.opener && !window.opener.closed &&
+          typeof window.opener.selectPartnerFromPopup === 'function'){
+        window.opener.selectPartnerFromPopup({id, name});
+        window.close();
+      } else {
+        alert('선택을 전달할 창이 없습니다.');
+      }
+    }
+  </script>
+  {% endif %}
 </body>
 </html>

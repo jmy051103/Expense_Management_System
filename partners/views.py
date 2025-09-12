@@ -1,13 +1,51 @@
 # partners/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
-
 from .models import SalesPartner
 from .forms import (
     SalesPartnerForm,
     SalesPartnerContactFormSetCreate,
     SalesPartnerContactFormSetEdit,
 )
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def api_partner_detail(request, pk):
+    p = SalesPartner.objects.filter(pk=pk).prefetch_related("contacts").first()
+    if not p:
+        return JsonResponse({"error": "not found"}, status=404)
+
+    return JsonResponse({
+        "id": p.id,
+        "name": p.name or "",
+        "biz_no": p.biz_no or "",
+        "contacts": [
+            {
+                "id": c.id,
+                "name": c.name or "",
+                "department": c.department or "",
+                "phone": c.phone or "",
+                "extension": c.extension or "",
+                "email": c.email or "",
+            } for c in p.contacts.all().order_by("id")
+        ]
+    })
+
+def partner_contacts_api(request, pk):
+    partner = get_object_or_404(SalesPartner, pk=pk)
+    contacts = [
+        {
+            "id": c.id,
+            "name": c.name,
+            "department": c.department or "",
+            "phone": c.phone or "",
+            "email": c.email or "",
+            "display": f"{c.name} / {c.department}" if (c.department or "").strip() else c.name,
+        }
+        for c in partner.contacts.all().order_by("name")  
+    ]
+    return JsonResponse({"contacts": contacts})
 
 def sales_partner_list(request):
     if request.method == "POST":
@@ -37,10 +75,10 @@ def sales_partner_list(request):
     page_number = request.GET.get("page") or 1
     page_obj = paginator.get_page(page_number)
 
-    # ✅ page만 제거한 쿼리스트링 (목록수/검색어 등은 유지)
     qs_keep = request.GET.copy()
     qs_keep.pop('page', None)
     qs_without_page = qs_keep.urlencode()
+    is_popup = request.GET.get("popup") == "1" 
 
     return render(request, "sales_partner_list.html", {
         "page_obj": page_obj,
@@ -48,7 +86,8 @@ def sales_partner_list(request):
         "per_page": per_page,
         "q_name": q_name,
         "q_contact": q_contact,
-        "qs": qs_without_page,  # ← 템플릿의 페이지 링크에서 사용
+        "qs": qs_without_page,
+        "is_popup": is_popup,
     })
 
 

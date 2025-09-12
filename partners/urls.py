@@ -7,4 +7,8 @@ urlpatterns = [
     path("partners/sales/<int:pk>/edit/", views.sales_partner_edit, name="sales_partner_edit"),
     path("partners/sales/<int:pk>/delete/", views.sales_partner_delete, name="sales_partner_delete"),
     path("purchase/", views.purchase_partner_list, name="purchase_partner_list"),
+
+    # API 엔드포인트
+    path("api/partners/<int:pk>/", views.api_partner_detail, name="api_partner_detail"),
+    path("api/partners/<int:pk>/contacts/", views.partner_contacts_api, name="partner_contacts_api"),
 ]
