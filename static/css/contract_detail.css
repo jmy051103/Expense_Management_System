@@ -183,7 +183,12 @@ body {
 }
 
 /* 하단 버튼 */
-.page-bottom { margin-top: 18px; display: flex; justify-content: flex-end; }
+.page-bottom { 
+  margin-top: 18px; 
+  display: flex; 
+  justify-content: flex-end;
+  padding-right: 100px; 
+}
 .btn-outline {
   display: inline-block; padding: 10px 14px; border-radius: 10px;
   border: 1px solid var(--line); background:#fff; color:#111; text-decoration: none;
@@ -200,4 +205,32 @@ body {
   .image-grid { grid-template-columns: repeat(3, 1fr); }
   .meta-grid { grid-template-columns: 1fr; }
   .mini-items { font-size: 12px; }
+}
+
+/* 푸터 */
+.site-footer {
+  margin-top: 32px;
+  background: var(--footer-bg);
+  color: var(--footer-ink);
+}
+.footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px 24px;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.footer-left {
+  padding: 8px 0;
+  text-align: center;
+  font-weight: 800;
+  font-size: 18px;
+  border-right: 1px solid rgba(255,255,255,.25);
+}
+.footer-right {
+  padding: 8px 0 8px 18px;
+  font-size: 14px;
+  line-height: 1.75;
 }
