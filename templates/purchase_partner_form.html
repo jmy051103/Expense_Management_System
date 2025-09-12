@@ -1,0 +1,302 @@
+{% load static %}
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>매입처정보 등록</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-10-11">
+  <link rel="stylesheet" href="{% static 'css/purchase_partner_list.css' %}?v=2025-09-12-02">
+</head>
+<body>
+
+  <!-- 상단 상태줄 -->
+  <div class="topbar">
+    <strong>시험운영</strong>
+    <span class="sep">|</span>
+    <small>Today {% now "Y.m.d (D)" %}</small>
+    <span class="ip" style="margin-left:auto;">현재접속 IP : {{ request.META.REMOTE_ADDR|default:"-" }}</span>
+  </div>
+
+  <!-- 타이틀 + 탭 -->
+  <div class="sticky-wrap">
+    <div class="titlebar">
+      <h1>
+        <a href="{% url 'dashboard' %}" class="title-link">(주)대진아이엔티 업무지원시스템</a>
+      </h1>
+      <form action="{% url 'logout' %}" method="post" class="logout-form">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">로그아웃</button>
+      </form>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="상단 메뉴">
+      {% with acc=request.user.profile.access|default_if_none:"" %}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
+          <div class="tab-group has-dropdown">
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">계정관리</a>
+            <ul id="menu-accounts" class="dropdown" role="menu">
+              <li><a href="{% url 'create_profile' %}">계정 만들기</a></li>
+              <li><a href="{% url 'view_profile' %}">계정 보기</a></li>
+            </ul>
+          </div>
+        {% else %}
+          <span class="tab tab-disabled">계정관리</span>
+        {% endif %}
+      {% endwith %}
+
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-work">업무관리</a>
+        <ul id="menu-work" class="dropdown" role="menu">
+          <li><a href="{% url 'sales_partner_list' %}">매출처정보</a></li>
+          <li><a href="{% url 'purchase_partner_list' %}">매입처정보</a></li>
+        </ul>
+      </div>
+
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">계약정보</a>
+        <ul id="menu-contract" class="dropdown" role="menu">
+          <li><a href="{% url 'add_contract' %}">계약정보 등록</a></li>
+          <li><a href="{% url 'contract_list' %}">계약정보 목록</a></li>
+        </ul>
+      </div>
+
+      <button class="tab" role="tab">통계</button>
+    </nav>
+  </div>
+
+  <!-- 본문 -->
+  <main class="container content">
+    <h2 class="page-title">매출처정보</h2>
+
+    <section class="panel">
+      <form method="post" action="">
+        {% csrf_token %}
+
+        {# --- 에러 보이기(선택) --- #}
+        {% if form.errors or form.non_field_errors or formset.non_form_errors or formset.errors %}
+          <div class="err" style="color:#b91c1c; margin:10px 26px;">
+            {{ form.non_field_errors }}
+            {{ form.errors }}
+            {{ formset.non_form_errors }}
+            {% for sf in formset %}
+              {{ sf.errors }}
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <!-- 기본정보 -->
+        <div style="padding: 18px 26px; font-weight:800;">| 기본정보</div>
+        <table>
+          <tbody>
+            <tr>
+              <td class="label-cell" style="width:160px; background:#f3f4f6;">매출처명 *</td>
+              <td colspan="3">{{ form.name }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell" style="background:#f3f4f6;">사업자번호</td>
+              <td>{{ form.biz_no }}</td>
+              <td class="label-cell" style="width:160px; background:#f3f4f6;">팩스번호</td>
+              <td>{{ form.fax }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell" style="background:#f3f4f6;">주소</td>
+              <td colspan="3">
+                <div class="addr-wrap">
+                  <button type="button"
+                          class="btn gray"
+                          style="flex:0 0 auto; min-width:70px;"
+                          onclick="execDaumPostcode()">검색</button>
+                  {{ form.address }}
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="label-cell" style="background:#f3f4f6;">대표 이메일</td>
+              <td colspan="3">{{ form.email }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 담당자정보 -->
+        <div style="padding: 18px 26px; font-weight:800;">| 담당자정보</div>
+        {{ formset.management_form }}
+        <table class="contacts-table">
+          <colgroup>
+            <col style="width:12%">  <!-- 담당자명: 작게 -->
+            <col style="width:12%">  <!-- 부서: 작게 -->
+            <col style="width:28%">  <!-- 연락처: 크게 -->
+            <col style="width:10%">  <!-- 내선: 작게 -->
+            <col style="width:28%">  <!-- 이메일: 크게 -->
+            <col style="width:10%">  <!-- 삭제: 작게 -->
+          </colgroup>
+          <thead>
+            <tr>
+              <th>담당자명</th>
+              <th>부서</th>
+              <th>연락처</th>
+              <th>내선</th>
+              <th>이메일</th>
+              <th style="width:80px;">삭제</th>
+            </tr>
+          </thead>
+          <tbody id="contacts-tbody">
+            {% for f in formset %}
+              <tr class="contact-row">
+                {{ f.id }}  {# ✅ 기존 레코드 식별용 숨은 id 필수! #}
+                <td>{{ f.name }}</td>
+                <td>{{ f.department }}</td>
+                <td>{{ f.phone }}</td>
+                <td>{{ f.extension }}</td>
+                <td>{{ f.email }}</td>
+                <td class="center">
+                  {{ f.DELETE }}
+                  <button type="button" class="btn small gray btn-del">삭제</button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="btn-row" style="justify-content:flex-end;">
+          <button id="add-contact-btn" type="button" class="btn gray">추가</button>
+        </div>
+
+        <div class="btn-row" style="justify-content:center; padding-bottom:26px;">
+          <a class="btn" href="{% url 'sales_partner_list' %}">목록으로</a>
+          <button class="btn primary" type="submit">저장하기</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left"><strong>(주)대진아이엔티</strong></div>
+      <div class="footer-right">
+        <div>경기도 남양주시 다산중앙로19번길 25-23, F동 712호</div>
+        <div>대표명 : 양정안&nbsp;&nbsp;사업자번호 : 637-81-00010</div>
+        <div>기술문의 : 양재민 (jmy051103@gmail.com), 홍지원 (jiwonh37@gmail.com)</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 담당자 행 추가/삭제 스크립트 -->
+  <script>
+    (function () {
+      const addBtn = document.getElementById('add-contact-btn');
+      if (!addBtn || addBtn.dataset.bound === '1') return;  // 중복 바인딩 방지
+      addBtn.dataset.bound = '1';
+
+      const tbody   = document.getElementById('contacts-tbody');
+      const totalEl = document.querySelector('[name="{{ formset.prefix }}-TOTAL_FORMS"]');
+
+      function bindDelete(btn) {
+        btn.addEventListener('click', function () {
+          const row = this.closest('tr');
+          const del = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+          if (del) del.checked = true;   // 폼셋에서 삭제로 인식
+          row.style.display = 'none';
+        });
+      }
+
+      // 기존 행들의 삭제 버튼 바인딩
+      tbody.querySelectorAll('.btn-del').forEach(bindDelete);
+
+      // 추가 버튼 동작 (empty_form 사용)
+      addBtn.addEventListener('click', function () {
+        const idx = parseInt(totalEl.value, 10);
+
+        const html = `
+          <tr class="contact-row">
+            {{ formset.empty_form.id.as_widget|escapejs }}        <!-- ✅ 새 행에도 id 위젯 포함 -->
+            <td>{{ formset.empty_form.name.as_widget|escapejs }}</td>
+            <td>{{ formset.empty_form.department.as_widget|escapejs }}</td>
+            <td>{{ formset.empty_form.phone.as_widget|escapejs }}</td>
+            <td>{{ formset.empty_form.extension.as_widget|escapejs }}</td>
+            <td>{{ formset.empty_form.email.as_widget|escapejs }}</td>
+            <td class="center">
+              {{ formset.empty_form.DELETE.as_widget|escapejs }}
+              <button type="button" class="btn small gray btn-del">삭제</button>
+            </td>
+          </tr>
+        `.replace(/__prefix__/g, idx);
+
+        tbody.insertAdjacentHTML('beforeend', html);
+        totalEl.value = idx + 1;
+
+        // 방금 추가된 행의 삭제 버튼 바인딩
+        const lastDel = tbody.querySelector('tr.contact-row:last-child .btn-del');
+        if (lastDel) bindDelete(lastDel);
+      });
+    })();
+  </script>
+
+  <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <script>
+    function execDaumPostcode() {
+      new daum.Postcode({
+        oncomplete: function(data) {
+          // 사용자가 주소 선택하면 input 채우기
+          document.getElementById("id_address").value = data.address;
+        }
+      }).open();
+    }
+  </script>
+  <style>
+  /* 레이어 중앙 고정 */
+  #postcode-layer {
+    display:none; position:fixed; left:50%; top:50%;
+    width:360px; height:480px; transform:translate(-50%, -50%);
+    z-index:9999; border:1px solid #e5e7eb; border-radius:10px; background:#fff;
+    box-shadow:0 12px 28px rgba(0,0,0,.15);
+  }
+  #postcode-layer .close {
+    position:absolute; right:8px; top:8px; border:0; background:#f3f4f6; border-radius:8px; padding:6px 10px; cursor:pointer;
+  }
+  #postcode-dim {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:9998;
+  }
+</style>
+
+<div id="postcode-dim"></div>
+<div id="postcode-layer">
+  <button type="button" class="close" id="postcode-close">닫기</button>
+  <!-- 여기 안에 우편번호 위젯이 임베드됩니다 -->
+</div>
+
+<script>
+  (function () {
+    const btn = document.getElementById('btn-search-address');
+    const layer = document.getElementById('postcode-layer');
+    const dim = document.getElementById('postcode-dim');
+    const closeBtn = document.getElementById('postcode-close');
+    const addrInput = document.getElementById('id_address');
+
+    if (!btn || !layer) return;
+
+    function show() { layer.style.display = 'block'; dim.style.display = 'block'; }
+    function hide() { layer.style.display = 'none'; dim.style.display = 'none'; }
+
+    btn.addEventListener('click', function () {
+      show();
+      new daum.Postcode({
+        oncomplete: function (data) {
+          const addr = (data.userSelectedType === 'R') ? data.roadAddress : data.jibunAddress;
+          if (addrInput) { addrInput.value = addr || ''; addrInput.focus(); }
+          hide();
+        },
+        onresize: function (size) { layer.style.height = size.height + 'px'; },
+        width: '100%', height: '100%'
+      }).embed(layer);
+    });
+
+    closeBtn.addEventListener('click', hide);
+    dim.addEventListener('click', hide);
+  })();
+</script>
+
+  
+</body>
+</html>

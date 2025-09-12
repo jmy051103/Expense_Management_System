@@ -1,0 +1,340 @@
+/* =========================================================
+   색상 / 토큰
+   ========================================================= */
+:root{
+  --bg:#f3f4f6;
+  --panel:#ffffff;
+  --ink:#1f2937;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --brand:#2d333b;
+  --brand-ink:#0b13eb;
+  --title-bg:#2e7192;
+  --footer-bg:#2e7192;
+  --footer-ink:#e5e7eb;
+
+  --thead-bg:#7ea0b8;
+  --thead-border:#6f8ea6;
+}
+
+/* =========================================================
+   기본 리셋 & 텍스트 유틸
+   ========================================================= */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif;
+  color:var(--ink);
+  background:var(--bg);
+}
+
+.num{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum"; }
+.right{ text-align:right; }
+.left{ text-align:left; }
+.center{ text-align:center; }
+
+/* 상단 링크 보강 */
+.titlebar h1 a.title-link,
+.titlebar h1 a.title-link:link,
+.titlebar h1 a.title-link:visited,
+.titlebar h1 a.title-link:hover,
+.titlebar h1 a.title-link:active{ color:#fff; text-decoration:none; }
+.tabs .tab:link,
+.tabs .tab:visited,
+.tab-group > a:link,
+.tab-group > a:visited{ color:#374151; text-decoration:none; }
+
+/* 드롭다운 장식 제거 */
+.dropdown li{ margin:0; padding:0; border:0 !important; }
+.dropdown a{
+  display:block;
+  padding:10px 12px;
+  font-size:14px;
+  color:#111;
+  text-decoration:none;
+  font-weight:400;
+  border:0 !important;
+  outline:none !important;
+  box-shadow:none !important;
+  background:transparent !important;
+}
+.dropdown a:hover,
+.dropdown a:active,
+.dropdown a:focus{ text-decoration:none !important; background:transparent !important; }
+.dropdown a::before,
+.dropdown a::after{ content:none !important; }
+.dropdown li + li a{ border-top:0 !important; }
+
+/* =========================================================
+   레이아웃
+   ========================================================= */
+.container{
+  flex:1;
+  width:100%;
+  max-width:1400px;
+  margin:0 auto;
+  padding:28px 16px 40px;
+}
+
+.page-title{
+  margin:8px 0 18px;
+  text-align:center;
+  font-size:32px;
+  font-weight:800;
+}
+
+.page-sub{ margin:0 0 14px; color:var(--muted); }
+
+/* =========================================================
+   검색/툴바 (컴팩트 + 가운데 정렬)
+   ========================================================= */
+.toolbar{
+  display:grid;
+  grid-template-columns:120px 1fr 1fr auto auto;
+  gap:10px;
+  align-items:center;
+  padding:14px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  margin:0 auto 14px;
+  width:min(960px, 100%);
+}
+@media (max-width:980px){
+  .toolbar{ width:100%; }
+}
+.inp,.sel{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  font-size:14px;
+}
+
+/* =========================================================
+   버튼(공통)
+   ========================================================= */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  font-size:13px;
+  color:#374151;
+  text-decoration:none;
+  vertical-align:middle;
+}
+.btn + .btn{ margin-left:8px; }
+.btn.primary{ background:#3b82f6; border-color:#3b82f6; color:#fff; }
+.btn.gray{ background:#f0f2f5; }
+.btn.small{ height:34px; padding:0 12px; font-size:12px; border-radius:8px; }
+
+/* =========================================================
+   패널 & 테이블(리스트)
+   ========================================================= */
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+  width:100%;
+  max-width:100%;
+}
+
+.table-wrap{ overflow-x:auto; }
+table{ width:100%; border-collapse:separate; border-spacing:0; }
+
+/* 헤더 */
+thead th{
+  padding:14px 12px;
+  text-align:center;
+  font-size:14px;
+  color:#fff;
+  background:var(--thead-bg);
+  border-right:1px solid var(--thead-border);
+}
+thead th:first-child{ border-left:0; }
+thead th:last-child{ border-right:0; }
+
+/* 바디 */
+tbody td{
+  padding:14px 12px;
+  font-size:15px;
+  color:#1f2937;
+  border-bottom:1px solid var(--line);
+  background:#fff;
+}
+
+/* 지브라 + hover */
+tbody tr:nth-child(odd) td{ background:#fcfdff; }
+tbody tr:hover td{ background:#f6f9fc; }
+
+/* 컬럼 폭(필요 시) */
+.th-name{ width:220px; }
+.th-email{ width:220px; }
+.th-actions{ width:160px; }
+
+/* 체크박스 셀 */
+th.checkbox-cell,
+td.checkbox-cell{ width:36px; text-align:center; }
+
+/* 액션 버튼 정렬 */
+td.actions{ white-space:nowrap; padding:14px 12px; }
+td.actions .action-group{
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  justify-content:center;
+}
+
+/* 선택 삭제 안내 줄 */
+.table-note,
+.bulk-delete{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 16px;
+  background:#fff;
+  border-top:1px solid var(--line);
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* 페이지네이션 */
+.pagination{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  background:#fff;
+  border-top:1px solid var(--line);
+}
+.pagination .page,
+.pagination .page-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:32px;
+  height:32px;
+  padding:0 8px;
+  border:1px solid #d1d5db;
+  border-radius:6px;
+  background:#fff;
+  color:#374151;
+  font-size:13px;
+  text-decoration:none;
+}
+.pagination .current{ background:#3b82f6; border-color:#3b82f6; color:#fff; }
+.pagination .disabled{ opacity:.45; pointer-events:none; }
+
+/* 리스트 표 가운데 정렬 강제 */
+.table-wrap > table th,
+.table-wrap > table td{ text-align:center !important; vertical-align:middle; }
+.table-wrap > table td.left{ text-align:center !important; }
+
+/* =========================================================
+   폼 화면(등록/수정)
+   ========================================================= */
+.form-table{ width:100%; border-collapse:separate; border-spacing:0; }
+.form-table td{
+  padding:12px;
+  font-size:14px;
+  vertical-align:middle;
+  border-bottom:1px solid var(--line);
+}
+.form-table .label{
+  width:160px;
+  background:#f3f4f6;
+  font-weight:600;
+  text-align:center;
+  vertical-align:middle;
+}
+
+/* 입력창 높이 통일 */
+.form-table .inp,
+.form-table input[type="text"],
+.form-table input[type="email"],
+.form-table input[type="tel"]{
+  width:100%;
+  height:36px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  font-size:14px;
+  outline:none;
+}
+
+/* 폼셋 삭제 체크박스 숨김 */
+#contacts-tbody input[type="checkbox"][name$="-DELETE"]{ display:none; }
+
+/* 담당자 폼 테이블 */
+.contacts-table{ table-layout:fixed; width:100%; }
+.contacts-table input[type="text"],
+.contacts-table input[type="tel"],
+.contacts-table input[type="email"]{ width:100%; }
+
+/* 담당자 추가/삭제 버튼 줄 */
+.btn-row{ display:flex; gap:8px; align-items:center; margin:16px 0; }
+.btn-row[style*="justify-content:flex-end"]{ justify-content:flex-end; }
+
+/* 담당자 ‘삭제’ 버튼 톤 */
+.btn.btn-del,
+.btn.small.gray.btn-del{ background:#f9fafb; border-color:var(--line); }
+
+/* =========================================================
+   푸터
+   ========================================================= */
+.site-footer{
+  margin-top:32px;
+  background:var(--footer-bg);
+  color:var(--footer-ink);
+}
+.footer-inner{
+  max-width:1100px;
+  margin:0 auto;
+  padding:18px 16px;
+  display:grid;
+  grid-template-columns:280px 1fr;
+  gap:24px;
+  align-items:start;
+}
+.footer-left{
+  padding:8px 0;
+  text-align:center;
+  font-weight:800;
+  font-size:18px;
+  border-right:1px solid rgba(255,255,255,.25);
+}
+.footer-right{
+  padding:8px 0 8px 18px;
+  font-size:14px;
+  line-height:1.75;
+}
+
+/* 주소 입력 레이아웃 */
+.addr-wrap{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:8px;
+  width:100%;
+}
+.addr-wrap > #id_address{
+  flex:1 1 auto;
+  min-width:0;
+}
+
+/* 담당자 추가 버튼 여백 */
+#add-contact-btn{ margin-right:40px; }

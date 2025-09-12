@@ -4,8 +4,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-09-00">
+  <title>매입처정보</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-10-11">
+  <link rel="stylesheet" href="{% static 'css/sales_partner_list.css' %}?v=2025-09-12-11">
 </head>
 <body>
 
@@ -36,9 +37,7 @@
       {% with acc=request.user.profile.access|default_if_none:"" %}
         {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
           <div class="tab-group has-dropdown">
-            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">
-              계정관리
-            </a>
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">계정관리</a>
             <ul id="menu-accounts" class="dropdown" role="menu" aria-label="계정관리 메뉴">
               <li role="none"><a role="menuitem" href="{% url 'create_profile' %}">계정 만들기</a></li>
               <li role="none"><a role="menuitem" href="{% url 'view_profile' %}">계정 보기</a></li>
@@ -49,23 +48,16 @@
         {% endif %}
       {% endwith %}
 
-      <!-- ✅ 업무관리 드롭다운 추가 -->
       <div class="tab-group has-dropdown">
-        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-work">
-          업무관리
-        </a>
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-work">업무관리</a>
         <ul id="menu-work" class="dropdown" role="menu" aria-label="업무관리 메뉴">
-          <!-- URL 이름은 프로젝트 상황에 맞게 변경 -->
           <li role="none"><a role="menuitem" href="{% url 'sales_partner_list' %}">매출처정보</a></li>
           <li role="none"><a role="menuitem" href="{% url 'purchase_partner_list' %}">매입처정보</a></li>
         </ul>
       </div>
 
-      <!-- 계약정보 드롭다운(기존) -->
       <div class="tab-group has-dropdown">
-        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">
-          계약정보
-        </a>
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">계약정보</a>
         <ul id="menu-contract" class="dropdown" role="menu" aria-label="계약정보 메뉴">
           <li role="none"><a role="menuitem" href="{% url 'add_contract' %}">계약정보 등록</a></li>
           <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
@@ -75,3 +67,183 @@
       <button class="tab" role="tab">통계</button>
     </nav>
   </div>
+
+  <!-- 본문 -->
+  <main class="container content">
+    <h2 class="page-title">매입처정보</h2>
+
+    <!-- 검색/툴바 -->
+    <form class="toolbar" method="get" id="searchForm">
+      <select name="per_page" class="sel" onchange="document.getElementById('searchForm').submit()">
+        {% for n in per_page_options %}
+          <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>목록수 {{ n }}</option>
+        {% endfor %}
+      </select>
+
+      <input class="inp" type="text" name="q_name" value="{{ q_name }}" placeholder="매출처명">
+      <input class="inp" type="text" name="q_contact" value="{{ q_contact }}" placeholder="담당자명">
+
+      <button class="btn gray" type="submit">검색하기</button>
+      <a class="btn primary" href="{% url 'purchase_partner_create' %}">등록하기</a>
+
+      <!-- 페이지 바꿀 때 1페이지부터 보이게 하려면 JS 없이 서버가 처리하므로 hidden은 필요 없음 -->
+    </form>
+
+    <p class="page-sub">검색 {{ page_obj.paginator.count }}건</p>
+
+    <!-- 목록 + 일괄삭제 폼 -->
+    <section class="panel" style="margin-top:12px;">
+      <form id="bulk-form" method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="bulk_delete" />
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px">
+                  <input type="checkbox" id="chk-all">
+                </th>
+                <th style="width:90px">번호</th>
+                <th class="th-name">매출처명</th>
+                <th style="width:170px">사업자번호</th>
+                <th style="width:180px">담당자 정보</th>
+                <th class="th-email">이메일</th>
+                {% if is_popup %}
+                  <th style="width:80px">선택</th>
+                {% else %}
+                  <th class="th-actions">관리</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in page_obj %}
+                <tr>
+                  <td><input type="checkbox" class="row-chk" name="ids" value="{{ p.id }}"></td>
+                  <td class="num">{{ p.id }}</td>
+
+                  <!-- 매출처명: 링크 없이 텍스트 -->
+                  <td class="left">{{ p.name }}</td>
+
+                  <td class="num">{{ p.biz_no|default:"-" }}</td>
+                  <td class="left">
+                    {% with total=p.contacts.all|length %}
+                      {% if total > 0 %}
+                        {{ p.contacts.all.0.name }}{% if total > 1 %} 외 {{ total|add:"-1" }}명{% endif %}
+                      {% else %}
+                        -
+                      {% endif %}
+                    {% endwith %}
+                  </td>
+
+                  <td class="left">
+                    {% with total=p.contacts.all|length %}
+                      {% if total > 0 %}
+                        {{ p.contacts.all.0.email|default:"-" }}
+                      {% else %}
+                        -
+                      {% endif %}
+                    {% endwith %}
+                  </td>
+
+                  {# ▼ 여기부터 마지막 컬럼만 조건부로 #}
+                  {% if is_popup %}
+                    <td class="center">
+                      <button type="button" class="btn small primary"
+                              data-id="{{ p.id }}"
+                              data-name="{{ p.name|escape }}"   {# 브라우저가 엔티티를 원문으로 디코딩해줌 #}
+                              onclick="choosePartner(this)">선택</button>
+                    </td>
+                  {% else %}
+                    <td class="actions">
+                      <div class="action-group">
+                        <a class="btn small" href="{% url 'sales_partner_edit' p.id %}">수정</a>
+                        <form method="post" action="{% url 'sales_partner_delete' p.id %}" style="display:inline;">
+                          {% csrf_token %}
+                          <button type="submit" class="btn small gray"
+                                  onclick="return confirm('삭제하시겠습니까?')">삭제</button>
+                        </form>
+                      </div>
+                    </td>
+                  {% endif %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="btn-row" style="justify-content:flex-start; padding:10px 12px;">
+          <span style="font-size:13px; color:var(--muted); margin-right:10px;">- 선택한 업체를 삭제합니다.</span>
+          <button type="submit" class="btn">선택 삭제</button>
+        </div>
+      </form>
+
+      <!-- 각 행 삭제용 개별 폼들(폼 중첩 방지: 버튼에서 form= 으로 참조) -->
+      {% for p in page_obj %}
+        <form id="del-{{ p.id }}" method="post" action="{% url 'sales_partner_delete' p.id %}" style="display:none;">
+          {% csrf_token %}
+        </form>
+      {% endfor %}
+
+      <!-- ✅ 숫자 페이지네이션 -->
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a class="page-btn" href="?page={{ page_obj.previous_page_number }}{% if qs %}&{{ qs }}{% endif %}">‹</a>
+        {% else %}<span class="page-btn disabled">‹</span>{% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+          {% if num == page_obj.number %}
+            <span class="page current">{{ num }}</span>
+          {% else %}
+            <a class="page" href="?page={{ num }}{% if qs %}&{{ qs }}{% endif %}">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+          <a class="page-btn" href="?page={{ page_obj.next_page_number }}{% if qs %}&{{ qs }}{% endif %}">›</a>
+        {% else %}<span class="page-btn disabled">›</span>{% endif %}
+      </div>
+    </section>
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left"><strong>(주)대진아이엔티</strong></div>
+      <div class="footer-right">
+        <div>경기도 남양주시 다산중앙로19번길 25-23, F동 712호</div>
+        <div>대표명 : 양정안&nbsp;&nbsp;사업자번호 : 637-81-00010</div>
+        <div>기술문의 : 양재민 (jmy051103@gmail.com), 홍지원 (jiwonh37@gmail.com)</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 체크박스 전체선택 -->
+  <script>
+    (function () {
+      const all = document.getElementById('chk-all');
+      if (!all) return;
+      const rows = document.querySelectorAll('.row-chk');
+      all.addEventListener('change', () => {
+        rows.forEach(cb => cb.checked = all.checked);
+      });
+    })();
+  </script>
+
+  {% if is_popup %}
+  <script>
+    function choosePartner(btn){
+      const id   = parseInt(btn.dataset.id, 10);
+      const name = btn.dataset.name;  // "A & B"처럼 엔티티는 자동 복원됨
+
+      if (window.opener && !window.opener.closed &&
+          typeof window.opener.selectPartnerFromPopup === 'function'){
+        window.opener.selectPartnerFromPopup({id, name});
+        window.close();
+      } else {
+        alert('선택을 전달할 창이 없습니다.');
+      }
+    }
+  </script>
+  {% endif %}
+</body>
+</html>
