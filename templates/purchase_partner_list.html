@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>매입처정보</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-10-11">
-  <link rel="stylesheet" href="{% static 'css/sales_partner_list.css' %}?v=2025-09-12-11">
+  <link rel="stylesheet" href="{% static 'css/purchase_partner_list.css' %}?v=2025-09-12-11">
 </head>
 <body>
 
@@ -156,12 +156,12 @@
                   {% else %}
                     <td class="actions">
                       <div class="action-group">
-                        <a class="btn small" href="{% url 'sales_partner_edit' p.id %}">수정</a>
-                        <form method="post" action="{% url 'sales_partner_delete' p.id %}" style="display:inline;">
-                          {% csrf_token %}
-                          <button type="submit" class="btn small gray"
-                                  onclick="return confirm('삭제하시겠습니까?')">삭제</button>
-                        </form>
+                        <a class="btn small" href="{% url 'purchase_partner_edit' p.id %}">수정</a>
+                        <button type="submit"
+                                class="btn small gray"
+                                formmethod="post"
+                                formaction="{% url 'purchase_partner_delete' p.id %}"
+                                onclick="return confirm('삭제하시겠습니까?')">삭제</button>
                       </div>
                     </td>
                   {% endif %}
@@ -179,7 +179,7 @@
 
       <!-- 각 행 삭제용 개별 폼들(폼 중첩 방지: 버튼에서 form= 으로 참조) -->
       {% for p in page_obj %}
-        <form id="del-{{ p.id }}" method="post" action="{% url 'sales_partner_delete' p.id %}" style="display:none;">
+        <form id="del-{{ p.id }}" method="post" action="{% url 'purchase_partner_delete' p.id %}" style="display:none;">
           {% csrf_token %}
         </form>
       {% endfor %}
@@ -233,11 +233,13 @@
   <script>
     function choosePartner(btn){
       const id   = parseInt(btn.dataset.id, 10);
-      const name = btn.dataset.name;  // "A & B"처럼 엔티티는 자동 복원됨
+      const name = btn.dataset.name;   // 엔티티 자동 복원됨
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get('target') || '';
 
       if (window.opener && !window.opener.closed &&
-          typeof window.opener.selectPartnerFromPopup === 'function'){
-        window.opener.selectPartnerFromPopup({id, name});
+          typeof window.opener.selectPurchasePartnerFromPopup === 'function') {
+        window.opener.selectPurchasePartnerFromPopup({ id, name, target });
         window.close();
       } else {
         alert('선택을 전달할 창이 없습니다.');

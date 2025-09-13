@@ -853,5 +853,55 @@
     };
   </script>
 
+  <script>
+(function(){
+  // 특정 매입처 input을 대상으로 팝업 열기
+  function openPurchasePopupFor(inputEl){
+    // 대상 input에 id가 없으면 하나 부여(콜백에서 식별용)
+    if (!inputEl.id) {
+      inputEl.id = `vendor-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+    }
+    const q = (inputEl.value || '').trim();
+    const url = `/partners/purchase/?popup=1`
+              + (q ? `&q_name=${encodeURIComponent(q)}` : '')
+              + `&target=${encodeURIComponent(inputEl.id)}`;
+    window.open(url, 'purchasePartnerSearch', 'width=900,height=600');
+  }
+
+  // 거래내역 tbody에서 vendor[] 입력칸: Enter 또는 더블클릭으로 팝업 열기
+  const tbody = document.getElementById('items-body');
+  tbody.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && e.target && e.target.name === 'vendor[]') {
+      e.preventDefault();
+      openPurchasePopupFor(e.target);
+    }
+  });
+  tbody.addEventListener('dblclick', function(e){
+    const t = e.target;
+    if (t && t.name === 'vendor[]') openPurchasePopupFor(t);
+  });
+
+  // 팝업에서 호출하는 콜백 (매입처 선택)
+  window.selectPurchasePartnerFromPopup = function({ id, name, target }){
+    const input = document.getElementById(target);
+    if (!input) return;
+    // 이름 채우기
+    input.value = name;
+
+    // 선택한 매입처 id도 함께 제출하고 싶으면 hidden 동반
+    // (이미 있다면 재사용, 없으면 생성)
+    let hidden = input.nextElementSibling && input.nextElementSibling.matches('input[type="hidden"][name="vendor_partner_id[]"]')
+      ? input.nextElementSibling
+      : null;
+    if (!hidden) {
+      hidden = document.createElement('input');
+      hidden.type = 'hidden';
+      hidden.name = 'vendor_partner_id[]';
+      input.insertAdjacentElement('afterend', hidden);
+    }
+    hidden.value = id;
+  };
+})();
+</script>
 </body>
 </html>

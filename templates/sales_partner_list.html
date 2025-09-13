@@ -157,11 +157,11 @@
                     <td class="actions">
                       <div class="action-group">
                         <a class="btn small" href="{% url 'sales_partner_edit' p.id %}">수정</a>
-                        <form method="post" action="{% url 'sales_partner_delete' p.id %}" style="display:inline;">
-                          {% csrf_token %}
-                          <button type="submit" class="btn small gray"
-                                  onclick="return confirm('삭제하시겠습니까?')">삭제</button>
-                        </form>
+                        <button type="submit"
+                                class="btn small gray"
+                                formmethod="post"
+                                formaction="{% url 'sales_partner_delete' p.id %}"
+                                onclick="return confirm('삭제하시겠습니까?')">삭제</button>
                       </div>
                     </td>
                   {% endif %}
