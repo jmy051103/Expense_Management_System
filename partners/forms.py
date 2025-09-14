@@ -50,13 +50,15 @@ SalesPartnerContactFormSetEdit = inlineformset_factory(
 class PurchasePartnerForm(forms.ModelForm):
     class Meta:
         model = PurchasePartner
-        fields = ["name", "biz_no", "fax", "address", "email"]
+        fields = ["name", "biz_no", "fax", "address", "email", "homepage"]
         widgets = {
             "name": forms.TextInput(attrs={"class": "inp", "placeholder": "매입처명"}),
             "biz_no": forms.TextInput(attrs={"class": "inp", "placeholder": "사업자번호"}),
             "fax": forms.TextInput(attrs={"class": "inp", "placeholder": "팩스번호"}),
             "address": forms.TextInput(attrs={"class": "inp", "placeholder": "주소"}),
             "email": forms.EmailInput(attrs={"class": "inp", "placeholder": "대표 이메일"}),
+            "homepage": forms.URLInput(attrs={"class": "inp", "placeholder": "매입처 홈페이지"}),
+
         }
 
 class PurchasePartnerContactForm(forms.ModelForm):
@@ -82,3 +84,9 @@ PurchasePartnerContactFormSetEdit = inlineformset_factory(
     form=PurchasePartnerContactForm,
     extra=0, can_delete=True,
 )
+
+def clean_homepage(self):
+    url = self.cleaned_data.get("homepage") or ""
+    if url and not url.startswith(("http://", "https://")):
+        url = "https://" + url
+    return url

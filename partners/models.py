@@ -44,6 +44,7 @@ class PurchasePartner(models.Model):
     fax = models.CharField("팩스번호", max_length=50, blank=True)
     address = models.CharField("주소", max_length=300, blank=True)
     email = models.EmailField("대표 이메일", blank=True)
+    homepage = models.URLField("홈페이지", blank=True, null=True)
 
     class Meta:
         db_table = "partners_purchasepartner"
