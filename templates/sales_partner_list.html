@@ -74,6 +74,10 @@
 
     <!-- 검색/툴바 -->
     <form class="toolbar" method="get" id="searchForm">
+      {% if is_popup %}
+        <input type="hidden" name="popup" value="1">
+      {% endif %}
+
       <select name="per_page" class="sel" onchange="document.getElementById('searchForm').submit()">
         {% for n in per_page_options %}
           <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>목록수 {{ n }}</option>

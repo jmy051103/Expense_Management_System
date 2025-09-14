@@ -793,17 +793,12 @@
 
   <script>
     // 회사 검색 Enter → 팝업 열기 (이 리스너만 유지)
-    document.getElementById('customer_company').addEventListener('keydown', function(e){
+    document.getElementById('customer_company')?.addEventListener('keydown', function(e){
       if (e.key === 'Enter') {
         e.preventDefault();
-        const q = this.value.trim();
-        if (q) {
-          window.open(
-            `/partners/sales/?popup=1&q_name=${encodeURIComponent(q)}`,
-            'partnerSearch',
-            'width=900,height=600'
-          );
-        }
+        const q = (this.value || '').trim();
+        const url = `/partners/sales/?popup=1` + (q ? `&q_name=${encodeURIComponent(q)}` : '');
+        window.open(url, 'partnerSearch', 'width=900,height=600');
       }
     });
 

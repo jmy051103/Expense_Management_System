@@ -74,13 +74,20 @@
 
     <!-- 검색/툴바 -->
     <form class="toolbar" method="get" id="searchForm">
+      {% if is_popup %}
+        <input type="hidden" name="popup" value="1">
+        {% if request.GET.target %}
+          <input type="hidden" name="target" value="{{ request.GET.target }}">
+        {% endif %}
+      {% endif %}
+
       <select name="per_page" class="sel" onchange="document.getElementById('searchForm').submit()">
         {% for n in per_page_options %}
           <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>목록수 {{ n }}</option>
         {% endfor %}
       </select>
 
-      <input class="inp" type="text" name="q_name" value="{{ q_name }}" placeholder="매출처명">
+      <input class="inp" type="text" name="q_name" value="{{ q_name }}" placeholder="매입처명">
       <input class="inp" type="text" name="q_contact" value="{{ q_contact }}" placeholder="담당자명">
 
       <button class="btn gray" type="submit">검색하기</button>
@@ -104,7 +111,7 @@
                   <input type="checkbox" id="chk-all">
                 </th>
                 <th style="width:90px">번호</th>
-                <th class="th-name">매출처명</th>
+                <th class="th-name">매입처명</th>
                 <th style="width:170px">사업자번호</th>
                 <th style="width:180px">담당자 정보</th>
                 <th class="th-email">이메일</th>
