@@ -15,6 +15,10 @@ try:
 except Exception:
     Contract = None
 
+try:
+    from partners.models import SalesPartner
+except Exception:
+    SalesPartner = None
 
 
 def get_sales_people(only_sales: bool = False):
@@ -56,6 +60,7 @@ def dashboard(request):
         "request_count": 0,
         "in_progress": 0,
         "done": 0,
+        "accounts": SalesPartner.objects.count() if SalesPartner else 0,
     }
 
     if Contract is not None:

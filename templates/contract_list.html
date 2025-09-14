@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-12-11">
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-14-10">
 </head>
 <body>
 
@@ -329,6 +329,141 @@
         lb.click();
       }
     });
+  </script>
+
+  <script>
+  (function(){
+    // yyyy-mm-dd 포맷
+    const pad = n => (n<10?'0':'') + n;
+    const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+    // 달력 DOM 만들기(한 번만)
+    function buildPicker(){
+      const wrap = document.createElement('div');
+      wrap.className = 'dj-datepicker dj-hidden';
+      wrap.innerHTML = `
+        <div class="dj-dp-head">
+          <button type="button" class="dj-dp-btn" data-prev aria-label="이전달">◀</button>
+          <div class="dj-dp-title"></div>
+          <button type="button" class="dj-dp-btn" data-next aria-label="다음달">▶</button>
+        </div>
+        <div class="dj-dp-grid">
+          <div class="dj-dp-dow">
+            <span>Su</span><span>Mo</span><span>Tu</span>
+            <span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+          </div>
+          <div class="dj-dp-day"></div>
+        </div>`;
+      document.body.appendChild(wrap);
+      return wrap;
+    }
+
+    const picker = buildPicker();
+    const titleEl = picker.querySelector('.dj-dp-title');
+    const daysEl  = picker.querySelector('.dj-dp-day');
+
+    let activeInput = null;
+    let viewYear = 0, viewMonth = 0; // 0-11
+
+    function render(year, month){
+      viewYear = year; viewMonth = month;
+      titleEl.textContent = `${year}년 ${String(month+1).padStart(2,'0')}월`;
+      daysEl.innerHTML = '';
+
+      const first = new Date(year, month, 1);
+      const startDay = first.getDay();
+      const lastDate = new Date(year, month+1, 0).getDate();
+
+      const frag = document.createDocumentFragment();
+      for (let i=0; i<startDay; i++){
+        const div = document.createElement('div');
+        div.className = 'blank';
+        frag.appendChild(div);
+      }
+
+      const todayStr = fmt(new Date());
+      for (let d=1; d<=lastDate; d++){
+        const btn = document.createElement('button');
+        btn.type='button';
+        btn.textContent = d;
+        const thisStr = fmt(new Date(year, month, d));
+        if (thisStr === todayStr) btn.classList.add('is-today');
+        btn.addEventListener('click', ()=>{
+          if (!activeInput) return;
+          activeInput.value = thisStr;   // 클릭으로 값만 세팅
+        });
+        btn.addEventListener('dblclick', ()=>{
+          if (!activeInput) return;
+          activeInput.value = thisStr;   // 더블클릭하면 값 세팅 + 닫기
+          closePicker();
+        });
+        frag.appendChild(btn);
+      }
+
+      const filled = startDay + lastDate;
+      const tail = (7 - (filled % 7)) % 7;
+      for (let i=0; i<tail; i++){
+        const div = document.createElement('div');
+        div.className = 'blank';
+        frag.appendChild(div);
+      }
+
+      daysEl.appendChild(frag);
+    }
+
+    function openPicker(input){
+      activeInput = input;
+      const base = (input.value && /^\d{4}-\d{2}-\d{2}$/.test(input.value))
+        ? new Date(input.value)
+        : new Date();
+      render(base.getFullYear(), base.getMonth());
+
+      const rect = input.getBoundingClientRect();
+      picker.style.left = (window.scrollX + rect.left) + 'px';
+      picker.style.top  = (window.scrollY + rect.bottom + 6) + 'px';
+      picker.classList.remove('dj-hidden');
+    }
+    function closePicker(){
+      picker.classList.add('dj-hidden');
+      activeInput = null;
+    }
+
+    picker.querySelector('[data-prev]').addEventListener('click', ()=>{
+      const m = viewMonth===0?11:viewMonth-1;
+      const y = viewMonth===0?viewYear-1:viewYear;
+      render(y,m);
+    });
+    picker.querySelector('[data-next]').addEventListener('click', ()=>{
+      const m = viewMonth===11?0:viewMonth+1;
+      const y = viewMonth===11?viewYear+1:viewYear;
+      render(y,m);
+    });
+
+    // 바깥 클릭/ESC 닫기
+    document.addEventListener('mousedown', (e)=>{
+      if(!picker.classList.contains('dj-hidden') && !picker.contains(e.target) && e.target !== activeInput){
+        closePicker();
+      }
+    });
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closePicker(); });
+
+    // === 이 페이지의 날짜 인풋 연결 ===
+    const dateInputs = Array
+      .from(document.querySelectorAll('input[name="date_from"], input[name="date_to"]'));
+
+    dateInputs.forEach(inp=>{
+      // 브라우저 기본 date UI 비활성화를 위해 text로 교체
+      if (inp.type === 'date'){
+        inp.setAttribute('data-original-type','date');
+        inp.type = 'text';
+      }
+      inp.placeholder = '작성일';
+      inp.inputMode = 'numeric';
+
+      inp.addEventListener('focus', ()=> openPicker(inp));
+      inp.addEventListener('click', ()=> openPicker(inp));
+    });
+  })();
   </script>
 </body>
 </html>

@@ -238,65 +238,11 @@
     function execDaumPostcode() {
       new daum.Postcode({
         oncomplete: function(data) {
-          // 사용자가 주소 선택하면 input 채우기
           document.getElementById("id_address").value = data.address;
         }
       }).open();
     }
   </script>
-  <style>
-  /* 레이어 중앙 고정 */
-  #postcode-layer {
-    display:none; position:fixed; left:50%; top:50%;
-    width:360px; height:480px; transform:translate(-50%, -50%);
-    z-index:9999; border:1px solid #e5e7eb; border-radius:10px; background:#fff;
-    box-shadow:0 12px 28px rgba(0,0,0,.15);
-  }
-  #postcode-layer .close {
-    position:absolute; right:8px; top:8px; border:0; background:#f3f4f6; border-radius:8px; padding:6px 10px; cursor:pointer;
-  }
-  #postcode-dim {
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:9998;
-  }
-</style>
 
-<div id="postcode-dim"></div>
-<div id="postcode-layer">
-  <button type="button" class="close" id="postcode-close">닫기</button>
-  <!-- 여기 안에 우편번호 위젯이 임베드됩니다 -->
-</div>
-
-<script>
-  (function () {
-    const btn = document.getElementById('btn-search-address');
-    const layer = document.getElementById('postcode-layer');
-    const dim = document.getElementById('postcode-dim');
-    const closeBtn = document.getElementById('postcode-close');
-    const addrInput = document.getElementById('id_address');
-
-    if (!btn || !layer) return;
-
-    function show() { layer.style.display = 'block'; dim.style.display = 'block'; }
-    function hide() { layer.style.display = 'none'; dim.style.display = 'none'; }
-
-    btn.addEventListener('click', function () {
-      show();
-      new daum.Postcode({
-        oncomplete: function (data) {
-          const addr = (data.userSelectedType === 'R') ? data.roadAddress : data.jibunAddress;
-          if (addrInput) { addrInput.value = addr || ''; addrInput.focus(); }
-          hide();
-        },
-        onresize: function (size) { layer.style.height = size.height + 'px'; },
-        width: '100%', height: '100%'
-      }).embed(layer);
-    });
-
-    closeBtn.addEventListener('click', hide);
-    dim.addEventListener('click', hide);
-  })();
-</script>
-
-  
 </body>
 </html>

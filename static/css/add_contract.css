@@ -499,3 +499,20 @@ table.form-table { width: 100%; border-collapse: collapse; table-layout: fixed; 
 
 /* 공백 셀 */
 .dj-dp-day .blank { height: 34px; border-radius: 8px; background: transparent; border: none; }
+
+/* 주소 검색: 버튼+인풋 한 줄 정렬 */
+.addr-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+}
+.addr-wrap > .inp,
+.addr-wrap > input[type="text"]{
+  flex:1 1 auto;    /* 인풋이 남은 가로폭 모두 차지 */
+  min-width:0;
+}
+
+/* 검색 버튼을 조금 더 진하게 */
+.btn.gray{ background:#e5e7eb; font-weight:600; }
+.btn.gray:hover{ filter:brightness(.98); }

@@ -1,11 +1,12 @@
 {% load static %}
+{% load humanize %}
 <!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-09-00">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-14-10">
 </head>
 <body>
 
@@ -107,13 +108,17 @@
           <div class="link">완료건</div>
         </div>
       </article>
-      <article class="card">
-        <div class="meta">
-          <div class="label">거래 매출처</div>
-          <div class="value num big">{{ stats.accounts|default:"1,135" }}</div>
-          <div class="link">정보</div>
-        </div>
-      </article>
+      <div class="card-link" role="link" tabindex="0"
+          onclick="location.href='{% url 'sales_partner_list' %}'"
+          onkeydown="if(event.key==='Enter'||event.key===' ') location.href='{% url 'sales_partner_list' %}'">
+        <article class="card">
+          <div class="meta">
+            <div class="label">거래 매출처</div>
+            <div class="value num big">{{ stats.accounts|intcomma }}</div>
+            <div class="link">정보</div>
+          </div>
+        </article>
+      </div>
     </section>
 
     <!-- 이번달 거래 -->

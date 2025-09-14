@@ -456,3 +456,44 @@ body {
   word-break:break-word;    /* 긴 단어 줄바꿈 */
 }
 .special-note strong{ color:#111; }
+
+/* ===== 커스텀 달력 ===== */
+:root{
+  --dp-scale: 1.15;
+  --dp-bg: #fff;
+  --dp-ink: #111;
+  --dp-muted: #6b7280;
+  --dp-line: #e5e7eb;
+  --dp-accent: #2e7192;
+}
+.dj-datepicker{
+  position: absolute; z-index: 9999;
+  transform: scale(var(--dp-scale));
+  transform-origin: top left;
+  background: var(--dp-bg);
+  color: var(--dp-ink);
+  border: 1px solid var(--dp-line);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.12);
+  width: 260px; user-select: none;
+}
+.dj-dp-head{
+  display: grid; grid-template-columns: 32px 1fr 32px; align-items: center;
+  padding: 8px; border-bottom: 1px solid var(--dp-line);
+  font-weight: 700; text-align: center;
+}
+.dj-dp-btn{
+  border: 1px solid var(--dp-line); background: #f9fafb; border-radius: 8px;
+  height: 28px; cursor: pointer;
+}
+.dj-dp-grid{ padding: 6px 8px 10px; }
+.dj-dp-dow, .dj-dp-day{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.dj-dp-dow span{ font-size: 12px; color: var(--dp-muted); text-align: center; padding: 4px 0; }
+.dj-dp-day button{
+  height: 34px; border: 1px solid var(--dp-line); background: #fff; border-radius: 8px;
+  cursor: pointer; text-align: center;
+}
+.dj-dp-day button:hover{ border-color: var(--dp-accent); }
+.dj-dp-day button.is-today{ border-color: var(--dp-accent); }
+.dj-hidden{ display: none !important; }
+.dj-dp-day .blank { height: 34px; border-radius: 8px; background: transparent; border: none; }

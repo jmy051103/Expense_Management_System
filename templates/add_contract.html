@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-12-11">
+  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-14-10">
   <style>
     /* 거래내역 표 내부 전용(버튼 크기/배치) */
     #items-table .arrows-col{
@@ -356,9 +356,24 @@
               </tr>
               <tr>
                 <th>배송지주소</th>
-                <td><input class="inp" name="ship_addr" value="{% if is_edit %}{{ contract.ship_addr }}{% endif %}"></td>
+                <td colspan="3">
+                  <div class="addr-wrap">
+                    <button type="button"
+                            class="btn gray"
+                            style="flex:0 0 auto; min-width:70px;"
+                            onclick="execShipPostcode()">검색</button>
+                    <input id="id_ship_addr" class="inp" name="ship_addr"
+                          value="{% if is_edit %}{{ contract.ship_addr }}{% endif %}"
+                          placeholder="주소">
+                  </div>
+                </td>
+              </tr>
+              <tr>
                 <th>배송지연락처</th>
-                <td><input class="inp" name="ship_phone" value="{% if is_edit %}{{ contract.ship_phone }}{% endif %}"></td>
+                <td colspan="3">
+                  <input class="inp" name="ship_phone"
+                        value="{% if is_edit %}{{ contract.ship_phone }}{% endif %}">
+                </td>
               </tr>
             </tbody>
           </table>
@@ -903,5 +918,18 @@
   };
 })();
 </script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+  function execShipPostcode(){
+    new daum.Postcode({
+      oncomplete: function(data){
+        const addr = data.address || '';
+        const input = document.getElementById('id_ship_addr');
+        if (input){ input.value = addr; input.focus(); }
+      }
+    }).open();
+  }
+</script>
 </body>
 </html>
+

@@ -330,3 +330,62 @@ tbody td {
   pointer-events: none;  /* 클릭/포커스 막기 */
 }
 .tab-disabled:hover { background: transparent; }
+
+.card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.card-link:hover .card {
+  filter: brightness(0.97);
+  cursor: pointer;
+}
+
+/* 카드 전체를 링크로 감쌀 때 스타일 */
+.card-link {
+  display: block;
+  text-decoration: none;   /* 언더라인 제거 */
+  color: inherit;          /* 글자색 부모(검정) 상속 */
+}
+
+.card-link .value {
+  color: #111 !important;  /* 숫자는 항상 검정색 */
+}
+
+.card-link .link {
+  text-decoration: none;   /* 밑줄 제거 */
+  color: #374151;          /* 회색 톤(원하는 색상) */
+}
+.card-link:hover .card {
+  filter: brightness(0.97);
+  cursor: pointer;
+}
+
+/* 카드 링크 보정(언더라인 제거 + 숫자 검정) */
+.cards a{ text-decoration:none !important; color:inherit !important; }
+.cards a .value{ color:#111 !important; }
+.cards a .link{ text-decoration:none !important; color:#374151 !important; }
+
+/* 카드 링크: 모든 상태에서 언더라인/색상 강제 리셋 */
+.card-link,
+.card-link:link,
+.card-link:visited,
+.card-link:hover,
+.card-link:active{
+  text-decoration: none !important;
+  color: inherit !important;     /* 보라/파랑 방지 */
+}
+
+/* 카드 안 숫자는 항상 검정 */
+.card-link .value{ color:#111 !important; }
+
+/* '정보' 텍스트도 밑줄 제거 + 원하는 색 유지 */
+.card-link .link{
+  text-decoration: none !important;
+  color:#374151 !important;
+}
+/* 카드 클릭 DIV 기본 톤(언더라인, 색 강제 제거) */
+.card-link{ text-decoration:none; color:inherit; }
+
+/* 카드 안 '정보' 텍스트는 회색(또는 검정)으로 고정 */
+.card-link .link{ text-decoration:none; color:#374151; } /* 검정 원하면 #111 */
