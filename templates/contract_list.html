@@ -465,5 +465,53 @@
     });
   })();
   </script>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function(){
+    const KR = new Intl.NumberFormat('ko-KR');
+    const toNum = v => {
+      if (typeof v === 'number') return v;
+      if (!v) return 0;
+      return parseFloat(String(v).replace(/[,\s]/g, '')) || 0;
+    };
+    const fmtMoneyText = n => KR.format(Math.round(n)) + '원';
+
+    document.querySelectorAll('tr.row-block').forEach(blockTr => {
+      let sellTotalSum = 0;
+      let buyTotalSum  = 0;
+
+      blockTr.querySelectorAll('.mini-items tbody tr').forEach(row => {
+        const tds = row.children;
+        if (!tds || tds.length < 7) return;
+
+        const sellTotalSpan= tds[4]?.querySelector('span[data-krw], span');
+        const buyTotalSpan = tds[6]?.querySelector('span[data-krw], span');
+
+        const sellTotal = toNum(sellTotalSpan?.getAttribute('data-krw') || sellTotalSpan?.textContent);
+        const buyTotal  = toNum(buyTotalSpan?.getAttribute('data-krw')  || buyTotalSpan?.textContent);
+
+        sellTotalSum += sellTotal;
+        buyTotalSum  += buyTotal;
+
+        if (sellTotalSpan) { sellTotalSpan.textContent = fmtMoneyText(sellTotal); }
+        if (buyTotalSpan)  { buyTotalSpan.textContent  = fmtMoneyText(buyTotal); }
+      });
+
+      const profit = sellTotalSum - buyTotalSum;
+      const margin = sellTotalSum > 0 ? (profit / sellTotalSum) * 100 : 0;
+
+      const profitCell = blockTr.querySelector('td.right.strong');
+      const rightCells = blockTr.querySelectorAll('td.right');
+      const marginCell = rightCells.length >= 2 ? rightCells[1] : null;
+
+      if (profitCell) {
+        profitCell.textContent = fmtMoneyText(profit);
+      }
+      if (marginCell) {
+        marginCell.textContent = Math.round(margin) + '%';
+      }
+    });
+  });
+  </script>
 </body>
 </html>

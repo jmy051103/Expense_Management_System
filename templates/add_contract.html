@@ -574,6 +574,11 @@
       });
       sumSellEl.textContent = fmt(sellSum);
       sumBuyEl.textContent  = fmt(buySum);
+      const profit = sellSum - buySum;
+      document.querySelector('[name="profit"]').textContent = fmt(profit) + "원";
+      let margin = 0;
+      if (sellSum > 0) margin = (profit / sellSum) * 100;
+      document.querySelector('[name="margin"]').textContent = margin.toFixed(2) + "%";
     }
 
     function recalcRow(tr){
