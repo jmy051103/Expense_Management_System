@@ -193,15 +193,18 @@ def contract_processing_list(request):
 
 @login_required
 @require_POST
-def contract_approve(request, pk: int):
+def contract_submit(request, pk: int):
     contract = get_object_or_404(Contract, pk=pk)
 
-    # ✅ 'draft' → 'submitted'
-    if contract.status != "submitted":
-        messages.warning(request, "품의요청 상태에서만 결재승인이 가능합니다.")
-        return redirect("contract_temporary")  # 품의요청 목록으로
+    if contract.status != "draft":
+        messages.warning(request, "임시저장 상태에서만 품의요청이 가능합니다.")
+        return redirect("contract_temporary")
 
-    contract.status = "processing"
+    contract.status = "submitted"
     contract.save(update_fields=["status"])
-    messages.success(request, f"[{contract.contract_no or contract.pk}] 결재처리중으로 이동했습니다.")
+
+    # ⬇️ contract_no가 없으면 pk(또는 id)로 대체
+    display_no = getattr(contract, "contract_no", None) or getattr(contract, "id", contract.pk)
+    messages.success(request, f"[{display_no}] 품의요청으로 전환했습니다.")
+
     return redirect("contract_processing")

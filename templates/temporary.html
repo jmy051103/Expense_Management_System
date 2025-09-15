@@ -201,10 +201,10 @@
                     <td class="actions" rowspan="{{ rows }}">
                       <a class="btn light" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
 
-                      <form method="post" action="{% url 'contract_approve' c.id %}"
-                            onsubmit="event.stopPropagation(); return confirm('결재처리중으로 이동하시겠습니까?');">
+                      <form method="post" action="{% url 'contract_submit' c.id %}"
+                            onsubmit="event.stopPropagation(); return confirm('품의요청으로 이동하시겠습니까?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn primary">결재승인</button>
+                        <button type="submit" class="btn primary">품의요청</button>
                       </form>
 
                       <form method="post" action="{% url 'contract_delete' c.id %}"
