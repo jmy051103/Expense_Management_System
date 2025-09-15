@@ -281,18 +281,75 @@ def contract_approved_list(request):
         "page_title": "결재완료 목록",
     })
 
+
+# 상단에 유틸 함수들 추가/수정
+def _get_access(user) -> str:
+    if not user.is_authenticated:
+        return ""
+    if user.is_superuser:
+        return "SUPER"
+    try:
+        return getattr(getattr(user, "profile", None), "access", "") or ""
+    except Exception:
+        return ""
+
+def _can_submit(user) -> bool:
+    """임시저장 -> 품의요청: 로그인 사용자 모두(직원/관리자/실장/사장/슈퍼)"""
+    return user.is_authenticated
+
+def _can_approve(user) -> bool:
+    """품의요청 -> 결재처리: 실장/사장/슈퍼만 (관리자모드 X)"""
+    if user.is_superuser:
+        return True
+    return _get_access(user) in ("실장모드", "사장모드")
+
+def _can_complete(user) -> bool:
+    """결재처리 -> 결재완료: 사장/슈퍼만 (관리자/실장 X)"""
+    if user.is_superuser:
+        return True
+    return _get_access(user) in ("사장모드",)
+
+
+@login_required
+@require_POST
+def contract_approve(request, pk: int):
+    """submitted -> processing"""
+    if not _can_approve(request.user):
+        messages.error(request, "실장/사장만 결재처리가 가능합니다.")
+        return redirect("contract_processing")
+    contract = get_object_or_404(Contract, pk=pk)
+    if contract.status != "submitted":
+        messages.warning(request, "품의요청 상태에서만 결재처리가 가능합니다.")
+        return redirect("contract_processing")
+    contract.status = "processing"
+    contract.save(update_fields=["status"])
+    messages.success(request, f"[{contract.pk}] 결재처리중으로 변경했습니다.")
+    return redirect("contract_processing")
+
 @login_required
 @require_POST
 def contract_complete(request, pk: int):
-    contract = get_object_or_404(Contract, pk=pk)
-
-    # 처리 가능한 상태만 허용 (원하면 조건 수정)
-    if contract.status not in ("processing", "submitted"):
-        messages.warning(request, "결재처리중/품의요청 상태만 결재완료로 변경할 수 있습니다.")
-        # 단건 상세/처리 페이지 이름이 다르면 적절히 바꿔주세요
+    """processing -> completed"""
+    if not _can_complete(request.user):
+        messages.error(request, "사장만 결재완료 처리가 가능합니다.")
         return redirect("contract_processing")
-
+    contract = get_object_or_404(Contract, pk=pk)
+    if contract.status != "processing":
+        messages.warning(request, "결재처리중 상태에서만 결재완료가 가능합니다.")
+        return redirect("contract_processing")
     contract.status = "completed"
     contract.save(update_fields=["status"])
     messages.success(request, f"[{contract.pk}] 결재완료로 변경했습니다.")
     return redirect("contract_approved")
+
+
+@login_required
+@require_POST
+def contract_delete(request, pk: int):
+    """옵션: 리스트에서 쓰는 삭제 버튼용"""
+    contract = get_object_or_404(Contract, pk=pk)
+    # 필요 시 권한 체크 추가
+    contract.delete()
+    messages.success(request, "계약이 삭제되었습니다.")
+    # 어디로 돌릴지 정책에 따라 변경 (여기는 품의요청 목록으로)
+    return redirect("contract_processing")
