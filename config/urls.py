@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.views import LoginView, LogoutView
 from django.conf import settings
 from django.conf.urls.static import static
+from accounts import views as accounts_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -22,7 +23,7 @@ urlpatterns = [
     ),
     path("accounts/logout/", LogoutView.as_view(next_page="home"), name="logout"),
 
-    # ✅ accounts 앱 URL include
+    # accounts 앱 URL include
     path("accounts/", include("accounts.urls")),
 
     # expenses 앱
@@ -30,6 +31,10 @@ urlpatterns = [
 
     # partner 앱
     path("partners/", include("partners.urls")),
+
+    path("contracts/temporary/",  accounts_views.contract_temporary_list, name="contract_temporary"),
+    path("contracts/processing/", accounts_views.contract_processing_list, name="contract_processing"),
+    path("contracts/<int:pk>/approve/", accounts_views.contract_approve, name="contract_approve"),
 ]
 
 # 개발 환경에서 media 파일 제공

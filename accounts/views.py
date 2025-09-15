@@ -9,6 +9,11 @@ from expenses.models import ExpenseReport
 from .models import Profile
 from .forms import UserEditForm, ProfileEditForm
 from django.db.models import Count
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
+from expenses.models import ExpenseReport
 
 try:
     from expenses.models import Contract
@@ -158,4 +163,53 @@ def edit_account(request, user_id):
         "uform": uform, "pform": pform, "target": target
     })
 
+
+@login_required
+def contract_temporary_list(request):
+    # status 가 'draft' 인 것만
+    qs = (Contract.objects
+          .select_related("writer", "sales_owner")
+          .prefetch_related("items")
+          .filter(status="draft")
+          .order_by("-created_at"))
+    return render(request, "temporary.html", {
+        "contracts": qs,
+        "page_title": "임시저장 목록",
+    })
+
+@login_required
+def contract_processing_list(request):
+    # status 가 'processing' 인 것만
+    qs = (Contract.objects
+          .select_related("writer", "sales_owner")
+          .prefetch_related("items")
+          .filter(status="processing")
+          .order_by("-created_at"))
+    return render(request, "processing.html", {
+        "contracts": qs,
+        "page_title": "결재처리중 목록",
+    })
+
+@login_required
+@require_POST
+def contract_approve(request, pk: int):
+    """
+    임시저장 상태(draft) → 결재처리중(processing) 으로 전환
+    성공 시 결재처리중 목록으로 이동
+    """
+    contract = get_object_or_404(Contract, pk=pk)
+
+    if contract.status != "draft":
+        messages.warning(request, "임시저장 상태에서만 결재승인이 가능합니다.")
+        return redirect("contract_temporary")
+
+    # (선택) 권한 체크가 필요하면 여기에 조건 추가
+    # if not (request.user.is_superuser or request.user == contract.writer):
+    #     messages.error(request, "결재승인 권한이 없습니다.")
+    #     return redirect("contract_temporary")
+
+    contract.status = "processing"
+    contract.save(update_fields=["status"])
+    messages.success(request, f"[{contract.contract_no or contract.pk}] 결재처리중으로 이동했습니다.")
+    return redirect("contract_processing")
 
