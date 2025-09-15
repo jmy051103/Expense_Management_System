@@ -266,3 +266,33 @@ def contract_process_page(request):
         "contracts": qs,
         "page_title": "결재처리중 목록",
     })
+
+@login_required
+def contract_approved_list(request):
+    qs = (
+        Contract.objects
+        .select_related("writer", "sales_owner")
+        .prefetch_related("items")
+        .filter(status="completed")         # ← 결재완료만
+        .order_by("-created_at")
+    )
+    return render(request, "approved.html", {
+        "contracts": qs,
+        "page_title": "결재완료 목록",
+    })
+
+@login_required
+@require_POST
+def contract_complete(request, pk: int):
+    contract = get_object_or_404(Contract, pk=pk)
+
+    # 처리 가능한 상태만 허용 (원하면 조건 수정)
+    if contract.status not in ("processing", "submitted"):
+        messages.warning(request, "결재처리중/품의요청 상태만 결재완료로 변경할 수 있습니다.")
+        # 단건 상세/처리 페이지 이름이 다르면 적절히 바꿔주세요
+        return redirect("contract_processing")
+
+    contract.status = "completed"
+    contract.save(update_fields=["status"])
+    messages.success(request, f"[{contract.pk}] 결재완료로 변경했습니다.")
+    return redirect("contract_approved")

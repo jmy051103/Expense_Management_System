@@ -37,6 +37,8 @@ urlpatterns = [
     path("contracts/<int:pk>/submit/", accounts_views.contract_submit, name="contract_submit"),
     path("contracts/<int:pk>/process/", accounts_views.contract_process, name="contract_process"),
     path("contracts/process/", accounts_views.contract_process_page, name="contract_process"),
+    path("contracts/approved/", accounts_views.contract_approved_list, name="contract_approved"),
+    path("contracts/<int:pk>/complete/", accounts_views.contract_complete, name="contract_complete"),
 ]
 
 # 개발 환경에서 media 파일 제공
