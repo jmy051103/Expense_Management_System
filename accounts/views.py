@@ -166,50 +166,42 @@ def edit_account(request, user_id):
 
 @login_required
 def contract_temporary_list(request):
-    # status 가 'draft' 인 것만
+    # 임시저장만
     qs = (Contract.objects
           .select_related("writer", "sales_owner")
           .prefetch_related("items")
-          .filter(status="draft")
+          .filter(status="draft")       # ✅ 임시저장만
           .order_by("-created_at"))
     return render(request, "temporary.html", {
         "contracts": qs,
         "page_title": "임시저장 목록",
     })
 
+
 @login_required
 def contract_processing_list(request):
-    # status 가 'processing' 인 것만
+    # 품의요청만
     qs = (Contract.objects
           .select_related("writer", "sales_owner")
           .prefetch_related("items")
-          .filter(status="processing")
+          .filter(status="submitted")   # ✅ 품의요청만
           .order_by("-created_at"))
     return render(request, "processing.html", {
         "contracts": qs,
-        "page_title": "결재처리중 목록",
+        "page_title": "품의요청 목록",
     })
 
 @login_required
 @require_POST
 def contract_approve(request, pk: int):
-    """
-    임시저장 상태(draft) → 결재처리중(processing) 으로 전환
-    성공 시 결재처리중 목록으로 이동
-    """
     contract = get_object_or_404(Contract, pk=pk)
 
-    if contract.status != "draft":
-        messages.warning(request, "임시저장 상태에서만 결재승인이 가능합니다.")
-        return redirect("contract_temporary")
-
-    # (선택) 권한 체크가 필요하면 여기에 조건 추가
-    # if not (request.user.is_superuser or request.user == contract.writer):
-    #     messages.error(request, "결재승인 권한이 없습니다.")
-    #     return redirect("contract_temporary")
+    # ✅ 'draft' → 'submitted'
+    if contract.status != "submitted":
+        messages.warning(request, "품의요청 상태에서만 결재승인이 가능합니다.")
+        return redirect("contract_temporary")  # 품의요청 목록으로
 
     contract.status = "processing"
     contract.save(update_fields=["status"])
     messages.success(request, f"[{contract.contract_no or contract.pk}] 결재처리중으로 이동했습니다.")
     return redirect("contract_processing")
-

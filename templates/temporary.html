@@ -73,61 +73,7 @@
     {% endif %}
 
     <section class="panel">
-      <div class="table-wrap">
-        <table class="form-table table-list">
-          <thead>
-            <tr>
-              <th style="width:90px">계약번호</th>
-              <th style="width:160px">매출처</th>
-              <th>품목 요약</th>
-              <th style="width:120px">작성자/작성일</th>
-              <th style="width:140px">관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for c in contracts %}
-              <tr data-href="{% url 'contract_detail' c.id %}">
-                <td class="mono">{{ c.contract_no|default:c.id }}</td>
-                <td>{{ c.customer_company|default:c.title }}</td>
-                <td>
-                  {% with items=c.items.all %}
-                    {% if items %}
-                      {% with cnt=items|length %}
-                        {% if cnt > 0 %}
-                            {% with first_item=items|first %}
-                            {% if cnt == 1 %}
-                                {{ first_item.name }}
-                            {% else %}
-                                {{ first_item.name }} 외 {{ cnt|add:"-1" }}건
-                            {% endif %}
-                            {% endwith %}
-                        {% else %}
-                            품목 없음
-                        {% endif %}
-                        {% endwith %}
-                    {% else %}품목 없음{% endif %}
-                  {% endwith %}
-                </td>
-                <td>
-                  <div>{{ c.writer.first_name|default:c.writer.username }}</div>
-                  <small class="muted">{{ c.created_at|date:"Y-m-d" }}</small>
-                </td>
-                <td class="actions">
-                  <a class="btn light" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
-
-                  <form method="post" action="{% url 'contract_approve' c.id %}" style="display:inline"
-                        onsubmit="event.stopPropagation(); return confirm('결재처리중으로 이동하시겠습니까?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn primary">결재승인</button>
-                  </form>
-                </td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="5" class="empty">임시저장된 계약이 없습니다.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+        {% include "contracts/_contracts_table.html" with contracts=contracts %}
     </section>
   </main>
 
