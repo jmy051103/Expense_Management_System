@@ -1,0 +1,235 @@
+{% load static %}
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>결재처리중 목록</title>
+  <link rel="stylesheet" href="{% static 'css/contract_process.css' %}?v=2025-09-15-06">
+</head>
+<body>
+
+  <!-- 상단 상태줄 -->
+  <div class="topbar">
+    <strong>시험운영</strong>
+    <span class="sep">|</span>
+    <small>Today {% now "Y.m.d (D)" %}</small>
+    <span class="ip" style="margin-left:auto;">현재접속 IP : {{ request.META.REMOTE_ADDR|default:"-" }}</span>
+  </div>
+
+  <!-- 타이틀 + 탭 -->
+  <div class="sticky-wrap">
+    <div class="titlebar">
+      <h1>
+        <a href="{% url 'dashboard' %}" class="title-link">(주)대진아이엔티 업무지원시스템</a>
+      </h1>
+      <form action="{% url 'logout' %}" method="post" class="logout-form">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">로그아웃</button>
+      </form>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="상단 메뉴">
+      {% with acc=request.user.profile.access|default_if_none:"" %}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
+          <div class="tab-group has-dropdown">
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">계정관리</a>
+            <ul id="menu-accounts" class="dropdown" role="menu" aria-label="계정관리 메뉴">
+              <li role="none"><a role="menuitem" href="{% url 'create_profile' %}">계정 만들기</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'view_profile' %}">계정 보기</a></li>
+            </ul>
+          </div>
+        {% else %}
+          <span class="tab tab-disabled" aria-disabled="true">계정관리</span>
+        {% endif %}
+      {% endwith %}
+
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-work">업무관리</a>
+        <ul id="menu-work" class="dropdown" role="menu" aria-label="업무관리 메뉴">
+          <li role="none"><a role="menuitem" href="{% url 'sales_partner_list' %}">매출처정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'purchase_partner_list' %}">매입처정보</a></li>
+        </ul>
+      </div>
+
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">계약정보</a>
+        <ul id="menu-contract" class="dropdown" role="menu" aria-label="계약정보 메뉴">
+          <li role="none"><a role="menuitem" href="{% url 'add_contract' %}">계약정보 등록</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
+        </ul>
+      </div>
+
+      <button class="tab" role="tab">통계</button>
+    </nav>
+  </div>
+
+  <!-- 콘텐츠 -->
+  <main class="page-wrap">
+    <h1 class="page-title">결재처리중 목록</h1>
+    <p class="page-sub">계약상태가 <b>결재처리중</b>인 계약만 표시합니다.</p>
+
+    {% if messages %}
+      <ul class="panel" style="margin-bottom:12px;">
+        {% for m in messages %}
+          <li>{{ m }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="form-table table-list">
+          <thead>
+            <tr>
+              <th style="width:80px">계약번호<br><small class="muted">계약상태</small></th>
+              <th style="width:120px">매출처<br><small class="muted">담당자</small></th>
+              <th>품목</th>
+              <th style="width:80px">이익금액</th>
+              <th style="width:80px">이익율</th>
+              <th style="width:80px">마감월</th>
+              <th style="width:80px">작성자<br><small class="muted">작성일</small></th>
+              <th style="width:100px">관리</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for c in contracts %}
+              {% with items=c.items.all %}
+                {% with rows=1 %}
+                  <tr class="row-block" data-href="{% url 'contract_detail' c.id %}">
+                    <!-- 계약번호/상태 -->
+                    <td class="meta meta-no" rowspan="{{ rows }}">
+                      <div class="mono">{{ c.contract_no|default:c.id }}</div>
+                      <a href="{% url 'contract_detail' c.id %}"
+                         class="status-link" onclick="event.stopPropagation()">
+                        {{ c.get_status_display }}
+                      </a>
+                    </td>
+
+                    <!-- 매출처/담당자 -->
+                    <td class="meta meta-cust" rowspan="{{ rows }}">
+                      <div class="cust">{{ c.customer_company|default:c.title }}</div>
+                      <div class="owner">
+                        {% if c.sales_owner %}
+                          {{ c.sales_owner.first_name|default:c.sales_owner.username }}
+                        {% else %}-{% endif %}
+                      </div>
+                    </td>
+
+                    <!-- 품목(내부 미니 테이블) -->
+                    <td class="items-cell">
+                      <table class="mini-items">
+                        <thead>
+                          <tr>
+                            <th class="w-item">품목</th>
+                            <th class="w-qty">수량</th>
+                            <th class="w-spec">규격</th>
+                            <th class="w-num hide-sm">매출단가</th>
+                            <th class="w-num">매출금액</th>
+                            <th class="w-num hide-sm">매입단가</th>
+                            <th class="w-num">매입금액</th>
+                            <th class="w-vendor">매입처</th>
+                            <th class="w-vat">과세</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for it in items %}
+                            <tr>
+                              <td class="txt">{{ it.name }}</td>
+                              <td class="num">{{ it.qty|default:0 }}</td>
+                              <td class="txt">{{ it.spec }}</td>
+
+                              <td class="num hide-sm">
+                                <span data-krw="{{ it.sell_unit|default:0 }}">{{ it.sell_unit|default:0 }}</span>
+                              </td>
+                              <td class="num strong sell">
+                                <span data-krw="{{ it.sell_total|default:0 }}">{{ it.sell_total|default:0 }}</span>
+                              </td>
+
+                              <td class="num hide-sm">
+                                <span data-krw="{{ it.buy_unit|default:0 }}">{{ it.buy_unit|default:0 }}</span>
+                              </td>
+                              <td class="num buy">
+                                <span data-krw="{{ it.buy_total|default:0 }}">{{ it.buy_total|default:0 }}</span>
+                              </td>
+
+                              <td class="txt vendor">{{ it.vendor }}</td>
+                              <td class="w-vat">
+                                {% if it.vat_mode == 'separate' %}VAT별도
+                                {% elif it.vat_mode == 'included' %}VAT포함
+                                {% elif it.vat_mode == 'exempt' %}면세
+                                {% else %}-{% endif %}
+                              </td>
+                            </tr>
+                          {% empty %}
+                            <tr><td class="empty" colspan="9">품목 없음</td></tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+
+                      {% if c.special_note %}
+                        <div class="special-note"><strong>특이사항:</strong> {{ c.special_note }}</div>
+                      {% endif %}
+                    </td>
+
+                    <!-- 오른쪽 고정 컬럼 -->
+                    <td class="right strong" rowspan="{{ rows }}">
+                      {% if c.profit != None %}
+                        <span data-krw="{{ c.profit }}">{{ c.profit }}</span>
+                      {% else %}-{% endif %}
+                    </td>
+                    <td class="right" rowspan="{{ rows }}">
+                      {% if c.margin_rate != None %}{{ c.margin_rate|floatformat:2 }}%{% else %}-{% endif %}
+                    </td>
+                    <td class="center" rowspan="{{ rows }}">
+                      {% if c.margin_month %}{{ c.margin_month }}{% else %}-{% endif %}
+                    </td>
+                    <td class="author" rowspan="{{ rows }}">
+                      <div>{{ c.writer.first_name|default:c.writer.username }}</div>
+                      <small class="muted">{{ c.created_at|date:"Y-m-d" }}</small>
+                    </td>
+                    <td class="actions" rowspan="{{ rows }}">
+                      <a class="btn light" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
+                      <form method="post" action="{% url 'contract_delete' c.id %}"
+                            onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn danger">삭제</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endwith %}
+              {% endwith %}
+            {% empty %}
+              <tr><td colspan="8" class="empty">결재처리중 상태의 계약이 없습니다.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- 하단 회사 정보 -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left"><strong>(주)대진아이엔티</strong></div>
+      <div class="footer-right">
+        <div>경기도 남양주시 다산중앙로19번길 25-23, F동 712호</div>
+        <div>대표명 : 양정안&nbsp;&nbsp;사업자번호 : 637-81-00010</div>
+        <div>기술문의 : 양재민 (jmy051103@gmail.com), 홍지원 (jiwonh37@gmail.com)</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 행 클릭 → 상세 이동 (미니테이블/버튼/폼 클릭은 무시)
+    document.querySelector('.table-list')?.addEventListener('click', (e) => {
+      if (e.target.closest('a,button,form,input,select,textarea,.mini-items')) return;
+      const tr = e.target.closest('tr[data-href]');
+      if (!tr) return;
+      const href = tr.getAttribute('data-href');
+      if (href) window.location.href = href;
+    });
+  </script>
+</body>
+</html>

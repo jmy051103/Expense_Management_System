@@ -106,13 +106,18 @@
       </div>
     </article>
 
-      <article class="card">
-        <div class="meta">
-          <div class="label">결재처리중</div>
-          <div class="value num big">{{ stats.in_progress }}</div>
-          <div class="link">처리중건</div>
-        </div>
-      </article>
+    <article class="card"
+      role="link" tabindex="0"
+      data-url="{% url 'contract_process' %}"
+      onclick="location.href=this.dataset.url"
+      onkeydown="if(event.key==='Enter'||event.key===' ')location.href=this.dataset.url"
+      style="cursor:pointer">
+    <div class="meta">
+      <div class="label">결재처리중</div>
+      <div class="value num big">{{ stats.in_progress }}</div>
+      <div class="link">처리중건</div>
+    </div>
+</article>
       <article class="card">
         <div class="meta">
           <div class="label">결재완료</div>

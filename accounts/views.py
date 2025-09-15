@@ -229,3 +229,40 @@ def contract_process(request, pk: int):
     display_no = getattr(contract, "contract_no", None) or contract.pk
     messages.success(request, f"[{display_no}] 결재처리중으로 전환했습니다.")
     return redirect("contract_processing")  # 결재처리중 목록으로 이동
+
+@login_required
+@require_POST
+def contract_mark_processing(request, pk: int):
+    """
+    품의요청(submitted) -> 결재처리중(processing) 전환 후
+    결재처리중 목록(contract_process)으로 이동
+    """
+    contract = get_object_or_404(Contract, pk=pk)
+
+    if contract.status != "submitted":
+        messages.warning(request, "품의요청 상태에서만 결재처리로 전환 가능합니다.")
+        # ⬇️ 여기는 '품의요청 목록'의 URL name 으로 유지
+        return redirect("contract_processing")
+
+    contract.status = "processing"
+    contract.save(update_fields=["status"])
+
+    # contract_no 가 없는 모델도 대비
+    ident = getattr(contract, "contract_no", None) or contract.pk
+    messages.success(request, f"[{ident}] 결재처리중으로 이동했습니다.")
+
+    # ⬇️ 여기를 반드시 '결재처리중 목록'의 URL name 으로!
+    return redirect("contract_process")
+
+
+@login_required
+def contract_process_page(request):
+    qs = (Contract.objects
+          .select_related("writer", "sales_owner")
+          .prefetch_related("items")
+          .filter(status="processing")
+          .order_by("-created_at"))
+    return render(request, "contract_process.html", {
+        "contracts": qs,
+        "page_title": "결재처리중 목록",
+    })
