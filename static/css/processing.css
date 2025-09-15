@@ -181,6 +181,7 @@ body {
   margin: 0 0 12px;
   font-size: 22px;
   font-weight: 800;
+  text-align: center;
 }
 .page-sub {
   margin: 0 0 16px;
@@ -415,3 +416,5 @@ a:hover { text-decoration: underline; }
   font-size: 14px;
   line-height: 1.75;
 }
+.page-wrap { flex: 1; }        
+.site-footer { margin-top: auto; }

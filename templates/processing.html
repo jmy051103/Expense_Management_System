@@ -198,6 +198,12 @@
                     </td>
                     <td class="actions" rowspan="{{ rows }}">
                       <a class="btn light" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
+                      <form method="post"
+                                action="{% url 'contract_process' c.id %}"
+                                onsubmit="event.stopPropagation(); return confirm('이 계약을 결재처리중으로 전환하시겠습니까?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn primary">결재처리</button>
+                        </form>
                       <form method="post" action="{% url 'contract_delete' c.id %}"
                             onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
                         {% csrf_token %}

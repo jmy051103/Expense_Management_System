@@ -208,3 +208,24 @@ def contract_submit(request, pk: int):
     messages.success(request, f"[{display_no}] 품의요청으로 전환했습니다.")
 
     return redirect("contract_processing")
+
+
+@login_required
+@require_POST
+def contract_process(request, pk: int):
+    """
+    품의요청(submitted) → 결재처리중(processing)
+    완료 후 '결재처리중 목록'으로 이동
+    """
+    contract = get_object_or_404(Contract, pk=pk)
+
+    if contract.status != "submitted":
+        messages.warning(request, "품의요청 상태에서만 결재처리로 전환할 수 있습니다.")
+        return redirect("contract_processing")  # 목록 라우트 이름에 맞게 유지
+
+    contract.status = "processing"
+    contract.save(update_fields=["status"])
+
+    display_no = getattr(contract, "contract_no", None) or contract.pk
+    messages.success(request, f"[{display_no}] 결재처리중으로 전환했습니다.")
+    return redirect("contract_processing")  # 결재처리중 목록으로 이동
