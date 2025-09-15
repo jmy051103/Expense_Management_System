@@ -64,18 +64,10 @@
 
   <main class="page-wrap">
     <h1 class="page-title">임시저장 목록</h1>
-    {% if messages %}
-      <ul class="panel" style="margin-bottom:12px;">
-        {% for m in messages %}
-          <li>{{ m }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-
     <section class="panel">
         {% include "contracts/_contracts_table.html" with contracts=contracts %}
     </section>
-  </main>
+    </main>
 
   <footer class="site-footer">
     <div class="footer-inner">
