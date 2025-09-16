@@ -25,6 +25,18 @@ try:
 except Exception:
     SalesPartner = None
 
+# helpers (파일 상단의 기존 헬퍼 근처에 추가)
+def _is_employee(user) -> bool:
+    return (not user.is_superuser) and _get_access(user) == "직원모드"
+
+def _redirect_by_status(status: str) -> str:
+    return {
+        "draft": "contract_temporary",
+        "submitted": "contract_processing",
+        "processing": "contract_process_list",
+        "completed": "contract_approved",
+    }.get(status, "dashboard")
+
 
 def get_sales_people(only_sales: bool = False):
     """
@@ -196,17 +208,17 @@ def contract_processing_list(request):
 def contract_submit(request, pk: int):
     contract = get_object_or_404(Contract, pk=pk)
 
+    if _is_employee(request.user) and contract.writer_id != request.user.id:
+        messages.error(request, "직원모드는 본인이 작성한 계약만 품의요청할 수 있습니다.")
+        return redirect("contract_temporary")
+
     if contract.status != "draft":
         messages.warning(request, "임시저장 상태에서만 품의요청이 가능합니다.")
         return redirect("contract_temporary")
 
     contract.status = "submitted"
     contract.save(update_fields=["status"])
-
-    # ⬇️ contract_no가 없으면 pk(또는 id)로 대체
-    display_no = getattr(contract, "contract_no", None) or getattr(contract, "id", contract.pk)
-    messages.success(request, f"[{display_no}] 품의요청으로 전환했습니다.")
-
+    messages.success(request, f"[{getattr(contract,'contract_no',None) or contract.pk}] 품의요청으로 전환했습니다.")
     return redirect("contract_processing")
 
 
@@ -347,31 +359,15 @@ def contract_complete(request, pk: int):
 @require_POST
 def contract_delete(request, pk: int):
     contract = get_object_or_404(Contract, pk=pk)
-    status_before = contract.status
-    acc = getattr(getattr(request.user, "profile", None), "access", "") or ""
 
-    # 직원모드는 draft(임시저장)만 삭제 가능
-    if acc == "직원모드" and status_before != "draft":
-        messages.error(request, "직원모드는 임시저장 계약만 삭제할 수 있습니다.")
-        redirect_map = {
-            "draft": "contract_temporary",
-            "submitted": "contract_processing",
-            "processing": "contract_process_list",
-            "completed": "contract_approved",
-        }
-        return redirect(redirect_map.get(status_before, "contract_processing"))
+    if _is_employee(request.user):
+        if contract.status != "draft" or contract.writer_id != request.user.id:
+            messages.error(request, "직원모드는 임시저장 상태의 본인 계약만 삭제할 수 있습니다.")
+            return redirect("contract_temporary")
 
     contract.delete()
     messages.success(request, "계약이 삭제되었습니다.")
-
-    redirect_map = {
-        "draft": "contract_temporary",
-        "submitted": "contract_processing",
-        "processing": "contract_process_list",
-        "completed": "contract_approved",
-    }
-    return redirect(redirect_map.get(status_before, "contract_processing"))
-
+    return redirect("contract_temporary")
 
 
 @login_required
@@ -392,3 +388,11 @@ def contract_edit(request, pk):
             return redirect("contract_approved")         # 결재완료 목록
         else:
             return redirect("contract_temporary")        # 기본: 임시저장 목록
+    
+
+
+    if _is_employee(request.user):
+        # 직원모드: 본인 작성 + draft만 편집 가능
+        if contract.writer_id != request.user.id or contract.status != "draft":
+            messages.error(request, "직원모드는 본인이 작성한 '임시저장' 계약만 수정할 수 있습니다.")
+            return redirect(_redirect_by_status(contract.status))
