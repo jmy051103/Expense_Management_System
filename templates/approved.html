@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>결재완료 목록</title>
-  <link rel="stylesheet" href="{% static 'css/approved.css' %}?v=2025-09-15-05">
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-16-08">
 </head>
 <body>
   <div class="topbar">
@@ -157,7 +157,14 @@
 
                 <td class="actions" rowspan="{{ rows }}">
                   <a class="btn light" href="{% url 'contract_detail' c.id %}" onclick="event.stopPropagation()">상세</a>
+
+                  {% with acc=request.user.profile.access|default_if_none:"" %}
+                    {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
+                      <a class="btn light" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
+                    {% endif %}
+                  {% endwith %}
                 </td>
+
               </tr>
             {% endwith %}
           {% empty %}
