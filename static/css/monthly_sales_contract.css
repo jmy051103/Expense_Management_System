@@ -1,0 +1,120 @@
+/* 월별 매출계약통계 전용 스타일 */
+/* 레이아웃 */
+.page-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+.page-title {
+  font-size: 32px;
+  font-weight: 700;
+  text-align: center;
+  margin: 16px 0 8px;
+}
+.page-sub {
+  color: #666;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+/* 필터 */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  align-items: end;
+  padding: 16px 18px;
+}
+.filters .grp {
+  display: grid;
+  gap: 6px;
+}
+.filters .grp label {
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+}
+.filters input[type="text"],
+.filters select {
+  min-width: 140px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+}
+.filters .btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+}
+
+/* 안내문 */
+.hint { 
+  margin: 0 18px 12px; 
+  color: var(--muted, #6b7280); 
+  font-size: 12px; 
+}
+
+/* 표 */
+.table-wrap { overflow: auto; }
+table.stats { width: 100%; border-collapse: collapse; }
+table.stats thead th {
+  position: sticky;
+  top: 0;
+  background: #f9fafb;
+  z-index: 1;
+}
+table.stats th,
+table.stats td {
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--line, #e5e7eb);
+  font-size: 14px;
+}
+table.stats td.num,
+table.stats th.right { text-align: right; }
+table.stats td.center { text-align: center; }
+
+table.stats tbody tr:nth-child(odd) td { background: #fcfcfd; }
+table.stats tfoot td {
+  font-weight: 800;
+  background: #fff;
+}
+
+/* 날짜/서체 */
+.mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.muted { color: var(--muted, #6b7280); }
+
+/* 섹션 하단 메모 */
+.section-note {
+  margin: 10px 0 0;
+  padding: 8px 18px 16px;
+  color: var(--muted, #6b7280);
+  font-size: 12px;
+}
+
+/* 버튼(외곽선형) – 공용에 없어서 보강 */
+.btn-outline {
+  display: inline-block;
+  padding: 10px 14px;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 10px;
+  background: #fff;
+  color: #374151;
+  font-size: 13px;
+  text-decoration: none;
+}
+.btn-outline:hover { background: #f9fafb; }
+
+/* 패널 안쪽 테이블 여백 보강(공용 panel 사용 시) */
+.panel .table-wrap { padding: 6px 12px 0; }
+
+/* 반응형 */
+@media (max-width: 720px) {
+  .filters { gap: 8px; }
+  .filters .grp { width: calc(50% - 6px); }
+  .filters .grp:nth-child(odd) { margin-right: 6px; }
+  .filters .grp:nth-child(even) { margin-left: 6px; }
+  .filters .grp label { font-size: 11px; }
+  table.stats th, table.stats td { padding: 10px 10px; font-size: 13px; }
+}

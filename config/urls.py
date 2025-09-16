@@ -29,8 +29,11 @@ urlpatterns = [
     # expenses 앱
     path("expenses/", include("expenses.urls")),
 
-    # partner 앱
+    # partners 앱
     path("partners/", include("partners.urls")),
+    
+    # reports 앱
+    path("reports/", include("reports.urls")),
 
     # ---- Contract lists ----
     path("contracts/temporary/",  accounts_views.contract_temporary_list, name="contract_temporary"),   # draft list

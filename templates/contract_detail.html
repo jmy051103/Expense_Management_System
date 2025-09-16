@@ -70,7 +70,16 @@
         </ul>
       </div>
 
-      <button class="tab" role="tab">통계</button>
+      <!-- 통계 드롭다운 -->
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
+        <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
+          <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_voice' %}">매입처 월별 계산서</a></li>
+        </ul>
+      </div>
     </nav>
   </div>
 
