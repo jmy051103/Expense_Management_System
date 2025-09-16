@@ -78,7 +78,7 @@
   <div class="page">
     <!-- 상단 브레드크럼/액션 -->
     <div class="page-top">
-      <a href="{% url 'contract_list' %}" class="link-muted">← 목록으로</a>
+      <a href="javascript:history.back()" class="link-muted">← 이전으로</a>
       <h1 class="page-title">계약 상세</h1>
       <span class="badge status-{{ contract.status|default:'default' }}">
         {{ contract.get_status_display|default:"상태 미정" }}
@@ -184,10 +184,6 @@
         </div>
       </section>
     {% endif %}
-
-    <div class="page-bottom">
-      <a class="btn-outline" href="{% url 'contract_list' %}">← 목록으로</a>
-    </div>
   </div>
   
   <footer class="site-footer">
