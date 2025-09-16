@@ -346,10 +346,49 @@ def contract_complete(request, pk: int):
 @login_required
 @require_POST
 def contract_delete(request, pk: int):
-    """옵션: 리스트에서 쓰는 삭제 버튼용"""
     contract = get_object_or_404(Contract, pk=pk)
-    # 필요 시 권한 체크 추가
+    status_before = contract.status
+    acc = getattr(getattr(request.user, "profile", None), "access", "") or ""
+
+    # 직원모드는 draft(임시저장)만 삭제 가능
+    if acc == "직원모드" and status_before != "draft":
+        messages.error(request, "직원모드는 임시저장 계약만 삭제할 수 있습니다.")
+        redirect_map = {
+            "draft": "contract_temporary",
+            "submitted": "contract_processing",
+            "processing": "contract_process_list",
+            "completed": "contract_approved",
+        }
+        return redirect(redirect_map.get(status_before, "contract_processing"))
+
     contract.delete()
     messages.success(request, "계약이 삭제되었습니다.")
-    # 어디로 돌릴지 정책에 따라 변경 (여기는 품의요청 목록으로)
-    return redirect("contract_processing")
+
+    redirect_map = {
+        "draft": "contract_temporary",
+        "submitted": "contract_processing",
+        "processing": "contract_process_list",
+        "completed": "contract_approved",
+    }
+    return redirect(redirect_map.get(status_before, "contract_processing"))
+
+
+
+@login_required
+def contract_edit(request, pk):
+    contract = get_object_or_404(Contract, pk=pk)
+
+    # 접근 권한 확인
+    acc = getattr(getattr(request.user, "profile", None), "access", "") or ""
+    if acc == "직원모드" and contract.status != "draft":
+        messages.error(request, "직원모드는 임시저장 상태만 수정할 수 있습니다.")
+
+        # 상황에 맞는 목록으로 돌려보내기
+        if contract.status == "submitted":
+            return redirect("contract_processing")       # 품의요청 목록
+        elif contract.status == "processing":
+            return redirect("contract_process_list")     # 결재처리중 목록
+        elif contract.status == "completed":
+            return redirect("contract_approved")         # 결재완료 목록
+        else:
+            return redirect("contract_temporary")        # 기본: 임시저장 목록
