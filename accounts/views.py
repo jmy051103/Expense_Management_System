@@ -169,37 +169,59 @@ def dashboard(request):
 
 @login_required
 def create_profile(request):
-    if request.method == "POST":
-        username = (request.POST.get("username") or "").strip()
-        password = request.POST.get("password") or ""
-        name = (request.POST.get("name") or "").strip()
-        role = request.POST.get("position")
-        department = request.POST.get("department")
-        access = request.POST.get("access")
+    # 모델에서 choices 꺼내서 템플릿에 넘길 준비
+    role_choices   = getattr(Profile, "ROLE_CHOICES", [])
+    dept_choices   = getattr(Profile, "DEPT_CHOICES", [])
+    access_choices = getattr(Profile, "ACCESS_CHOICES", [])
 
+    if request.method == "POST":
+        username   = (request.POST.get("username") or "").strip()
+        password   = request.POST.get("password") or ""
+        name       = (request.POST.get("name") or "").strip()
+        role       = (request.POST.get("position") or "").strip()
+        department = (request.POST.get("department") or "").strip()
+        access     = (request.POST.get("access") or "").strip()
+
+        # 기본 검증
         if not username or not password:
             messages.error(request, "아이디와 패스워드는 필수입니다.")
-            return render(request, "create_profile.html")
+        elif not role or not department or not access:
+            messages.error(request, "직책/부서/권한을 선택해주세요.")
+        else:
+            try:
+                with transaction.atomic():
+                    user = User.objects.create_user(username=username, password=password)
+                    if name:
+                        user.first_name = name
+                        user.save(update_fields=["first_name"])
+                    Profile.objects.create(
+                        user=user, role=role, department=department, access=access
+                    )
+                return redirect("dashboard")
+            except IntegrityError:
+                messages.error(request, "이미 존재하는 아이디입니다. 다른 아이디를 입력하세요.")
 
-        try:
-            with transaction.atomic():
-                user = User.objects.create_user(username=username, password=password)
-                if name:
-                    user.first_name = name
-                    user.save(update_fields=["first_name"])
-                Profile.objects.create(
-                    user=user,
-                    role=role,
-                    department=department,
-                    access=access,
-                )
-        except IntegrityError:
-            messages.error(request, "이미 존재하는 아이디입니다. 다른 아이디를 입력하세요.")
-            return render(request, "create_profile.html")
+        # 여기로 오면 에러 → 입력값 유지해서 다시 렌더
+        return render(request, "create_profile.html", {
+            "role_choices": role_choices,
+            "dept_choices": dept_choices,
+            "access_choices": access_choices,
+            "form": {
+                "username": username,
+                "name": name,
+                "role": role,
+                "department": department,
+                "access": access,
+            },
+        })
 
-        return redirect("dashboard")
-
-    return render(request, "create_profile.html")
+    # GET
+    return render(request, "create_profile.html", {
+        "role_choices": role_choices,
+        "dept_choices": dept_choices,
+        "access_choices": access_choices,
+        "form": {"username": "", "name": "", "role": "", "department": "", "access": ""},
+    })
 
 
 @login_required

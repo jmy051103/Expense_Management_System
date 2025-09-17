@@ -95,42 +95,32 @@
     <form method="post" class="post">
       {% csrf_token %}
       
-      <input type="text" id="username" name="username"
-            placeholder="아이디" required autocomplete="username"><br>
+      <input type="text" name="username" placeholder="아이디" required
+            autocomplete="username" value="{{ form.username }}">
+      <input type="password" name="password" placeholder="패스워드" required
+            autocomplete="current-password">
+      <input type="text" name="name" placeholder="이름" value="{{ form.name }}">
 
-      <input type="password" id="password" name="password"
-        required autocomplete="current-password" placeholder="패스워드"><br>
+      <select name="position" required>
+        <option value="" disabled {% if not form.role %}selected{% endif %}>직책</option>
+        {% for val, label in role_choices %}
+          <option value="{{ val }}" {% if form.role == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
 
-      <input type="text" id="name" name="name" placeholder="이름"><br>
+      <select name="department" required>
+        <option value="" disabled {% if not form.department %}selected{% endif %}>부서</option>
+        {% for val, label in dept_choices %}
+          <option value="{{ val }}" {% if form.department == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
 
-      <select id="position" name="position" required>
-        <option value="" selected disabled>직책</option>
-        <option>대표이사</option>
-        <option>실장</option>
-        <option>부장</option>
-        <option>과장</option>
-        <option>대리</option>
-        <option>주임</option>
-        <option>사원</option>
-        <option>차장</option>
-      </select><br>
-    
-      <select id="department" name="department" required>
-        <option value="" selected disabled>부서</option>
-        <option>연구개발전담부(디자인팀)</option>
-        <option>MD팀(제품기획및개발)</option>
-        <option>영업팀</option>
-        <option>회계팀</option>
-        <option>물류팀</option>
-      </select><br>
-
-      <select id="access" name="access" required>
-        <option value="" selected disabled>관리자 권한 설정</option>
-        <option>관리자모드</option>
-        <option>사장모드</option>
-        <option>실장모드</option>
-        <option>직원모드</option>
-      </select><br>
+      <select name="access" required>
+        <option value="" disabled {% if not form.access %}selected{% endif %}>관리자 권한 설정</option>
+        {% for val, label in access_choices %}
+          <option value="{{ val }}" {% if form.access == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
 
       <div class="actions">
         <button type="submit">프로필 생성</button>
