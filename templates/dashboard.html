@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-14-10">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-17-10">
 </head>
 <body>
 
@@ -32,7 +32,7 @@
       </form>
     </div>
 
-    
+
     <!-- 탭 -->
     <nav class="tabs" role="tablist" aria-label="상단 메뉴">
       {% with acc=request.user.profile.access|default_if_none:"" %}
@@ -153,6 +153,7 @@
       </article>
     </div>
     </section>
+
 
     <!-- 이번달 거래 -->
     <h2 class="section-title">이달의 거래 진행 현황</h2>

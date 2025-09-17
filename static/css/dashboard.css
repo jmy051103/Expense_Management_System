@@ -352,8 +352,3 @@ tbody td {
   color: #111;
 }
 
-/* 카드 안 '정보' 텍스트는 회색 고정 */
-.card-link .link {
-  text-decoration: none;
-  color: #374151;  /* 검정으로 바꾸고 싶으면 #111 */
-}

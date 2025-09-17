@@ -278,11 +278,13 @@ table.form-table {
   border: 1px solid #d1d5db;
   background: #fff;
   cursor: pointer;
+  font-size: 15px;
 }
 .btn.primary {
   background: #111827;
   color: #fff;
   border-color: #111827;
+  font-size: 15px;
 }
 .btn.warn {
   background: #f97316;
