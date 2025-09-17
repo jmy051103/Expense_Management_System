@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-17-10">
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-17-23">
 </head>
 <body>
 
@@ -178,15 +178,14 @@
                       <table class="mini-items">
                         <thead>
                           <tr>
-                            <th class="w-item">품목</th>
-                            <th class="w-qty">수량</th>
-                            <th class="w-spec">규격</th>
-                            <th class="w-num hide-sm">매출단가</th>
-                            <th class="w-num">매출금액</th>
-                            <th class="w-num hide-sm">매입단가</th>
-                            <th class="w-num">매입금액</th>
-                            <th class="w-vendor">매입처</th>
-                            <th class="w-vat">과세</th>
+                            <th class="w-item" style="width:130px">품목</th>
+                            <th class="w-qty" style="width:80px">수량</th>
+                            <th class="w-spec" style="width:100px">규격</th>
+                            <th class="w-num hide-sm" style="width:100px">매출단가</th>
+                            <th class="w-num" style="width:100px">매출금액</th>
+                            <th class="w-num hide-sm" style="width:100px">매입단가</th>
+                            <th class="w-num" style="width:100px">매입금액</th>
+                            <th class="w-vendor" style="width:90px">매입처</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -211,15 +210,10 @@
                               </td>
 
                               <td class="txt vendor">{{ it.vendor }}</td>
-                              <td class="w-vat">
-                                {% if it.vat_mode == 'separate' %}VAT별도
-                                {% elif it.vat_mode == 'included' %}VAT포함
-                                {% elif it.vat_mode == 'exempt' %}면세
-                                {% else %}-{% endif %}
-                              </td>
+                              
                             </tr>
                           {% empty %}
-                            <tr><td class="empty-row" colspan="9">품목 없음</td></tr>
+                            <tr><td class="empty-row" colspan="8">품목 없음</td></tr>
                           {% endfor %}
                           
                         </tbody>

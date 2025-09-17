@@ -1,6 +1,9 @@
 # expenses/models.py
 from django.conf import settings
 from django.db import models
+from django.db import models, transaction
+from django.db.models import Max
+from django.utils import timezone
 
 # ---------------- 기존 보고서 모델 ----------------
 class ExpenseReport(models.Model):
@@ -56,9 +59,7 @@ class Contract(models.Model):
 
     title = models.CharField(max_length=200, default="무제 계약")
     writer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="contracts_written")
-    sales_owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="contracts_owned"
-    )
+    sales_owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="contracts_owned")
 
     # 매출처
     customer_company = models.CharField(max_length=200, blank=True)
@@ -79,15 +80,38 @@ class Contract(models.Model):
     special_note = models.CharField(max_length=500, blank=True)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
-
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+
+    # ✅ 처음엔 null 허용으로 추가 (마이그레이션/백필 후 원하면 null=False로 변경)
+    contract_no = models.CharField(max_length=32, unique=True, blank=True, null=True)
+    year = models.PositiveIntegerField(editable=False, db_index=True, null=True, blank=True)
+    seq  = models.PositiveIntegerField(editable=False, null=True, blank=True)
 
     class Meta:
-        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=['year', 'seq'], name='uniq_contract_year_seq'),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.pk and not self.contract_no:
+            y = timezone.localdate().year
+            self.year = y
+            with transaction.atomic():
+                last_seq = (
+                    Contract.objects
+                    .filter(year=y)
+                    .select_for_update()
+                    .order_by('-seq')
+                    .values_list('seq', flat=True)
+                    .first() or 0
+                )
+                self.seq = last_seq + 1
+                self.contract_no = f"{y}DJ{self.seq}"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"[{self.get_status_display()}] {self.title} (#{self.pk})"
+
 
 
 class ContractImage(models.Model):

@@ -522,3 +522,11 @@ body {
   font-size: 12px !important;
   line-height: 1.2;
 }
+
+/* 미니 테이블에서 '규격'(3번째)과 '매입처'(8번째) 우측 정렬 */
+.mini-items thead th:nth-child(3),
+.mini-items tbody td:nth-child(3),
+.mini-items thead th:nth-child(8),
+.mini-items tbody td:nth-child(8){
+  text-align: right;
+}
