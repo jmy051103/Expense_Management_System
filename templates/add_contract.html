@@ -246,10 +246,10 @@
 
                       <td class="center"><input class="inp right" name="spec[]" value="{{ it.spec }}"></td>
 
-                      <td class="hide-sm"><input class="inp right" name="sell_unit[]" value="{{ it.sell_unit|default_if_none:'' }}" inputmode="decimal"></td>
-                      <td><input class="inp right" name="sell_total[]" value="{{ it.sell_total|default_if_none:'' }}" inputmode="decimal"></td>
-                      <td class="hide-sm"><input class="inp right" name="buy_unit[]" value="{{ it.buy_unit|default_if_none:'' }}" inputmode="decimal"></td>
-                      <td><input class="inp right" name="buy_total[]" value="{{ it.buy_total|default_if_none:'' }}" inputmode="decimal"></td>
+                      <td class="hide-sm"><input class="inp right" name="sell_unit[]" value="{{ it.sell_unit|default_if_none:'' }}" inputmode="numeric"></td>
+                      <td><input class="inp right" name="sell_total[]" value="{{ it.sell_total|default_if_none:'' }}" inputmode="numeric"></td>
+                      <td class="hide-sm"><input class="inp right" name="buy_unit[]" value="{{ it.buy_unit|default_if_none:'' }}" inputmode="numeric"></td>
+                      <td><input class="inp right" name="buy_total[]" value="{{ it.buy_total|default_if_none:'' }}" inputmode="numeric"></td>
                       <td><input class="inp" name="vendor[]" value="{{ it.vendor }}"></td>
 
                       <td>
