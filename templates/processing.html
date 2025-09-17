@@ -86,14 +86,6 @@
     <h1 class="page-title">결재요청 목록</h1>
     <p class="page-sub">계약상태가 <b>결재요청</b>인 계약만 표시합니다.</p>
 
-    {% if messages %}
-      <ul class="panel" style="margin-bottom:12px;">
-        {% for m in messages %}
-          <li>{{ m }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-
     <section class="panel">
       <div class="table-wrap">
         <table class="form-table table-list">
