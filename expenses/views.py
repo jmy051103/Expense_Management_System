@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.db.models import F
 
 from .forms import ExpenseReportForm, ExpenseItemFormSet, ContractForm
 from .models import ExpenseReport, Contract, ContractImage, ContractItem
@@ -325,8 +326,11 @@ def contract_list(request):
     contracts = (
         Contract.objects
         .select_related("writer", "sales_owner")
-        .prefetch_related("images", "items")   # ✅ works now
-        .order_by("-created_at")
+        .prefetch_related("images", "items")
+        .order_by(                             # ⬅️ 여기 추가/수정
+            F('collect_invoice_date').desc(nulls_last=True),
+            '-created_at',
+        )
     )
     return render(request, "contract_list.html", {
         "contracts": contracts,

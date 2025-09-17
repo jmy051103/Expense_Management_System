@@ -1,16 +1,15 @@
 <thead>
     <tr>
         <th style="width:80px">계약번호<br><small class="muted">계약상태</small></th>
-        <th style="width:120px">매출처<br><small class="muted">담당자</small></th>
+        <th style="width:100px">매출처<br><small class="muted">담당자</small></th>
         <th>품목</th>
-        <th style="width:80px">이익금액</th>
+        <th style="width:100px">이익금액</th>
         <th style="width:80px">이익율</th>
         <th style="width:80px">마감월</th>
         <th style="width:80px">작성자<br><small class="muted">작성일</small></th>
         <th style="width:100px">관리</th>
     </tr>
     </thead>
-    
     
     <tbody>
     {% for c in contracts %}
@@ -41,15 +40,14 @@
                 <table class="mini-items">
                 <thead>
                     <tr>
-                    <th class="w-item">품목</th>
-                    <th class="w-qty">수량</th>
-                    <th class="w-spec">규격</th>
-                    <th class="w-num hide-sm">매출단가</th>
-                    <th class="w-num">매출금액</th>
-                    <th class="w-num hide-sm">매입단가</th>
-                    <th class="w-num">매입금액</th>
-                    <th class="w-vendor">매입처</th>
-                    <th class="w-vat">과세</th>
+                    <th class="w-item" style="width:130px">품목</th>
+                    <th class="w-qty" style="width:80px">수량</th>
+                    <th class="w-spec" style="width:100px">규격</th>
+                    <th class="w-num hide-sm" style="width:100px">매출단가</th>
+                    <th class="w-num" style="width:100px">매출금액</th>
+                    <th class="w-num hide-sm" style="width:100px">매입단가</th>
+                    <th class="w-num" style="width:100px">매입금액</th>
+                    <th class="w-vendor" style="width:90px">매입처</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -74,15 +72,10 @@
                         </td>
 
                         <td class="txt vendor">{{ it.vendor }}</td>
-                        <td class="w-vat">
-                        {% if it.vat_mode == 'separate' %}VAT별도
-                        {% elif it.vat_mode == 'included' %}VAT포함
-                        {% elif it.vat_mode == 'exempt' %}면세
-                        {% else %}-{% endif %}
-                        </td>
+                        
                     </tr>
                     {% empty %}
-                    <tr><td class="empty-row" colspan="9">품목 없음</td></tr>
+                    <tr><td class="empty-row" colspan="8">품목 없음</td></tr>
                     {% endfor %}
                     
                 </tbody>
@@ -102,20 +95,21 @@
                 {% if c.margin_rate != None %}{{ c.margin_rate|floatformat:2 }}%{% else %}-{% endif %}
             </td>
             <td class="center" rowspan="{{ rows }}">
-                {% if c.margin_month %}{{ c.margin_month }}{% else %}-{% endif %}
+                {% if c.collect_invoice_date %}{{ c.collect_invoice_date|date:"Y-m" }}{% else %}-{% endif %}
             </td>
             <td class="author" rowspan="{{ rows }}">
                 <div>{{ c.writer.first_name|default:c.writer.username }}</div>
                 <small class="muted">{{ c.created_at|date:"Y-m-d" }}</small>
             </td>
             <td class="actions" rowspan="{{ rows }}">
-                <a class="btn light" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
+                <a class="btn small" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
                 <form method="post" action="{% url 'contract_delete' c.id %}"
                     onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
                 {% csrf_token %}
-                <button type="submit" class="btn danger">삭제</button>
+                <button type="submit" class="btn small gray">삭제</button>
                 </form>
             </td>
+
             </tr>
         {% endwith %}
         {% endwith %}

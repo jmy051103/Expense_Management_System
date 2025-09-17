@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-17-24">
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-18-08">
 </head>
 <body>
 
@@ -148,7 +148,6 @@
             </tr>
           </thead>
           
-          
           <tbody>
             {% for c in contracts %}
               {% with items=c.items.all %}
@@ -233,7 +232,7 @@
                       {% if c.margin_rate != None %}{{ c.margin_rate|floatformat:2 }}%{% else %}-{% endif %}
                     </td>
                     <td class="center" rowspan="{{ rows }}">
-                      {% if c.collect_invoice_date %}{{ c.collect_invoice_date|date:"Y-m" }}{% else %}-{% endif %}
+                      {% if c.margin_month %}{{ c.margin_month }}{% else %}-{% endif %}
                     </td>
                     <td class="author" rowspan="{{ rows }}">
                       <div>{{ c.writer.first_name|default:c.writer.username }}</div>

@@ -513,6 +513,7 @@ body {
 .btn.small{ height:34px; padding:0 12px; font-size:14px; border-radius:8px; color: #374151;
 ; }
 
+
 /* 툴바 버튼 높이 맞춤(선택) */
 .toolbar-actions .btn{ height:34px; }
 

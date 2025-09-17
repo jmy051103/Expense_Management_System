@@ -109,6 +109,14 @@ class Contract(models.Model):
                 self.contract_no = f"{y}DJ{self.seq}"
         super().save(*args, **kwargs)
 
+    @property
+    def margin_month(self):
+        """세금계산서 발행일 기준 YYYY-MM 문자열 반환"""
+        if self.collect_invoice_date:
+            return self.collect_invoice_date.strftime("%Y-%m")
+        return None
+        
+    
     def __str__(self):
         return f"[{self.get_status_display()}] {self.title} (#{self.pk})"
 
