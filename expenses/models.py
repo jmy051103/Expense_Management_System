@@ -154,6 +154,12 @@ class ContractItem(models.Model):
     vendor     = models.CharField(max_length=200, blank=True)
     vat_mode   = models.CharField(max_length=10, choices=VAT_CHOICES, default="separate")
 
+    def margin_month(self):
+        """세금계산서 발행일 기준 YYYY-MM 문자열 반환"""
+        if self.collect_invoice_date:
+            return self.collect_invoice_date.strftime("%Y-%m")
+        return None
+
     class Meta:
         ordering = ["id"]
 
