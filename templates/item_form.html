@@ -5,69 +5,147 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>품목정보</title>
-  <link rel="stylesheet" href="{% static 'css/item_form.css' %}?v=2025-09-17-01">
+  <!-- 공통 레이아웃/네비게이션 -->
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-10-11">
+  <link rel="stylesheet" href="{% static 'css/item_list.css' %}?v=2025-09-17-11">
+  <!-- 폼 전용 보완 -->
+  <link rel="stylesheet" href="{% static 'css/item_form.css' %}?v=2025-09-17-02">
 </head>
 <body>
+  <!-- 상단 상태줄 -->
+  <div class="topbar">
+    <strong>시험운영</strong>
+    <span class="sep">|</span>
+    <small>Today {% now "Y.m.d (D)" %}</small>
+    <span class="ip" style="margin-left:auto;">현재접속 IP : {{ request.META.REMOTE_ADDR|default:"-" }}</span>
+  </div>
 
-  <main class="wrap">
-    <h1 class="title">품목정보</h1>
+  <!-- 타이틀 + 탭(고정) -->
+  <div class="sticky-wrap">
+    <div class="titlebar">
+      <h1><a href="{% url 'dashboard' %}" class="title-link">(주)대진아이엔티 업무지원시스템</a></h1>
+      <form action="{% url 'logout' %}" method="post" class="logout-form">
+        {% csrf_token %}<button type="submit" class="logout-btn">로그아웃</button>
+      </form>
+    </div>
 
-    <form method="post" class="panel form-table">
-      {% csrf_token %}
+    <nav class="tabs" role="tablist" aria-label="상단 메뉴">
+      {% with acc=request.user.profile.access|default_if_none:"" %}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
+          <div class="tab-group has-dropdown">
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">계정관리</a>
+            <ul id="menu-accounts" class="dropdown" role="menu">
+              <li><a href="{% url 'create_profile' %}">계정 만들기</a></li>
+              <li><a href="{% url 'view_profile' %}">계정 보기</a></li>
+            </ul>
+          </div>
+        {% else %}
+          <span class="tab tab-disabled" aria-disabled="true">계정관리</span>
+        {% endif %}
+      {% endwith %}
 
-      <table>
-        <colgroup>
-          <col style="width:180px">
-          <col>
-        </colgroup>
-        <tbody>
-          <tr>
-            <th>매입처 <span class="req">*</span></th>
-            <td>
-              <input class="inp w-full" name="vendor" list="vendors" required
-                     placeholder="Enter키를 치세요" value="{{ form.vendor }}">
-              {% if vendor_names %}
-                <datalist id="vendors">
-                  {% for v in vendor_names %}
-                    <option value="{{ v }}"></option>
-                  {% endfor %}
-                </datalist>
-              {% endif %}
-            </td>
-          </tr>
-
-          <tr>
-            <th>품목명 <span class="req">*</span></th>
-            <td>
-              <input class="inp w-full" name="name" required value="{{ form.name }}">
-            </td>
-          </tr>
-
-          <tr>
-            <th>가격정보</th>
-            <td class="price-row">
-              <label>매입단가 :</label>
-              <input class="inp num" name="buy_unit" inputmode="decimal" step="0.01"
-                     placeholder="0" value="{{ form.buy_unit }}">
-              <span class="unit">원</span>
-              <span class="sep">/</span>
-              <label>매출단가 :</label>
-              <input class="inp num" name="sell_unit" inputmode="decimal" step="0.01"
-                     placeholder="0" value="{{ form.sell_unit }}">
-              <span class="unit">원</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="actions">
-        <a class="btn gray" href="{% url 'item_list' %}">목록으로</a>
-        <button class="btn primary" type="submit">
-          {% if mode == 'edit' %}수정하기{% else %}저장하기{% endif %}
-        </button>
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-work">업무관리</a>
+        <ul id="menu-work" class="dropdown" role="menu">
+          <li><a href="{% url 'sales_partner_list' %}">매출처정보</a></li>
+          <li><a href="{% url 'purchase_partner_list' %}">매입처정보</a></li>
+          <li><a href="{% url 'item_list' %}">품목정보</a></li>
+        </ul>
       </div>
-    </form>
+
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">계약정보</a>
+        <ul id="menu-contract" class="dropdown" role="menu">
+          <li><a href="{% url 'add_contract' %}">계약정보 등록</a></li>
+          <li><a href="{% url 'contract_list' %}">계약정보 목록</a></li>
+        </ul>
+      </div>
+
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
+        <ul id="menu-stats" class="dropdown" role="menu">
+          <li><a href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
+          <li><a href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
+          <li><a href="{% url 'margin_static' %}">마진통계</a></li>
+          <li><a href="{% url 'monthly_purchase_voice' %}">매입처 월별 계산서</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <!-- 본문 -->
+  <main class="container content">
+    <h2 class="page-title">{% if mode == 'edit' %}품목정보 수정{% else %}품목정보 등록{% endif %}</h2>
+
+    <section class="panel form-table" style="max-width:900px; margin:0 auto;">
+      <form method="post">
+        {% csrf_token %}
+
+        <table>
+          <colgroup>
+            <col style="width:180px">
+            <col>
+          </colgroup>
+          <tbody>
+            <tr>
+              <th class="label">매입처 <span class="req">*</span></th>
+              <td>
+                <input class="inp w-full" name="vendor" list="vendors" required
+                       placeholder="목록에서 선택 또는 직접 입력" value="{{ form.vendor }}">
+                {% if vendor_names %}
+                  <datalist id="vendors">
+                    {% for v in vendor_names %}
+                      <option value="{{ v }}"></option>
+                    {% endfor %}
+                  </datalist>
+                {% endif %}
+              </td>
+            </tr>
+
+            <tr>
+              <th class="label">품목명 <span class="req">*</span></th>
+              <td>
+                <input class="inp w-full" name="name" required value="{{ form.name }}">
+              </td>
+            </tr>
+
+            <tr>
+              <th class="label">가격정보</th>
+              <td class="price-row">
+                <label>매입단가 :</label>
+                <input class="inp num" name="buy_unit" inputmode="decimal" step="0.01"
+                       placeholder="0" value="{{ form.buy_unit }}">
+                <span class="unit">원</span>
+                <span class="sep">/</span>
+                <label>매출단가 :</label>
+                <input class="inp num" name="sell_unit" inputmode="decimal" step="0.01"
+                       placeholder="0" value="{{ form.sell_unit }}">
+                <span class="unit">원</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="actions">
+          <a class="btn gray" href="{% url 'item_list' %}">목록으로</a>
+          <button class="btn primary" type="submit">
+            {% if mode == 'edit' %}수정하기{% else %}저장하기{% endif %}
+          </button>
+        </div>
+      </form>
+    </section>
   </main>
 
+  <!-- 푸터 -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left"><strong>(주)대진아이엔티</strong></div>
+      <div class="footer-right">
+        <div>경기도 남양주시 다산중앙로19번길 25-23, F동 712호</div>
+        <div>대표명 : 양정안&nbsp;&nbsp;사업자번호 : 637-81-00010</div>
+        <div>기술문의 : 양재민 (jmy051103@gmail.com), 홍지원 (jiwonh37@gmail.com)</div>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

@@ -2,34 +2,40 @@
   --line:#d1d5db; --ink:#111827; --muted:#6b7280;
   --panel:#fff; --bg:#f3f4f6; --primary:#60a5fa; --primary-dark:#3b82f6;
 }
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif}
 
-.wrap{max-width:1200px; margin:40px auto; padding:0 24px}
-.title{margin:0 0 24px; text-align:center; font-size:44px; font-weight:800}
+/* === 폼 전용 (공통 네비/레이아웃은 item_list.css가 담당) =================== */
+*{ box-sizing:border-box }
+html,body{ height:100% }
+body{ color:var(--ink); background:var(--bg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif }
 
-.panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:24px}
-.form-table table{width:100%; border-collapse:collapse}
-.form-table th{background:#f9fafb; text-align:left; padding:14px; border-bottom:1px solid var(--line); font-weight:700}
-.form-table td{padding:14px; border-bottom:1px solid var(--line)}
+/* 제목은 item_list.css의 .page-title 사용 */
+
+/* 패널/테이블은 공통 클래스 재사용 + 약간 보완 */
+.panel{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:24px; }
+.form-table table{ width:100%; border-collapse:collapse }
+.form-table th{ background:#f9fafb; text-align:left; padding:14px; border-bottom:1px solid var(--line); font-weight:700 }
+.form-table td{ padding:14px; border-bottom:1px solid var(--line) }
 .form-table tr:last-child th,
-.form-table tr:last-child td{border-bottom:0}
+.form-table tr:last-child td{ border-bottom:0 }
 
-.req{color:#ef4444; font-weight:800}
+.label{ width:180px }
+.req{ color:#ef4444; font-weight:800 }
 
-.inp{height:40px; padding:0 12px; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:16px}
-.inp:focus{outline:2px solid var(--primary)}
-.w-full{width:100%}
-.num{text-align:right; width:160px}
+/* 인풋 */
+.inp{ height:40px; padding:0 12px; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:16px }
+.inp:focus{ outline:2px solid var(--primary) }
+.w-full{ width:100% }
+.num{ text-align:right; width:160px }
 
-.price-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
-.price-row label{color:var(--muted); font-weight:700}
-.price-row .unit{color:var(--muted)}
-.price-row .sep{margin:0 8px; color:#9ca3af}
+/* 가격 행 */
+.price-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+.price-row label{ color:var(--muted); font-weight:700 }
+.price-row .unit{ color:var(--muted) }
+.price-row .sep{ margin:0 8px; color:#9ca3af }
 
-.actions{display:flex; gap:10px; justify-content:center; margin-top:28px}
-.btn{display:inline-flex; align-items:center; justify-content:center; height:44px; padding:0 18px; border-radius:10px; border:1px solid var(--line); background:#fff; cursor:pointer; font-weight:700; text-decoration:none}
-.btn.gray{background:#9ca3af; border-color:#9ca3af; color:#fff}
-.btn.primary{background:var(--primary-dark); border-color:var(--primary-dark); color:#fff}
-.btn:hover{filter:brightness(.98)}
+/* 버튼 */
+.actions{ display:flex; gap:10px; justify-content:center; margin-top:28px }
+.btn{ display:inline-flex; align-items:center; justify-content:center; height:44px; padding:0 18px; border-radius:10px; border:1px solid var(--line); background:#fff; cursor:pointer; font-weight:700; text-decoration:none }
+.btn.gray{ background:#9ca3af; border-color:#9ca3af; color:#fff }
+.btn.primary{ background:var(--primary-dark); border-color:var(--primary-dark); color:#fff }
+.btn:hover{ filter:brightness(.98) }
