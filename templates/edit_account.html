@@ -106,16 +106,23 @@
       <!-- ProfileEditForm -->
       <select name="role" required>
         <option value="" disabled {% if not pform.role.value %}selected{% endif %}>직책</option>
-        <option value="사장" {% if pform.role.value == "사장" %}selected{% endif %}>사장</option>
-        <option value="부장" {% if pform.role.value == "부장" %}selected{% endif %}>부장</option>
-        <option value="팀장" {% if pform.role.value == "팀장" %}selected{% endif %}>팀장</option>
+        <option value="사장" {% if pform.role.value == "사장" %}selected{% endif %}>대표이사</option>
+        <option value="부장" {% if pform.role.value == "부장" %}selected{% endif %}>실장</option>
+        <option value="팀장" {% if pform.role.value == "팀장" %}selected{% endif %}>부장</option>
+        <option value="사장" {% if pform.role.value == "사장" %}selected{% endif %}>과장</option>
+        <option value="부장" {% if pform.role.value == "부장" %}selected{% endif %}>대리</option>
+        <option value="팀장" {% if pform.role.value == "팀장" %}selected{% endif %}>주임</option>
+        <option value="사장" {% if pform.role.value == "사장" %}selected{% endif %}>사원</option>
+        <option value="부장" {% if pform.role.value == "부장" %}selected{% endif %}>차장</option>
       </select>
 
       <select name="department" required>
         <option value="" disabled {% if not pform.department.value %}selected{% endif %}>부서</option>
-        <option value="홍보팀" {% if pform.department.value == "홍보팀" %}selected{% endif %}>홍보팀</option>
-        <option value="기획팀" {% if pform.department.value == "기획팀" %}selected{% endif %}>기획팀</option>
-        <option value="회장단" {% if pform.department.value == "회장단" %}selected{% endif %}>회장단</option>
+        <option value="홍보팀" {% if pform.department.value == "홍보팀" %}selected{% endif %}>연구개발전담부(디자인팀)</option>
+        <option value="기획팀" {% if pform.department.value == "기획팀" %}selected{% endif %}>MD팀(제품기획및개발)</option>
+        <option value="회장단" {% if pform.department.value == "회장단" %}selected{% endif %}>영업팀</option>
+        <option value="기획팀" {% if pform.department.value == "기획팀" %}selected{% endif %}>회계팀</option>
+        <option value="회장단" {% if pform.department.value == "회장단" %}selected{% endif %}>물류팀</option>
       </select>
 
       <select name="access" required>
@@ -123,6 +130,7 @@
         <option value="관리자모드" {% if pform.access.value == "관리자모드" %}selected{% endif %}>관리자모드</option>
         <option value="사장모드" {% if pform.access.value == "사장모드" %}selected{% endif %}>사장모드</option>
         <option value="직원모드" {% if pform.access.value == "직원모드" %}selected{% endif %}>직원모드</option>
+        <option value="직원모드" {% if pform.access.value == "직원모드" %}selected{% endif %}>실장모드</option>
       </select>
 
       <div class="actions">
