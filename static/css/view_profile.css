@@ -46,8 +46,8 @@ body {
 .section-title {
   margin: 24px 2px 16px;
   font-weight: 800;
-  font-size: 17px;
-  text-align: left;
+  font-size: 32px;
+  text-align: center;
 }
 
 /* 패널/그리드(카드 컨테이너 느낌) */
@@ -137,3 +137,16 @@ tbody td {
   pointer-events: none;  /* 클릭/포커스 막기 */
 }
 .tab-disabled:hover { background: transparent; }
+
+/* Buttons (compact) */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:8px 12px; border:1px solid #d1d5db; border-radius:8px;
+  background:#fff; color:#374151; text-decoration:none; cursor:pointer;
+  line-height:1;
+}
+.btn.small{ height:30px; padding:0 10px; font-size:13px; }
+.btn.gray{ background:#e5e7eb; }
+.actions{ white-space:nowrap; }
+.actions form{ display:inline; margin:0; }
+.actions .btn + form{ margin-left:6px; }

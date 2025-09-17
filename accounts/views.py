@@ -672,3 +672,23 @@ def item_delete(request, pk: int):
     obj.delete()
     messages.success(request, "삭제했습니다.")
     return redirect("item_list")
+
+@login_required
+@user_passes_test(can_manage_accounts)
+@require_POST
+def delete_account(request, user_id: int):
+    """관리자/사장만 계정 삭제. 자기 자신 or (비슈퍼가 슈퍼유저) 삭제 불가."""
+    target = get_object_or_404(User, pk=user_id)
+
+    if target.id == request.user.id:
+        messages.error(request, "본인 계정은 삭제할 수 없습니다.")
+        return redirect("view_profile")
+
+    if target.is_superuser and not request.user.is_superuser:
+        messages.error(request, "슈퍼유저 계정은 슈퍼유저만 삭제할 수 있습니다.")
+        return redirect("view_profile")
+
+    username = target.username
+    target.delete()  # Profile는 OneToOne(CASCADE)라면 함께 삭제됩니다.
+    messages.success(request, f"{username} 계정을 삭제했습니다.")
+    return redirect("view_profile")

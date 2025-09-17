@@ -5,8 +5,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>계정 목록</title>
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-10-11">
-  <link rel="stylesheet" href="{% static 'css/view_profile.css' %}?v=2025-09-10-11">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-17-03">
+  <link rel="stylesheet" href="{% static 'css/view_profile.css' %}?v=2025-09-17-04">
 </head>
 <body>
 
@@ -92,7 +92,7 @@
 
   <!-- 메인 -->
   <main class="container" style="max-width:980px;">
-    <h2 class="section-title" style="text-align:left;">계정 목록</h2>
+    <h1 class="section-title" style="text-align:center;">계정 목록</h1>
     <div class="panel">
       <div class="grid-1" style="padding:0;">
         <div class="side-box" style="width:100%;">
@@ -105,7 +105,6 @@
                 <th>부서</th>
                 <th>직책</th>
                 <th>권한</th>
-                <th>활성</th>
                 <th>가입일</th>
                 <th style="width:100px;">작업</th>
               </tr>
@@ -119,12 +118,19 @@
                 <td>{{ user.profile.department|default:"-" }}</td>
                 <td>{{ user.profile.role|default:"-" }}</td>
                 <td>{{ user.profile.access|default:"-" }}</td>
-                <td>{{ user.is_active|yesno:"Y,N" }}</td>
                 <td>{{ user.date_joined|date:"Y-m-d H:i" }}</td>
+
                 {% with acc=request.user.profile.access|default_if_none:"" %}
                   {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
-                    <td>
-                      <a class="btn" href="{% url 'edit_account' user.id %}">수정</a>
+                    <td class="actions">
+                      <a class="btn small" href="{% url 'edit_account' user.id %}">수정</a>
+                      <form method="post"
+                            action="{% url 'delete_account' user.id %}"  
+                            style="display:inline;"
+                            onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn small gray">삭제</button>
+                      </form>
                     </td>
                   {% else %}
                     <td>-</td>
@@ -133,7 +139,7 @@
               </tr>
               {% empty %}
               <tr>
-                <td colspan="9" class="center">등록된 계정이 없습니다.</td>
+                <td colspan="8" class="center">등록된 계정이 없습니다.</td>
               </tr>
               {% endfor %}
             </tbody>
