@@ -258,12 +258,15 @@ table{ width:100%; border-collapse:separate; border-spacing:0; }
 
 /* 헤더 */
 thead th{
+  position: sticky;
+  top: 0;
+  z-index: 1;
   padding:14px 12px;
   text-align:center;
   font-size:14px;
   color:#fff;
-  background:var(--thead-bg);
-  border-right:1px solid var(--thead-border);
+  background:#7ea0b8;
+  border-right:1px solid #6f8ea6;
 }
 thead th:first-child{ border-left:0; }
 thead th:last-child{ border-right:0; }
