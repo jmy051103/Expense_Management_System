@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-17-10">
+  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-09-17-22">
   <style>
     /* 거래내역 표 내부 전용(버튼 크기/배치) */
     #items-table .arrows-col{
@@ -120,17 +120,6 @@
           <span class="strong">작성자 *</span>
           <span class="pill">{{ request.user.first_name|default:request.user.username }}</span>
 
-          <label class="field-inline" for="sales_owner" style="margin-left:12px;">
-            <span class="strong">영업담당자</span>
-            <select class="sel" id="sales_owner" name="sales_owner" required>
-              <option value="">선택</option>
-              {% for u in sales_people %}
-                <option value="{{ u.id }}">
-                  {{ u.first_name|default:u.username }}{% if u.profile.role %} / {{ u.profile.role }}{% endif %}
-                </option>
-              {% endfor %}
-            </select>
-          </label>
         </div>
 
         <div class="contents">
@@ -260,13 +249,7 @@
                       </td>
 
                       <td class="center">
-                        <div class="row-actions" style="display:flex; gap:8px; justify-content:flex-start; align-items:center;">
-                          <div class="arrows-col">
-                            <button type="button" class="mini" data-up>▲</button>
-                            <button type="button" class="mini" data-down>▼</button>
-                          </div>
-                          <button type="button" class="btn danger" data-remove>품목삭제</button>
-                        </div>
+                        <button type="button" class="btn danger" data-remove>품목삭제</button>
                       </td>
                     </tr>
                   {% empty %}
@@ -288,10 +271,6 @@
                       </td>
                       <td class="center">
                         <div class="row-actions" style="display:flex; gap:8px; justify-content:flex-start; align-items:center;">
-                          <div class="arrows-col">
-                            <button type="button" class="mini" data-up>▲</button>
-                            <button type="button" class="mini" data-down>▼</button>
-                          </div>
                           <button type="button" class="btn danger" data-remove>품목삭제</button>
                         </div>
                       </td>
@@ -316,10 +295,6 @@
                     </td>
                     <td class="center">
                       <div class="row-actions" style="display:flex; gap:8px; justify-content:flex-start; align-items:center;">
-                        <div class="arrows-col">
-                          <button type="button" class="mini" data-up>▲</button>
-                          <button type="button" class="mini" data-down>▼</button>
-                        </div>
                         <button type="button" class="btn danger" data-remove>품목삭제</button>
                       </div>
                     </td>
