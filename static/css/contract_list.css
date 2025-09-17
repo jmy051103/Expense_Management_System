@@ -560,3 +560,7 @@ body {
 .form-table.table-list > tbody > tr > td:nth-child(5) { 
   text-align: right; 
 }
+
+.form-table.table-list > tbody > tr > td:nth-child(6) { 
+  font-size: 13px;
+}
