@@ -524,9 +524,39 @@ body {
 }
 
 /* 미니 테이블에서 '규격'(3번째)과 '매입처'(8번째) 우측 정렬 */
-.mini-items thead th:nth-child(3),
 .mini-items tbody td:nth-child(3),
-.mini-items thead th:nth-child(8),
 .mini-items tbody td:nth-child(8){
   text-align: right;
+}
+
+/* === meta 칼럼(계약번호/상태 + 매출처/담당자)만 더 작게 === */
+.form-table.table-list > tbody td.meta{
+  padding: 6px 8px;           /* 살짝 더 컴팩트 */
+  line-height: 1.25;
+}
+
+.form-table.table-list > tbody td.meta .mono,      /* 계약번호 */
+.form-table.table-list > tbody td.meta .cust{      /* 매출처 */
+  font-size: 13px;            /* 메인 줄 */
+  font-weight: 600;
+}
+
+.form-table.table-list > tbody td.meta .status-link,  /* (계약상태) */
+.form-table.table-list > tbody td.meta .owner{        /* (담당자) */
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 11px;            
+  color: var(--muted);
+}
+
+/* 필요하면 폭도 조금 더 타이트하게 */
+.form-table.table-list thead th:nth-child(1){ width: 80px; }
+.form-table.table-list thead th:nth-child(2){ width: 100px; }
+
+
+
+/* 본문도 4, 5번째 칸 오른쪽 정렬 */
+.form-table.table-list > tbody > tr > td:nth-child(4),
+.form-table.table-list > tbody > tr > td:nth-child(5) { 
+  text-align: right; 
 }
