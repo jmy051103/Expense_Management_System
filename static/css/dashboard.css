@@ -328,6 +328,7 @@ tbody td {
   color: black;
   cursor: not-allowed;
   pointer-events: none;  /* 클릭/포커스 막기 */
+  font-weight: 600;
 }
 .tab-disabled:hover { background: transparent; }
 
