@@ -45,9 +45,13 @@ def monthly_sales_contract(request):
         created_dt = it.contract.created_at
         key = (created_dt.date() if hasattr(created_dt, "date") else created_dt).isoformat()
 
-        supply = (it.sell_total or ZERO)                              # = 매출금액
-        vat    = (supply * TEN).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-        total  = supply + vat
+        supply = (it.sell_total or ZERO)  # 세전 매출금액
+        if (it.vat_mode or "").lower() == "separate":
+            vat = supply * TEN
+            total = supply + vat
+        else:
+            vat   = ZERO                
+            total = supply
 
         daily[key]["supply"] += supply
         daily[key]["vat"]    += vat
@@ -115,9 +119,13 @@ def monthly_purchase_contract(request):
     for it in qs:
         day_key = it.contract.created_at.date().isoformat()
 
-        supply = (it.buy_total or ZERO)  # = 매입금액
-        vat    = (supply * TEN).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-        total  = supply + vat
+        supply = (it.buy_total or ZERO)  # 세전 매입금액
+        if (it.vat_mode or "").lower() == "separate":
+            vat = supply * TEN
+            total = supply + vat
+        else:
+            vat   = ZERO                  # 면세 등: 부가세 0
+            total = supply
 
         daily[day_key]["supply"] += supply
         daily[day_key]["vat"]    += vat
@@ -251,7 +259,7 @@ def margin_static(request):
     return render(request, "margin_static.html", context)
 
 
-def monthly_purchase_voice(request):
+def monthly_purchase_invoice(request):
     """
     매입처 월별 보고서
     - 필터: year/month (연도 2019~2025로 한정)
@@ -282,10 +290,10 @@ def monthly_purchase_voice(request):
     def split_supply_vat(total, vat_mode):
         total = Decimal(total or 0)
         if (vat_mode or "").lower() == "separate":
-            supply = (total / Decimal("1.1")).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-            vat    = (total - supply).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+            supply = total / Decimal("1.1")
+            vat    = total - supply
         else:
-            supply = total.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+            supply = total
             vat    = ZERO
         return supply, vat
 
