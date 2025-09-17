@@ -49,7 +49,7 @@ class ExpenseItem(models.Model):
 class Contract(models.Model):
     STATUS_CHOICES = [
         ("draft", "임시저장"),
-        ("submitted", "품의요청"),
+        ("submitted", "결재요청"),
         ("processing", "결재처리중"),
         ("completed", "결재완료"),
     ]

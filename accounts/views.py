@@ -68,7 +68,7 @@ def _redirect_by_status(status: str) -> str:
     return {
         "draft": "contract_temporary",
         "submitted": "contract_processing",
-        "processing": "contract_process_list",
+        "processing": "contract_process",
         "completed": "contract_approved",
     }.get(status, "dashboard")
 
@@ -197,7 +197,6 @@ def create_profile(request):
             messages.error(request, "이미 존재하는 아이디입니다. 다른 아이디를 입력하세요.")
             return render(request, "create_profile.html")
 
-        messages.success(request, f"{username} 프로필이 성공적으로 생성되었습니다!")
         return redirect("dashboard")
 
     return render(request, "create_profile.html")
@@ -222,7 +221,6 @@ def edit_account(request, user_id):
         if uform.is_valid() and pform.is_valid():
             uform.save()
             pform.save()
-            messages.success(request, f"{target.username} 계정이 수정되었습니다.")
             return redirect("view_profile")
         messages.error(request, "입력값을 확인해주세요.")
     else:
@@ -259,7 +257,7 @@ def contract_processing_list(request):
           .order_by("-created_at"))
     return render(request, "processing.html", {
         "contracts": qs,
-        "page_title": "품의요청 목록",
+        "page_title": "결재요청 목록",
     })
 
 
@@ -296,17 +294,16 @@ def contract_submit(request, pk: int):
     contract = get_object_or_404(Contract, pk=pk)
 
     if _is_employee(request.user) and contract.writer_id != request.user.id:
-        messages.error(request, "직원모드는 본인이 작성한 계약만 품의요청할 수 있습니다.")
+        messages.error(request, "직원모드는 본인이 작성한 계약만 결재요청할 수 있습니다.")
         return redirect("contract_temporary")
 
     if contract.status != "draft":
-        messages.warning(request, "임시저장 상태에서만 품의요청이 가능합니다.")
+        messages.warning(request, "임시저장 상태에서만 결재요청이 가능합니다.")
         return redirect("contract_temporary")
 
     contract.status = "submitted"
     contract.save(update_fields=["status"])
-    disp = getattr(contract, "contract_no", None) or contract.pk
-    messages.success(request, f"[{disp}] 품의요청으로 전환했습니다.")
+
     return redirect("contract_processing")
 
 
@@ -315,13 +312,11 @@ def contract_submit(request, pk: int):
 def contract_process(request, pk: int):
     contract = get_object_or_404(Contract, pk=pk)
     if contract.status != "submitted":
-        messages.warning(request, "품의요청 상태에서만 결재처리로 전환할 수 있습니다.")
-        return redirect("contract_processing")
+        messages.warning(request, "결재요청 상태에서만 결재처리로 전환할 수 있습니다.")
+        return redirect("contract_process")
     contract.status = "processing"
     contract.save(update_fields=["status"])
-    disp = getattr(contract, "contract_no", None) or contract.pk
-    messages.success(request, f"[{disp}] 결재처리중으로 전환했습니다.")
-    return redirect("contract_processing")
+    return redirect("contract_process")
 
 
 @login_required
@@ -329,12 +324,10 @@ def contract_process(request, pk: int):
 def contract_mark_processing(request, pk: int):
     contract = get_object_or_404(Contract, pk=pk)
     if contract.status != "submitted":
-        messages.warning(request, "품의요청 상태에서만 결재처리로 전환 가능합니다.")
+        messages.warning(request, "결재요청 상태에서만 결재처리로 전환 가능합니다.")
         return redirect("contract_processing")
     contract.status = "processing"
     contract.save(update_fields=["status"])
-    disp = getattr(contract, "contract_no", None) or contract.pk
-    messages.success(request, f"[{disp}] 결재처리중으로 이동했습니다.")
     return redirect("contract_process")
 
 
@@ -358,12 +351,11 @@ def contract_approve(request, pk: int):
         return redirect("contract_processing")
     contract = get_object_or_404(Contract, pk=pk)
     if contract.status != "submitted":
-        messages.warning(request, "품의요청 상태에서만 결재처리가 가능합니다.")
+        messages.warning(request, "결재요청 상태에서만 결재처리가 가능합니다.")
         return redirect("contract_processing")
     contract.status = "processing"
     contract.save(update_fields=["status"])
-    messages.success(request, f"[{contract.pk}] 결재처리중으로 변경했습니다.")
-    return redirect("contract_processing")
+    return redirect("contract_process")
 
 
 @login_required
@@ -378,7 +370,6 @@ def contract_complete(request, pk: int):
         return redirect("contract_processing")
     contract.status = "completed"
     contract.save(update_fields=["status"])
-    messages.success(request, f"[{contract.pk}] 결재완료로 변경했습니다.")
     return redirect("contract_approved")
 
 
@@ -391,7 +382,6 @@ def contract_delete(request, pk: int):
             messages.error(request, "직원모드는 임시저장 상태의 본인 계약만 삭제할 수 있습니다.")
             return redirect("contract_temporary")
     contract.delete()
-    messages.success(request, "계약이 삭제되었습니다.")
     return redirect("contract_temporary")
 
 
@@ -580,7 +570,6 @@ def item_add(request):
             pass
 
         obj.save()
-        messages.success(request, "품목이 저장되었습니다.")
         return redirect("item_list")
 
     return render(request, "item_form.html", {
@@ -638,7 +627,6 @@ def item_edit(request, pk: int):
 
             try:
                 obj.save()
-                messages.success(request, "수정되었습니다.")
                 return redirect("item_list")
             except Exception as e:
                 messages.error(request, f"저장 중 오류: {e}")
@@ -670,7 +658,6 @@ def item_delete(request, pk: int):
         return redirect("item_list")
     obj = get_object_or_404(Item, pk=pk)
     obj.delete()
-    messages.success(request, "삭제했습니다.")
     return redirect("item_list")
 
 @login_required
@@ -690,5 +677,4 @@ def delete_account(request, user_id: int):
 
     username = target.username
     target.delete()  # Profile는 OneToOne(CASCADE)라면 함께 삭제됩니다.
-    messages.success(request, f"{username} 계정을 삭제했습니다.")
     return redirect("view_profile")
