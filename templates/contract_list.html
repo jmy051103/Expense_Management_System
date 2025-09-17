@@ -138,9 +138,9 @@
           <thead>
             <tr>
               <th style="width:80px">계약번호<br><small class="muted">계약상태</small></th>
-              <th style="width:120px">매출처<br><small class="muted">담당자</small></th>
+              <th style="width:100px">매출처<br><small class="muted">담당자</small></th>
               <th>품목</th>
-              <th style="width:80px">이익금액</th>
+              <th style="width:100px">이익금액</th>
               <th style="width:80px">이익율</th>
               <th style="width:80px">마감월</th>
               <th style="width:80px">작성자<br><small class="muted">작성일</small></th>
@@ -516,11 +516,12 @@
       const marginCell = rightCells.length >= 2 ? rightCells[1] : null;
 
       if (profitCell) {
-        profitCell.textContent = fmtMoneyText(profit);
+        profitCell.innerHTML = `<span class="num-val">${fmtMoneyText(profit)}</span>`;
       }
       if (marginCell) {
-        marginCell.textContent = Math.round(margin) + '%';
+        marginCell.innerHTML = `<span class="num-val">${Math.round(margin)}%</span>`;
       }
+
     });
   });
   </script>

@@ -514,3 +514,11 @@ body {
 
 /* 툴바 버튼 높이 맞춤(선택) */
 .toolbar-actions .btn{ height:34px; }
+
+/* 이익금액(4열) / 이익율(5열) 숫자만 축소 — tbody만 */
+.form-table.table-list > tbody > tr > td:nth-child(4) span[data-krw],
+.form-table.table-list > tbody > tr > td:nth-child(4) .num-val,
+.form-table.table-list > tbody > tr > td:nth-child(5) .num-val{
+  font-size: 12px !important;
+  line-height: 1.2;
+}
