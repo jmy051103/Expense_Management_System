@@ -915,6 +915,65 @@
     }).open();
   }
 </script>
+
+<script>
+(function(){
+  function openItemPopupFor(inputEl){
+    if (!inputEl.id) {
+      inputEl.id = `item-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+    }
+    const q = (inputEl.value || '').trim();
+    const url = `{% url 'item_list' %}?popup=1`
+              + (q ? `&q_name=${encodeURIComponent(q)}` : '')
+              + `&target=${encodeURIComponent(inputEl.id)}`;
+    window.open(url, 'itemSearch', 'width=1000,height=700');
+  }
+
+  const tbody = document.getElementById('items-body');
+
+  // Enter → 팝업
+  tbody.addEventListener('keydown', function(e){
+    const t = e.target;
+    if (e.key === 'Enter' && t && t.name === 'item_name[]') {
+      e.preventDefault();
+      openItemPopupFor(t);
+    }
+  });
+
+  // 더블클릭 → 팝업
+  tbody.addEventListener('dblclick', function(e){
+    const t = e.target;
+    if (t && t.name === 'item_name[]') openItemPopupFor(t);
+  });
+
+  // 팝업 콜백 (매입처 방식 그대로, 필요한 값만)
+  window.selectItemFromPopup = function({ name, sell_unit, buy_unit, vendor_name, target }){
+    const nameInput = document.getElementById(target);
+    if (!nameInput) return;
+
+    const tr = nameInput.closest('tr[data-row]');
+    nameInput.value = name || '';
+
+    const sellUnitInput  = tr.querySelector('[name="sell_unit[]"]');
+    const buyUnitInput   = tr.querySelector('[name="buy_unit[]"]');
+    const qtyInput       = tr.querySelector('[name="qty[]"]');
+    const sellTotalInput = tr.querySelector('[name="sell_total[]"]');
+    const buyTotalInput  = tr.querySelector('[name="buy_total[]"]');
+    const vendorInput    = tr.querySelector('[name="vendor[]"]');
+
+    if (sellUnitInput) sellUnitInput.value = sell_unit || '';
+    if (buyUnitInput)  buyUnitInput.value  = buy_unit  || '';
+    if (vendorInput)   vendorInput.value   = vendor_name || '';
+
+    // 기존 합계 계산 로직 그대로 타게 input 이벤트만 발생
+    const trig = el => el && el.dispatchEvent(new Event('input', { bubbles:true }));
+    trig(qtyInput); trig(sellUnitInput); trig(buyUnitInput);
+    trig(sellTotalInput); trig(buyTotalInput);
+
+    (sellUnitInput || qtyInput)?.focus();
+  };
+})();
+</script>
 </body>
 </html>
 

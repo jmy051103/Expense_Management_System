@@ -472,19 +472,14 @@ def item_list(request):
         "items": page_obj.object_list,
         "page_obj": page_obj,
         "total": paginator.count,
-        "per_page_options": per_page_options,  # ✅ 추가
-        "per_page": per_page,                  # ✅ 추가
+        "per_page_options": per_page_options,  
+        "per_page": per_page,            
         "qs": qs,
     })
 
 
 @login_required
 def item_add(request):
-    """
-    새 카탈로그 품목 등록.
-    - vendor: FK/CharField 모두 호환
-    - contract: (있다면) None 저장을 가정 → 모델에서 null=True 필요
-    """
     if Item is None:
         messages.error(request, "ContractItem 모델을 찾을 수 없습니다.")
         return redirect("item_list")

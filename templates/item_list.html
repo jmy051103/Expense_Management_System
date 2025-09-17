@@ -77,6 +77,10 @@
 
     <!-- 검색/툴바 -->
     <form class="toolbar" method="get" id="searchForm">
+      {% if request.GET.popup %}
+        <input type="hidden" name="popup" value="1">
+        <input type="hidden" name="target" value="{{ request.GET.target }}">
+      {% endif %}
       <select name="per_page" class="sel" onchange="document.getElementById('searchForm').submit()">
         {% for n in per_page_options %}
           <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>목록수 {{ n }}</option>
@@ -104,7 +108,11 @@
               <th style="width:220px">매입처</th>
               <th style="width:160px">매입가</th>
               <th style="width:160px">매출가</th>
-              <th class="th-actions">관리</th>
+              {% if request.GET.popup %}
+                <th style="width:80px">선택</th>
+              {% else %}
+                <th class="th-actions">관리</th>
+              {% endif %}
             </tr>
           </thead>
           <tbody>
@@ -120,16 +128,25 @@
                   {% if p.sell_unit %}{{ p.sell_unit|floatformat:0|intcomma }}원{% else %}-{% endif %}
                 </td>
                 <td class="actions">
-                  <div class="action-group">
-                    <!-- ✅ 수정: item_edit -->
-                    <a class="btn small" href="{% url 'item_edit' p.id %}">수정</a>
-                    <!-- ✅ 삭제: item_delete -->
-                    <form method="post" action="{% url 'item_delete' p.id %}" style="display:inline;">
-                      {% csrf_token %}
-                      <button class="btn small gray" type="submit"
-                              onclick="return confirm('삭제하시겠습니까?')">삭제</button>
-                    </form>
-                  </div>
+                  {% if request.GET.popup %}
+                    <button type="button" class="btn small primary"
+                            data-name="{{ p.name|escapejs }}"
+                            data-sell-unit="{{ p.sell_unit|default_if_none:'' }}"
+                            data-buy-unit="{{ p.buy_unit|default_if_none:'' }}"
+                            data-vendor-name="{{ p.vendor|default_if_none:''|escapejs }}"
+                            onclick="chooseItem(this)">
+                      선택
+                    </button>
+                  {% else %}
+                    <div class="action-group">
+                      <a class="btn small" href="{% url 'item_edit' p.id %}">수정</a>
+                      <form method="post" action="{% url 'item_delete' p.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button class="btn small gray" type="submit"
+                                onclick="return confirm('삭제하시겠습니까?')">삭제</button>
+                      </form>
+                    </div>
+                  {% endif %}
                 </td>
               </tr>
             {% empty %}
@@ -171,5 +188,30 @@
       </div>
     </div>
   </footer>
+
+  {% if request.GET.popup %}
+  <script>
+    function chooseItem(btn){
+      const usp = new URLSearchParams(location.search);
+      const target = usp.get('target') || '';
+
+      const payload = {
+        name:        btn.dataset.name || '',
+        sell_unit:   btn.dataset.sellUnit || '',
+        buy_unit:    btn.dataset.buyUnit || '',
+        vendor_name: btn.dataset.vendorName || '',
+        target
+      };
+
+      if (window.opener && !window.opener.closed &&
+          typeof window.opener.selectItemFromPopup === 'function'){
+        window.opener.selectItemFromPopup(payload);
+        window.close();
+      } else {
+        alert('선택을 전달할 창이 없습니다.');
+      }
+    }
+  </script>
+  {% endif %}
 </body>
 </html>
