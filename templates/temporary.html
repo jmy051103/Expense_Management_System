@@ -220,13 +220,13 @@
                       <form method="post" action="{% url 'contract_submit' c.id %}" style="display:inline"
                             onsubmit="event.stopPropagation(); return confirm('품의요청으로 전송하시겠습니까?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn primary">품의요청</button>
+                        <button type="submit" class="btn primary">결재요청</button>
                       </form>
                     {% elif acc == '직원모드' and c.writer_id == request.user.id %}
                       <form method="post" action="{% url 'contract_submit' c.id %}" style="display:inline"
                             onsubmit="event.stopPropagation(); return confirm('품의요청으로 전송하시겠습니까?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn primary">품의요청</button>
+                        <button type="submit" class="btn primary">결재요청</button>
                       </form>
                     {% endif %}
 

@@ -117,7 +117,7 @@
       <select class="sel w-100" name="status">
         <option value="">상태</option>
         <option value="draft"     {% if request.GET.status == 'draft' %}selected{% endif %}>임시저장</option>
-        <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>품의요청</option>
+        <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>결재요청</option>
         <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>결재처리중</option>
         <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>결재완료</option>
       </select>
