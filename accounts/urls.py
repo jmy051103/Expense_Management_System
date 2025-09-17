@@ -11,4 +11,7 @@ urlpatterns = [
          views.contract_mark_processing,
          name="contract_mark_processing"),
     path("items/", views.item_list, name="item_list"),
+    path("items/add/", views.item_add, name="item_add"),              # ⬅️ 신규
+    path("items/<int:pk>/edit/", views.item_edit, name="item_edit"),  # ⬅️ 선택사항(수정)
+    path("items/<int:pk>/delete/", views.item_delete, name="item_delete"),
 ]

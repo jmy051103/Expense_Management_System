@@ -1,0 +1,73 @@
+{% load static %}
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>품목정보</title>
+  <link rel="stylesheet" href="{% static 'css/item_form.css' %}?v=2025-09-17-01">
+</head>
+<body>
+
+  <main class="wrap">
+    <h1 class="title">품목정보</h1>
+
+    <form method="post" class="panel form-table">
+      {% csrf_token %}
+
+      <table>
+        <colgroup>
+          <col style="width:180px">
+          <col>
+        </colgroup>
+        <tbody>
+          <tr>
+            <th>매입처 <span class="req">*</span></th>
+            <td>
+              <input class="inp w-full" name="vendor" list="vendors" required
+                     placeholder="Enter키를 치세요" value="{{ form.vendor }}">
+              {% if vendor_names %}
+                <datalist id="vendors">
+                  {% for v in vendor_names %}
+                    <option value="{{ v }}"></option>
+                  {% endfor %}
+                </datalist>
+              {% endif %}
+            </td>
+          </tr>
+
+          <tr>
+            <th>품목명 <span class="req">*</span></th>
+            <td>
+              <input class="inp w-full" name="name" required value="{{ form.name }}">
+            </td>
+          </tr>
+
+          <tr>
+            <th>가격정보</th>
+            <td class="price-row">
+              <label>매입단가 :</label>
+              <input class="inp num" name="buy_unit" inputmode="decimal" step="0.01"
+                     placeholder="0" value="{{ form.buy_unit }}">
+              <span class="unit">원</span>
+              <span class="sep">/</span>
+              <label>매출단가 :</label>
+              <input class="inp num" name="sell_unit" inputmode="decimal" step="0.01"
+                     placeholder="0" value="{{ form.sell_unit }}">
+              <span class="unit">원</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="actions">
+        <a class="btn gray" href="{% url 'item_list' %}">목록으로</a>
+        <button class="btn primary" type="submit">
+          {% if mode == 'edit' %}수정하기{% else %}저장하기{% endif %}
+        </button>
+      </div>
+    </form>
+  </main>
+
+</body>
+</html>

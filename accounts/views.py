@@ -1,22 +1,24 @@
 # accounts/views.py
+from decimal import Decimal, InvalidOperation
+
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from django.contrib import messages
+from django.core.exceptions import FieldDoesNotExist
+from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
-from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
-from expenses.models import ExpenseReport
-from .models import Profile
-from .forms import UserEditForm, ProfileEditForm
-from django.db.models import Count
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-from expenses.models import ExpenseReport
-from django.core.paginator import Paginator
-from django.core.exceptions import FieldDoesNotExist
 
+from .forms import ProfileEditForm, UserEditForm
+from .models import Profile
+
+# 외부 앱 모델들(없을 수도 있으니 안전하게)
+try:
+    from expenses.models import ExpenseReport
+except Exception:
+    ExpenseReport = None
 
 try:
     from expenses.models import Contract
@@ -24,12 +26,7 @@ except Exception:
     Contract = None
 
 try:
-    from partners.models import SalesPartner
-except Exception:
-    SalesPartner = None
-
-try:
-    # 보통 expenses 앱에 둡니다
+    # 보통 expenses 앱에 둠
     from expenses.models import ContractItem as Item
 except Exception:
     try:
@@ -37,9 +34,29 @@ except Exception:
     except Exception:
         Item = None
 
-# helpers (파일 상단의 기존 헬퍼 근처에 추가)
+try:
+    from partners.models import SalesPartner
+except Exception:
+    SalesPartner = None
+
+
+# ---------------------
+# 유틸/권한 헬퍼
+# ---------------------
+def _get_access(user) -> str:
+    if not getattr(user, "is_authenticated", False):
+        return ""
+    if user.is_superuser:
+        return "SUPER"
+    try:
+        return getattr(getattr(user, "profile", None), "access", "") or ""
+    except Exception:
+        return ""
+
+
 def _is_employee(user) -> bool:
     return (not user.is_superuser) and _get_access(user) == "직원모드"
+
 
 def _redirect_by_status(status: str) -> str:
     return {
@@ -50,18 +67,6 @@ def _redirect_by_status(status: str) -> str:
     }.get(status, "dashboard")
 
 
-def get_sales_people(only_sales: bool = False):
-    """
-    영업담당자 드롭다운에 넣을 사용자 목록을 반환.
-    only_sales=True 이면 부서/직책에 '영업'이 들어간 계정만.
-    """
-    qs = User.objects.filter(is_active=True).select_related("profile")
-    if only_sales:
-        qs = qs.filter(Q(profile__department__icontains="영업") |
-                       Q(profile__role__icontains="영업"))
-    return qs.order_by("first_name", "username")
-
-
 def can_manage_accounts(user):
     """'관리자모드' 또는 '사장모드'만 허용 (슈퍼유저는 항상 허용)"""
     if not user.is_authenticated:
@@ -69,20 +74,32 @@ def can_manage_accounts(user):
     if user.is_superuser:
         return True
     try:
-        # user.profile이 없을 수도 있으니 안전하게 처리
         return getattr(user, "profile", None) and user.profile.access in ("관리자모드", "사장모드")
     except Profile.DoesNotExist:
         return False
 
+
+def _to_decimal(v, default="0"):
+    try:
+        return Decimal(str(v).replace(",", "").strip() or default)
+    except (InvalidOperation, AttributeError):
+        return Decimal(default)
+
+
+# ---------------------
+# 대시보드/계정
+# ---------------------
 @login_required
 def dashboard(request):
-    groups = list(request.user.groups.values_list('name', flat=True))
+    groups = list(request.user.groups.values_list("name", flat=True))
     role = getattr(getattr(request.user, "profile", None), "role", None)
 
-    recent_reports = (
-        ExpenseReport.objects.select_related("creator")
-        .order_by("-created_at")[:5]
-    )
+    recent_reports = []
+    if ExpenseReport:
+        recent_reports = (
+            ExpenseReport.objects.select_related("creator")
+            .order_by("-created_at")[:5]
+        )
 
     stats = {
         "temp": 0,
@@ -91,32 +108,27 @@ def dashboard(request):
         "done": 0,
         "accounts": SalesPartner.objects.count() if SalesPartner else 0,
     }
-
-    if Contract is not None:
+    if Contract:
         qs = Contract.objects.all()
-        stats["temp"]          = qs.filter(status="draft").count()
+        stats["temp"] = qs.filter(status="draft").count()
         stats["request_count"] = qs.filter(status="submitted").count()
-        stats["in_progress"]   = qs.filter(status="processing").count()
-        stats["done"]          = qs.filter(status="completed").count()
+        stats["in_progress"] = qs.filter(status="processing").count()
+        stats["done"] = qs.filter(status="completed").count()
 
-    return render(
-        request,
-        "dashboard.html",
-        {
-            "groups": groups, 
-            "role": role, 
-            "recent_reports": recent_reports,
-            "stats": stats,
-        },
-    )
+    return render(request, "dashboard.html", {
+        "groups": groups,
+        "role": role,
+        "recent_reports": recent_reports,
+        "stats": stats,
+    })
 
 
 @login_required
 def create_profile(request):
     if request.method == "POST":
-        username = request.POST.get("username", "").strip()
-        password = request.POST.get("password", "")
-        name = request.POST.get("name", "").strip()
+        username = (request.POST.get("username") or "").strip()
+        password = request.POST.get("password") or ""
+        name = (request.POST.get("name") or "").strip()
         role = request.POST.get("position")
         department = request.POST.get("department")
         access = request.POST.get("access")
@@ -131,7 +143,6 @@ def create_profile(request):
                 if name:
                     user.first_name = name
                     user.save(update_fields=["first_name"])
-
                 Profile.objects.create(
                     user=user,
                     role=role,
@@ -148,27 +159,18 @@ def create_profile(request):
     return render(request, "create_profile.html")
 
 
-# ---- 계정보기: 모든 계정(활성/비활성 포함) ----
 @login_required
 @user_passes_test(can_manage_accounts)
 def view_profile(request):
-    users = (
-        User.objects.select_related("profile")
-        .order_by("username")
-    )
+    users = User.objects.select_related("profile").order_by("username")
     return render(request, "view_profile.html", {"users": users})
 
 
-# ---- 계정 수정 ----
 @login_required
 @user_passes_test(can_manage_accounts)
 def edit_account(request, user_id):
     target = get_object_or_404(User.objects.select_related("profile"), pk=user_id)
-
-    # Profile 없으면 생성
-    profile = getattr(target, "profile", None)
-    if profile is None:
-        profile = Profile.objects.create(user=target)
+    profile = getattr(target, "profile", None) or Profile.objects.create(user=target)
 
     if request.method == "POST":
         uform = UserEditForm(request.POST, instance=target)
@@ -188,13 +190,15 @@ def edit_account(request, user_id):
     })
 
 
+# ---------------------
+# 계약 목록들
+# ---------------------
 @login_required
 def contract_temporary_list(request):
-    # 임시저장만
     qs = (Contract.objects
           .select_related("writer", "sales_owner")
           .prefetch_related("items")
-          .filter(status="draft")       # ✅ 임시저장만
+          .filter(status="draft")
           .order_by("-created_at"))
     return render(request, "temporary.html", {
         "contracts": qs,
@@ -204,17 +208,44 @@ def contract_temporary_list(request):
 
 @login_required
 def contract_processing_list(request):
-    # 품의요청만
     qs = (Contract.objects
           .select_related("writer", "sales_owner")
           .prefetch_related("items")
-          .filter(status="submitted")   # ✅ 품의요청만
+          .filter(status="submitted")
           .order_by("-created_at"))
     return render(request, "processing.html", {
         "contracts": qs,
         "page_title": "품의요청 목록",
     })
 
+
+@login_required
+def contract_process_page(request):
+    qs = (Contract.objects
+          .select_related("writer", "sales_owner")
+          .prefetch_related("items")
+          .filter(status="processing")
+          .order_by("-created_at"))
+    return render(request, "contract_process.html", {
+        "contracts": qs,
+        "page_title": "결재처리중 목록",
+    })
+
+
+@login_required
+def contract_approved_list(request):
+    qs = (Contract.objects
+          .select_related("writer", "sales_owner")
+          .prefetch_related("items")
+          .filter(status="completed")
+          .order_by("-created_at"))
+    return render(request, "approved.html", {
+        "contracts": qs,
+        "page_title": "결재완료 목록",
+    })
+
+
+# 상태 전환
 @login_required
 @require_POST
 def contract_submit(request, pk: int):
@@ -230,105 +261,46 @@ def contract_submit(request, pk: int):
 
     contract.status = "submitted"
     contract.save(update_fields=["status"])
-    messages.success(request, f"[{getattr(contract,'contract_no',None) or contract.pk}] 품의요청으로 전환했습니다.")
+    disp = getattr(contract, "contract_no", None) or contract.pk
+    messages.success(request, f"[{disp}] 품의요청으로 전환했습니다.")
     return redirect("contract_processing")
 
 
 @login_required
 @require_POST
 def contract_process(request, pk: int):
-    """
-    품의요청(submitted) → 결재처리중(processing)
-    완료 후 '결재처리중 목록'으로 이동
-    """
     contract = get_object_or_404(Contract, pk=pk)
-
     if contract.status != "submitted":
         messages.warning(request, "품의요청 상태에서만 결재처리로 전환할 수 있습니다.")
-        return redirect("contract_processing")  # 목록 라우트 이름에 맞게 유지
-
+        return redirect("contract_processing")
     contract.status = "processing"
     contract.save(update_fields=["status"])
+    disp = getattr(contract, "contract_no", None) or contract.pk
+    messages.success(request, f"[{disp}] 결재처리중으로 전환했습니다.")
+    return redirect("contract_processing")
 
-    display_no = getattr(contract, "contract_no", None) or contract.pk
-    messages.success(request, f"[{display_no}] 결재처리중으로 전환했습니다.")
-    return redirect("contract_processing")  # 결재처리중 목록으로 이동
 
 @login_required
 @require_POST
 def contract_mark_processing(request, pk: int):
-    """
-    품의요청(submitted) -> 결재처리중(processing) 전환 후
-    결재처리중 목록(contract_process)으로 이동
-    """
     contract = get_object_or_404(Contract, pk=pk)
-
     if contract.status != "submitted":
         messages.warning(request, "품의요청 상태에서만 결재처리로 전환 가능합니다.")
-        # ⬇️ 여기는 '품의요청 목록'의 URL name 으로 유지
         return redirect("contract_processing")
-
     contract.status = "processing"
     contract.save(update_fields=["status"])
-
-    # contract_no 가 없는 모델도 대비
-    ident = getattr(contract, "contract_no", None) or contract.pk
-    messages.success(request, f"[{ident}] 결재처리중으로 이동했습니다.")
-
-    # ⬇️ 여기를 반드시 '결재처리중 목록'의 URL name 으로!
+    disp = getattr(contract, "contract_no", None) or contract.pk
+    messages.success(request, f"[{disp}] 결재처리중으로 이동했습니다.")
     return redirect("contract_process")
 
 
-@login_required
-def contract_process_page(request):
-    qs = (Contract.objects
-          .select_related("writer", "sales_owner")
-          .prefetch_related("items")
-          .filter(status="processing")
-          .order_by("-created_at"))
-    return render(request, "contract_process.html", {
-        "contracts": qs,
-        "page_title": "결재처리중 목록",
-    })
-
-@login_required
-def contract_approved_list(request):
-    qs = (
-        Contract.objects
-        .select_related("writer", "sales_owner")
-        .prefetch_related("items")
-        .filter(status="completed")         # ← 결재완료만
-        .order_by("-created_at")
-    )
-    return render(request, "approved.html", {
-        "contracts": qs,
-        "page_title": "결재완료 목록",
-    })
-
-
-# 상단에 유틸 함수들 추가/수정
-def _get_access(user) -> str:
-    if not user.is_authenticated:
-        return ""
-    if user.is_superuser:
-        return "SUPER"
-    try:
-        return getattr(getattr(user, "profile", None), "access", "") or ""
-    except Exception:
-        return ""
-
-def _can_submit(user) -> bool:
-    """임시저장 -> 품의요청: 로그인 사용자 모두(직원/관리자/실장/사장/슈퍼)"""
-    return user.is_authenticated
-
 def _can_approve(user) -> bool:
-    """품의요청 -> 결재처리: 실장/사장/슈퍼만 (관리자모드 X)"""
     if user.is_superuser:
         return True
     return _get_access(user) in ("실장모드", "사장모드")
 
+
 def _can_complete(user) -> bool:
-    """결재처리 -> 결재완료: 사장/슈퍼만 (관리자/실장 X)"""
     if user.is_superuser:
         return True
     return _get_access(user) in ("사장모드",)
@@ -337,7 +309,6 @@ def _can_complete(user) -> bool:
 @login_required
 @require_POST
 def contract_approve(request, pk: int):
-    """submitted -> processing"""
     if not _can_approve(request.user):
         messages.error(request, "실장/사장만 결재처리가 가능합니다.")
         return redirect("contract_processing")
@@ -350,10 +321,10 @@ def contract_approve(request, pk: int):
     messages.success(request, f"[{contract.pk}] 결재처리중으로 변경했습니다.")
     return redirect("contract_processing")
 
+
 @login_required
 @require_POST
 def contract_complete(request, pk: int):
-    """processing -> completed"""
     if not _can_complete(request.user):
         messages.error(request, "사장만 결재완료 처리가 가능합니다.")
         return redirect("contract_processing")
@@ -371,12 +342,10 @@ def contract_complete(request, pk: int):
 @require_POST
 def contract_delete(request, pk: int):
     contract = get_object_or_404(Contract, pk=pk)
-
     if _is_employee(request.user):
         if contract.status != "draft" or contract.writer_id != request.user.id:
             messages.error(request, "직원모드는 임시저장 상태의 본인 계약만 삭제할 수 있습니다.")
             return redirect("contract_temporary")
-
     contract.delete()
     messages.success(request, "계약이 삭제되었습니다.")
     return redirect("contract_temporary")
@@ -386,61 +355,69 @@ def contract_delete(request, pk: int):
 def contract_edit(request, pk):
     contract = get_object_or_404(Contract, pk=pk)
 
-    # 접근 권한 확인
-    acc = getattr(getattr(request.user, "profile", None), "access", "") or ""
+    acc = _get_access(request.user)
     if acc == "직원모드" and contract.status != "draft":
         messages.error(request, "직원모드는 임시저장 상태만 수정할 수 있습니다.")
-
-        # 상황에 맞는 목록으로 돌려보내기
         if contract.status == "submitted":
-            return redirect("contract_processing")       # 품의요청 목록
+            return redirect("contract_processing")
         elif contract.status == "processing":
-            return redirect("contract_process_list")     # 결재처리중 목록
+            return redirect("contract_process_list")
         elif contract.status == "completed":
-            return redirect("contract_approved")         # 결재완료 목록
-        else:
-            return redirect("contract_temporary")        # 기본: 임시저장 목록
-    
-
+            return redirect("contract_approved")
+        return redirect("contract_temporary")
 
     if _is_employee(request.user):
-        # 직원모드: 본인 작성 + draft만 편집 가능
         if contract.writer_id != request.user.id or contract.status != "draft":
             messages.error(request, "직원모드는 본인이 작성한 '임시저장' 계약만 수정할 수 있습니다.")
             return redirect(_redirect_by_status(contract.status))
 
+    # (편집 폼 렌더/처리는 다른 파일에 있을 것으로 가정)
+    return render(request, "contract_edit.html", {"contract": contract})
 
+
+# ---------------------
+# 품목(카탈로그) 리스트/등록/수정/삭제
+# ---------------------
 @login_required
 def item_list(request):
+    """
+    품목정보 리스트: 이름/매입처 검색 + 페이지 사이즈 선택 + 페이지네이션
+    기본은 '계약에 속하지 않은(카탈로그)' 항목만 최신순으로 노출.
+    """
     if Item is None:
         messages.error(request, "ContractItem 모델을 찾을 수 없습니다.")
         return render(request, "item_list.html", {
-            "items": [],
-            "page_obj": None,
-            "total": 0,
-            "page_size": 10,
+            "items": [], "page_obj": None, "total": 0, "page_size": 10,
         })
 
-    qs = Item.objects.all().order_by("-id")
+    # 계약 필드가 있으면 카탈로그만, 없으면 전체
+    qs = Item.objects.all()
+    try:
+        f = Item._meta.get_field("contract")
+        # 카탈로그(일반 품목)만
+        qs = qs.filter(contract__isnull=True)
+    except FieldDoesNotExist:
+        pass
 
-    q_name   = request.GET.get("q_name", "").strip()
-    q_vendor = request.GET.get("q_vendor", "").strip()
+    qs = qs.order_by("-id")
+
+    q_name = (request.GET.get("q_name") or "").strip()
+    q_vendor = (request.GET.get("q_vendor") or "").strip()
 
     if q_name:
         qs = qs.filter(name__icontains=q_name)
 
     if q_vendor:
-        # vendor 필드가 FK면 vendor__name, CharField면 vendor만 검색
         try:
             f = Item._meta.get_field("vendor")
             if getattr(f, "is_relation", False):
-                qs = qs.filter(Q(vendor__name__icontains=q_vendor) | Q(vendor__icontains=q_vendor))
+                # ✅ FK면 이름으로만 검색
+                qs = qs.filter(vendor__name__icontains=q_vendor)
             else:
                 qs = qs.filter(vendor__icontains=q_vendor)
         except FieldDoesNotExist:
             qs = qs.filter(vendor__icontains=q_vendor)
 
-    # 페이지 크기
     try:
         page_size = int(request.GET.get("size", "10") or 10)
     except ValueError:
@@ -450,9 +427,201 @@ def item_list(request):
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(request.GET.get("page"))
 
+    # ⬇️ page 제외한 쿼리스트링
+    qs_params = request.GET.copy()
+    qs_params.pop('page', None)
+    qs = qs_params.urlencode()
+
     return render(request, "item_list.html", {
         "items": page_obj.object_list,
         "page_obj": page_obj,
         "total": paginator.count,
         "page_size": page_size,
+        "qs": qs,  # ✅ 추가
     })
+
+
+@login_required
+def item_add(request):
+    """
+    새 카탈로그 품목 등록.
+    - vendor: FK/CharField 모두 호환
+    - contract: (있다면) None 저장을 가정 → 모델에서 null=True 필요
+    """
+    if Item is None:
+        messages.error(request, "ContractItem 모델을 찾을 수 없습니다.")
+        return redirect("item_list")
+
+    # datalist 후보
+    vendor_names = []
+    try:
+        from partners.models import PurchasePartner
+        vendor_names = list(
+            PurchasePartner.objects.order_by("name").values_list("name", flat=True)
+        )
+    except Exception:
+        pass
+
+    if request.method == "POST":
+        vendor_in = (request.POST.get("vendor") or "").strip()
+        name = (request.POST.get("name") or "").strip()
+        buy_unit = _to_decimal(request.POST.get("buy_unit"))
+        sell_unit = _to_decimal(request.POST.get("sell_unit"))
+
+        if not vendor_in or not name:
+            messages.error(request, "매입처와 품목명은 필수입니다.")
+            return render(request, "item_form.html", {
+                "mode": "create",
+                "vendor_names": vendor_names,
+                "form": {
+                    "vendor": vendor_in, "name": name,
+                    "buy_unit": request.POST.get("buy_unit", ""),
+                    "sell_unit": request.POST.get("sell_unit", ""),
+                },
+            })
+
+        obj = Item()
+        # vendor 세팅(FK/CharField 모두 처리)
+        try:
+            f = Item._meta.get_field("vendor")
+            if getattr(f, "is_relation", False):
+                from partners.models import PurchasePartner
+                partner = (PurchasePartner.objects.filter(name__iexact=vendor_in).first()
+                           or PurchasePartner.objects.filter(name__icontains=vendor_in).first())
+                if partner is None:
+                    messages.error(request, "매입처를 찾을 수 없습니다. 목록에서 선택해 주세요.")
+                    return render(request, "item_form.html", {
+                        "mode": "create",
+                        "vendor_names": vendor_names,
+                        "form": {
+                            "vendor": vendor_in, "name": name,
+                            "buy_unit": request.POST.get("buy_unit", ""),
+                            "sell_unit": request.POST.get("sell_unit", ""),
+                        },
+                    })
+                obj.vendor = partner
+            else:
+                obj.vendor = vendor_in
+        except FieldDoesNotExist:
+            obj.vendor = vendor_in
+
+        obj.name = name
+        if hasattr(obj, "buy_unit"):
+            obj.buy_unit = buy_unit
+        if hasattr(obj, "sell_unit"):
+            obj.sell_unit = sell_unit
+
+        # contract 필드가 있고 null 불가라면 모델 수정이 필요함(문구 안내)
+        try:
+            cfield = Item._meta.get_field("contract")
+            if not getattr(cfield, "null", True):
+                messages.error(
+                    request,
+                    "현재 품목 모델이 계약(FK)을 필수로 요구합니다. "
+                    "카탈로그 품목을 쓰려면 expenses.ContractItem.contract 를 null=True 로 변경해주세요."
+                )
+                return render(request, "item_form.html", {
+                    "mode": "create",
+                    "vendor_names": vendor_names,
+                    "form": {
+                        "vendor": vendor_in, "name": name,
+                        "buy_unit": request.POST.get("buy_unit", ""),
+                        "sell_unit": request.POST.get("sell_unit", ""),
+                    },
+                })
+        except FieldDoesNotExist:
+            pass
+
+        obj.save()
+        messages.success(request, "품목이 저장되었습니다.")
+        return redirect("item_list")
+
+    return render(request, "item_form.html", {
+        "mode": "create",
+        "vendor_names": vendor_names,
+        "form": {"vendor": "", "name": "", "buy_unit": "", "sell_unit": ""},
+    })
+
+
+@login_required
+def item_edit(request, pk: int):
+    if Item is None:
+        messages.error(request, "ContractItem 모델을 찾을 수 없습니다.")
+        return redirect("item_list")
+
+    obj = get_object_or_404(Item, pk=pk)
+
+    # datalist 후보
+    vendor_names = []
+    try:
+        from partners.models import PurchasePartner
+        vendor_names = list(PurchasePartner.objects.order_by("name").values_list("name", flat=True))
+    except Exception:
+        pass
+
+    if request.method == "POST":
+        vendor_in = (request.POST.get("vendor") or "").strip()
+        name = (request.POST.get("name") or "").strip()
+        buy_unit = _to_decimal(request.POST.get("buy_unit"))
+        sell_unit = _to_decimal(request.POST.get("sell_unit"))
+
+        if not vendor_in or not name:
+            messages.error(request, "매입처와 품목명은 필수입니다.")
+        else:
+            try:
+                f = Item._meta.get_field("vendor")
+                if getattr(f, "is_relation", False):
+                    from partners.models import PurchasePartner
+                    partner = (PurchasePartner.objects.filter(name__iexact=vendor_in).first()
+                               or PurchasePartner.objects.filter(name__icontains=vendor_in).first())
+                    if partner is None:
+                        messages.error(request, "매입처를 찾을 수 없습니다. 목록에서 선택해 주세요.")
+                    else:
+                        obj.vendor = partner
+                else:
+                    obj.vendor = vendor_in
+            except FieldDoesNotExist:
+                obj.vendor = vendor_in
+
+            obj.name = name
+            if hasattr(obj, "buy_unit"):
+                obj.buy_unit = buy_unit
+            if hasattr(obj, "sell_unit"):
+                obj.sell_unit = sell_unit
+
+            try:
+                obj.save()
+                messages.success(request, "수정되었습니다.")
+                return redirect("item_list")
+            except Exception as e:
+                messages.error(request, f"저장 중 오류: {e}")
+
+    # GET 또는 유효성 실패 시 현재 값 채워서 폼 렌더
+    try:
+        vfield = Item._meta.get_field("vendor")
+        cur_vendor = obj.vendor.name if getattr(vfield, "is_relation", False) else (obj.vendor or "")
+    except Exception:
+        cur_vendor = getattr(obj, "vendor", "") or ""
+
+    return render(request, "item_form.html", {
+        "mode": "edit",
+        "vendor_names": vendor_names,
+        "form": {
+            "vendor": cur_vendor,
+            "name": getattr(obj, "name", ""),
+            "buy_unit": getattr(obj, "buy_unit", ""),
+            "sell_unit": getattr(obj, "sell_unit", ""),
+        },
+    })
+
+
+@login_required
+@require_POST
+def item_delete(request, pk: int):
+    if Item is None:
+        messages.error(request, "ContractItem 모델을 찾을 수 없습니다.")
+        return redirect("item_list")
+    obj = get_object_or_404(Item, pk=pk)
+    obj.delete()
+    messages.success(request, "삭제했습니다.")
+    return redirect("item_list")

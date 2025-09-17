@@ -119,7 +119,7 @@ class ContractItem(models.Model):
         ("exempt",   "면세"),
     ]
 
-    contract   = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name="items")
+    contract   = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name="items", null=True, blank=True)
     name       = models.CharField(max_length=200)
     qty        = models.PositiveIntegerField(default=0)
     spec       = models.CharField(max_length=100, blank=True)
