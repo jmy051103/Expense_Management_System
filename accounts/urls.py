@@ -10,4 +10,5 @@ urlpatterns = [
     path("contracts/<int:pk>/start-processing/",
          views.contract_mark_processing,
          name="contract_mark_processing"),
+    path("items/", views.item_list, name="item_list"),
 ]

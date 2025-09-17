@@ -14,6 +14,9 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from expenses.models import ExpenseReport
+from django.core.paginator import Paginator
+from django.core.exceptions import FieldDoesNotExist
+
 
 try:
     from expenses.models import Contract
@@ -24,6 +27,15 @@ try:
     from partners.models import SalesPartner
 except Exception:
     SalesPartner = None
+
+try:
+    # 보통 expenses 앱에 둡니다
+    from expenses.models import ContractItem as Item
+except Exception:
+    try:
+        from accounts.models import ContractItem as Item
+    except Exception:
+        Item = None
 
 # helpers (파일 상단의 기존 헬퍼 근처에 추가)
 def _is_employee(user) -> bool:
@@ -396,3 +408,51 @@ def contract_edit(request, pk):
         if contract.writer_id != request.user.id or contract.status != "draft":
             messages.error(request, "직원모드는 본인이 작성한 '임시저장' 계약만 수정할 수 있습니다.")
             return redirect(_redirect_by_status(contract.status))
+
+
+@login_required
+def item_list(request):
+    if Item is None:
+        messages.error(request, "ContractItem 모델을 찾을 수 없습니다.")
+        return render(request, "item_list.html", {
+            "items": [],
+            "page_obj": None,
+            "total": 0,
+            "page_size": 10,
+        })
+
+    qs = Item.objects.all().order_by("-id")
+
+    q_name   = request.GET.get("q_name", "").strip()
+    q_vendor = request.GET.get("q_vendor", "").strip()
+
+    if q_name:
+        qs = qs.filter(name__icontains=q_name)
+
+    if q_vendor:
+        # vendor 필드가 FK면 vendor__name, CharField면 vendor만 검색
+        try:
+            f = Item._meta.get_field("vendor")
+            if getattr(f, "is_relation", False):
+                qs = qs.filter(Q(vendor__name__icontains=q_vendor) | Q(vendor__icontains=q_vendor))
+            else:
+                qs = qs.filter(vendor__icontains=q_vendor)
+        except FieldDoesNotExist:
+            qs = qs.filter(vendor__icontains=q_vendor)
+
+    # 페이지 크기
+    try:
+        page_size = int(request.GET.get("size", "10") or 10)
+    except ValueError:
+        page_size = 10
+    page_size = max(5, min(page_size, 100))
+
+    paginator = Paginator(qs, page_size)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    return render(request, "item_list.html", {
+        "items": page_obj.object_list,
+        "page_obj": page_obj,
+        "total": paginator.count,
+        "page_size": page_size,
+    })
