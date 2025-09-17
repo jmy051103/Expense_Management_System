@@ -91,7 +91,7 @@
               <th class="label">매입처 <span class="req">*</span></th>
               <td>
                 <input class="inp w-full" name="vendor" list="vendors" required
-                       placeholder="목록에서 선택 또는 직접 입력" value="{{ form.vendor }}">
+                       placeholder="이름 입력 후 Enter" value="{{ form.vendor }}">
                 {% if vendor_names %}
                   <datalist id="vendors">
                     {% for v in vendor_names %}
@@ -147,5 +147,228 @@
       </div>
     </div>
   </footer>
+
+  <!-- 매입처 팝업 연동 -->
+  <script>
+    (function(){
+      // 대상 인풋 찾기
+      const vendorInput = document.querySelector('input[name="vendor"]');
+      if (!vendorInput) return;
+
+      // id가 없으면 콜백 식별용으로 하나 부여
+      if (!vendorInput.id) {
+        vendorInput.id = 'vendor-' + Date.now().toString(36);
+      }
+
+      // 팝업 열기 함수
+      function openPurchasePopup(){
+        const q = (vendorInput.value || '').trim();
+        const url = `/partners/purchase/?popup=1`
+                  + (q ? `&q_name=${encodeURIComponent(q)}` : '')
+                  + `&target=${encodeURIComponent(vendorInput.id)}`;
+        window.open(url, 'purchasePartnerSearch', 'width=900,height=600');
+      }
+
+      // Enter로 팝업
+      vendorInput.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          openPurchasePopup();
+        }
+      });
+
+      // 더블클릭으로도 팝업
+      vendorInput.addEventListener('dblclick', function(){
+        openPurchasePopup();
+      });
+
+      // 팝업에서 호출하는 콜백 (선택된 매입처 반영)
+      // 예상 payload: { id, name, target }
+      window.selectPurchasePartnerFromPopup = function ({ id, name, target }){
+        const inp = document.getElementById(target) || vendorInput;
+        if (!inp) return;
+        inp.value = name || '';
+        inp.focus();
+
+        // 필요 시 hidden으로 id도 함께 보낼 수 있음 (폼에서 사용하지 않으면 무시됨)
+        let hidden = inp.nextElementSibling && inp.nextElementSibling.matches('input[type="hidden"][name="vendor_partner_id"]')
+          ? inp.nextElementSibling
+          : null;
+        if (!hidden) {
+          hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = 'vendor_partner_id';
+          inp.insertAdjacentElement('afterend', hidden);
+        }
+        hidden.value = id || '';
+      };
+    })();
+  </script>  <!-- 매입처 팝업 연동 -->
+  <script>
+    (function(){
+      // 대상 인풋 찾기
+      const vendorInput = document.querySelector('input[name="vendor"]');
+      if (!vendorInput) return;
+
+      // id가 없으면 콜백 식별용으로 하나 부여
+      if (!vendorInput.id) {
+        vendorInput.id = 'vendor-' + Date.now().toString(36);
+      }
+
+      // 팝업 열기 함수
+      function openPurchasePopup(){
+        const q = (vendorInput.value || '').trim();
+        const url = `/partners/purchase/?popup=1`
+                  + (q ? `&q_name=${encodeURIComponent(q)}` : '')
+                  + `&target=${encodeURIComponent(vendorInput.id)}`;
+        window.open(url, 'purchasePartnerSearch', 'width=900,height=600');
+      }
+
+      // Enter로 팝업
+      vendorInput.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          openPurchasePopup();
+        }
+      });
+
+      // 더블클릭으로도 팝업
+      vendorInput.addEventListener('dblclick', function(){
+        openPurchasePopup();
+      });
+
+      // 팝업에서 호출하는 콜백 (선택된 매입처 반영)
+      // 예상 payload: { id, name, target }
+      window.selectPurchasePartnerFromPopup = function ({ id, name, target }){
+        const inp = document.getElementById(target) || vendorInput;
+        if (!inp) return;
+        inp.value = name || '';
+        inp.focus();
+
+        // 필요 시 hidden으로 id도 함께 보낼 수 있음 (폼에서 사용하지 않으면 무시됨)
+        let hidden = inp.nextElementSibling && inp.nextElementSibling.matches('input[type="hidden"][name="vendor_partner_id"]')
+          ? inp.nextElementSibling
+          : null;
+        if (!hidden) {
+          hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = 'vendor_partner_id';
+          inp.insertAdjacentElement('afterend', hidden);
+        }
+        hidden.value = id || '';
+      };
+    })();
+  </script>  <!-- 매입처 팝업 연동 -->
+  <script>
+    (function(){
+      // 대상 인풋 찾기
+      const vendorInput = document.querySelector('input[name="vendor"]');
+      if (!vendorInput) return;
+
+      // id가 없으면 콜백 식별용으로 하나 부여
+      if (!vendorInput.id) {
+        vendorInput.id = 'vendor-' + Date.now().toString(36);
+      }
+
+      // 팝업 열기 함수
+      function openPurchasePopup(){
+        const q = (vendorInput.value || '').trim();
+        const url = `/partners/purchase/?popup=1`
+                  + (q ? `&q_name=${encodeURIComponent(q)}` : '')
+                  + `&target=${encodeURIComponent(vendorInput.id)}`;
+        window.open(url, 'purchasePartnerSearch', 'width=900,height=600');
+      }
+
+      // Enter로 팝업
+      vendorInput.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          openPurchasePopup();
+        }
+      });
+
+      // 더블클릭으로도 팝업
+      vendorInput.addEventListener('dblclick', function(){
+        openPurchasePopup();
+      });
+
+      // 팝업에서 호출하는 콜백 (선택된 매입처 반영)
+      // 예상 payload: { id, name, target }
+      window.selectPurchasePartnerFromPopup = function ({ id, name, target }){
+        const inp = document.getElementById(target) || vendorInput;
+        if (!inp) return;
+        inp.value = name || '';
+        inp.focus();
+
+        // 필요 시 hidden으로 id도 함께 보낼 수 있음 (폼에서 사용하지 않으면 무시됨)
+        let hidden = inp.nextElementSibling && inp.nextElementSibling.matches('input[type="hidden"][name="vendor_partner_id"]')
+          ? inp.nextElementSibling
+          : null;
+        if (!hidden) {
+          hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = 'vendor_partner_id';
+          inp.insertAdjacentElement('afterend', hidden);
+        }
+        hidden.value = id || '';
+      };
+    })();
+  </script>
+  <!-- 매입처 팝업 연동 -->
+  <script>
+    (function(){
+      // 대상 인풋 찾기
+      const vendorInput = document.querySelector('input[name="vendor"]');
+      if (!vendorInput) return;
+
+      // id가 없으면 콜백 식별용으로 하나 부여
+      if (!vendorInput.id) {
+        vendorInput.id = 'vendor-' + Date.now().toString(36);
+      }
+
+      // 팝업 열기 함수
+      function openPurchasePopup(){
+        const q = (vendorInput.value || '').trim();
+        const url = `/partners/purchase/?popup=1`
+                  + (q ? `&q_name=${encodeURIComponent(q)}` : '')
+                  + `&target=${encodeURIComponent(vendorInput.id)}`;
+        window.open(url, 'purchasePartnerSearch', 'width=900,height=600');
+      }
+
+      // Enter로 팝업
+      vendorInput.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          openPurchasePopup();
+        }
+      });
+
+      // 더블클릭으로도 팝업
+      vendorInput.addEventListener('dblclick', function(){
+        openPurchasePopup();
+      });
+
+      // 팝업에서 호출하는 콜백 (선택된 매입처 반영)
+      // 예상 payload: { id, name, target }
+      window.selectPurchasePartnerFromPopup = function ({ id, name, target }){
+        const inp = document.getElementById(target) || vendorInput;
+        if (!inp) return;
+        inp.value = name || '';
+        inp.focus();
+
+        // 필요 시 hidden으로 id도 함께 보낼 수 있음 (폼에서 사용하지 않으면 무시됨)
+        let hidden = inp.nextElementSibling && inp.nextElementSibling.matches('input[type="hidden"][name="vendor_partner_id"]')
+          ? inp.nextElementSibling
+          : null;
+        if (!hidden) {
+          hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = 'vendor_partner_id';
+          inp.insertAdjacentElement('afterend', hidden);
+        }
+        hidden.value = id || '';
+      };
+    })();
+  </script>
 </body>
 </html>

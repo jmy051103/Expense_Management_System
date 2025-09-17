@@ -462,13 +462,15 @@ def item_list(request):
         except FieldDoesNotExist:
             qs = qs.filter(vendor__icontains=q_vendor)
 
+    per_page_options = [10, 20, 30, 50, 100]
     try:
-        page_size = int(request.GET.get("size", "10") or 10)
-    except ValueError:
-        page_size = 10
-    page_size = max(5, min(page_size, 100))
+        per_page = int(request.GET.get("per_page", 10))
+    except (TypeError, ValueError):
+        per_page = 10
+    if per_page not in per_page_options:
+        per_page = 10
 
-    paginator = Paginator(qs, page_size)
+    paginator = Paginator(qs, per_page)
     page_obj = paginator.get_page(request.GET.get("page"))
 
     # ⬇️ page 제외한 쿼리스트링
@@ -480,8 +482,9 @@ def item_list(request):
         "items": page_obj.object_list,
         "page_obj": page_obj,
         "total": paginator.count,
-        "page_size": page_size,
-        "qs": qs,  # ✅ 추가
+        "per_page_options": per_page_options,  # ✅ 추가
+        "per_page": per_page,                  # ✅ 추가
+        "qs": qs,
     })
 
 
