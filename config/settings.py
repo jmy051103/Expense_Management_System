@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "accounts",
     "expenses.apps.ExpensesConfig",
     "partners",
+    "reports",
 ]
 
 # --- Middleware ---

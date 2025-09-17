@@ -10,7 +10,7 @@
   <!-- 공통 프레임 -->
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-17-00">
   <!-- 이 페이지 전용 -->
-  <link rel="stylesheet" href="{% static 'css/monthly_sales_contract.css' %}?v=2025-09-17-09">
+  <link rel="stylesheet" href="{% static 'css/monthly_sales_contract.css' %}?v=2025-09-17-02">
 </head>
 <body>
 
@@ -99,7 +99,10 @@
 
         <label class="field">
           <span>거래처명</span>
-          <input type="text" name="q_customer" class="inp w-180" value="{{ request.GET.q_customer }}">
+          <input id="q_customer" type="text"
+                name="q_customer" class="inp w-180"
+                value="{{ request.GET.q_customer }}"
+                placeholder="이름 입력 후 Enter">
         </label>
 
         <label class="field">
@@ -120,13 +123,6 @@
         </div>
       </div>
     </form>
-
-    <!-- 도움말 -->
-    <div class="section-note">
-      <h2>| 월별 매출계약통계</h2>
-      <p>계약보고작성 기준으로 산정합니다.</p>
-      <p>계약등록 즉시 반영됩니다.</p>
-    </div>
 
     <!-- 표 -->
     <section class="panel">
@@ -178,8 +174,8 @@
       window.DAILY = {};
     }
     // year/month가 비어도 숫자 0으로 들어가도록 default 사용
-    window.SELECTED_YEAR  = {{ year|default:0 }};
-    window.SELECTED_MONTH = {{ month|default:0 }};
+    window.SELECTED_YEAR  = Number('{{ year|default:0 }}');
+    window.SELECTED_MONTH = Number('{{ month|default:0 }}');
   </script>
 
   <!-- 숫자 포맷/필터/표 렌더링 -->
@@ -201,7 +197,7 @@
       const yVal = (window.SELECTED_YEAR  && window.SELECTED_YEAR  > 0) ? window.SELECTED_YEAR  : yNow;
       const mVal = (window.SELECTED_MONTH && window.SELECTED_MONTH > 0) ? window.SELECTED_MONTH : mNow;
 
-      for (let y = yNow - 5; y <= yNow + 1; y++) {
+      for (let y = yNow - 6; y <= yNow; y++) {
         const opt = document.createElement('option');
         opt.value = y; opt.textContent = y;
         if (y === yVal) opt.selected = true;
@@ -252,6 +248,30 @@
       sumT.textContent = KR.format(Math.round(total));
       sumS.textContent = KR.format(Math.round(supply));
       sumV.textContent = KR.format(Math.round(vat));
+    })();
+  </script>
+
+  <script>
+    (function () {
+      const input = document.getElementById('q_customer');
+      if (!input) return;
+
+      // Enter로 매출처 검색 팝업 열기 (add_contract와 동일한 주소)
+      input.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const q = (this.value || '').trim();
+        const url = `/partners/sales/?popup=1` + (q ? `&q_name=${encodeURIComponent(q)}` : '');
+        window.open(url, 'partnerSearch', 'width=900,height=600');
+      });
+
+      // 팝업에서 선택되면 값 채우는 콜백 (팝업에서 window.opener 호출)
+      window.selectPartnerFromPopup = function ({ id, name }) {
+        input.value = name;
+        // 자동으로 검색까지 하고 싶으면 다음 줄 주석 해제
+        // input.form?.submit();
+        input.focus();
+      };
     })();
   </script>
 </body>

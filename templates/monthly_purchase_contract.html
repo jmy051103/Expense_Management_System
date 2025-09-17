@@ -1,0 +1,266 @@
+{% load static %}
+{% load humanize %}
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>월별 매입계약통계</title>
+
+  <!-- 공통 프레임 -->
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-17-00">
+  <!-- 이 페이지 전용: 판매와 동일 스타일 재사용 -->
+  <link rel="stylesheet" href="{% static 'css/monthly_sales_contract.css' %}?v=2025-09-17-02">
+</head>
+<body>
+
+  <!-- 상단 상태줄 -->
+  <div class="topbar">
+    <strong>시험운영</strong>
+    <span class="sep">|</span>
+    <small>Today {% now "Y.m.d (D)" %}</small>
+    <span class="ip" style="margin-left:auto;">현재접속 IP : {{ request.META.REMOTE_ADDR|default:"-" }}</span>
+  </div>
+
+  <!-- 타이틀 + 탭(고정) -->
+  <div class="sticky-wrap">
+    <div class="titlebar">
+      <h1>
+        <a href="{% url 'dashboard' %}" class="title-link">
+          (주)대진아이엔티 업무지원시스템
+        </a>
+      </h1>
+      <form action="{% url 'logout' %}" method="post" class="logout-form">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">로그아웃</button>
+      </form>
+    </div>
+
+    <!-- 탭 -->
+    <nav class="tabs" role="tablist" aria-label="상단 메뉴">
+      {% with acc=request.user.profile.access|default_if_none:"" %}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
+          <div class="tab-group has-dropdown">
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">계정관리</a>
+            <ul id="menu-accounts" class="dropdown" role="menu" aria-label="계정관리 메뉴">
+              <li role="none"><a role="menuitem" href="{% url 'create_profile' %}">계정 만들기</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'view_profile' %}">계정 보기</a></li>
+            </ul>
+          </div>
+        {% else %}
+          <span class="tab tab-disabled" aria-disabled="true">계정관리</span>
+        {% endif %}
+      {% endwith %}
+
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-work">업무관리</a>
+        <ul id="menu-work" class="dropdown" role="menu" aria-label="업무관리 메뉴">
+          <li role="none"><a role="menuitem" href="{% url 'sales_partner_list' %}">매출처정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'purchase_partner_list' %}">매입처정보</a></li>
+        </ul>
+      </div>
+
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">계약정보</a>
+        <ul id="menu-contract" class="dropdown" role="menu" aria-label="계약정보 메뉴">
+          <li role="none"><a role="menuitem" href="{% url 'add_contract' %}">계약정보 등록</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
+        </ul>
+      </div>
+
+      <!-- 통계 드롭다운 -->
+      <div class="tab-group has-dropdown">
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
+        <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
+          <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_voice' %}">매입처 월별 계산서</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="container">
+    <h1 class="section-title" style="margin-bottom:12px;">월별 매입계약통계</h1>
+
+    <!-- 필터 -->
+    <form class="panel toolbar monthly-filter" method="get" action="">
+      <div class="filters">
+        <label class="field">
+          <span>기간</span>
+          <div class="row">
+            <select id="year" name="year" class="sel w-80" aria-label="연도 선택"></select>
+            <span class="ym-suffix">년</span>
+            <select id="month" name="month" class="sel w-80" aria-label="월 선택"></select>
+            <span class="ym-suffix">월</span>
+          </div>
+        </label>
+
+        <label class="field">
+        <span>매입처명</span>
+        <input id="q_purchase"
+                type="text"
+                name="q_customer"
+                class="inp w-180"
+                value="{{ request.GET.q_customer }}"
+                placeholder="이름 입력 후 Enter">
+        </label>
+
+        <div class="field">
+          <span>&nbsp;</span>
+          <button type="submit" class="btn gray">검색</button>
+        </div>
+      </div>
+    </form>
+
+
+    <!-- 표 -->
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="form-table table-stat">
+          <thead>
+            <tr>
+              <th style="width:120px">일</th>
+              <th class="right">합계</th>
+              <th class="right">공급가액</th>
+              <th class="right">부가세액</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-rows"></tbody>
+          <tfoot>
+            <tr>
+              <td class="center strong">합계</td>
+              <td class="right strong"><span id="sum-total" class="num">{{ month_total|default:0|intcomma }}</span></td>
+              <td class="right strong"><span id="sum-supply" class="num">{{ month_supply|default:0|intcomma }}</span></td>
+              <td class="right strong"><span id="sum-vat" class="num">{{ month_vat|default:0|intcomma }}</span></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- 하단 회사 정보 -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left"><strong>(주)대진아이엔티</strong></div>
+      <div class="footer-right">
+        <div>경기도 남양주시 다산중앙로19번길 25-23, F동 712호</div>
+        <div>대표명 : 양정안&nbsp;&nbsp;사업자번호 : 637-81-00010</div>
+        <div>기술문의 : 양재민 (jmy051103@gmail.com), 홍지원 (jiwonh37@gmail.com)</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== 서버 변수 주입 ===== -->
+  <script>
+    try {
+      window.DAILY = JSON.parse('{{ daily_json|default:"{}"|escapejs }}');
+    } catch (e) {
+      console.error('daily_json parse error:', e);
+      window.DAILY = {};
+    }
+    window.SELECTED_YEAR  = Number('{{ year|default:0 }}');
+    window.SELECTED_MONTH = Number('{{ month|default:0 }}');
+  </script>
+
+  <!-- 숫자 포맷/필터/표 렌더링 (판매 페이지와 동일) -->
+  <script>
+    (function(){
+      const KR  = new Intl.NumberFormat('ko-KR');
+      const pad = n => (n<10?'0':'') + n;
+      const dateStr = (y,m,d) => `${y}-${pad(m)}-${pad(d)}`;
+
+      // 연/월 셀렉터 채우기
+      const ySel = document.getElementById('year');
+      const mSel = document.getElementById('month');
+      const form = document.querySelector('.monthly-filter');
+
+      const now  = new Date();
+      const yNow = now.getFullYear();
+      const mNow = now.getMonth() + 1;
+
+      const yVal = (window.SELECTED_YEAR  && window.SELECTED_YEAR  > 0) ? window.SELECTED_YEAR  : yNow;
+      const mVal = (window.SELECTED_MONTH && window.SELECTED_MONTH > 0) ? window.SELECTED_MONTH : mNow;
+
+      for (let y = yNow - 6; y <= yNow; y++) {
+        const opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        if (y === yVal) opt.selected = true;
+        ySel.appendChild(opt);
+      }
+      for (let i = 1; i <= 12; i++) {
+        const opt = document.createElement('option');
+        opt.value = i; opt.textContent = String(i).padStart(2,'0') + '월';
+        if (i === mVal) opt.selected = true;
+        mSel.appendChild(opt);
+      }
+
+      // 자동 제출
+      ySel.addEventListener('change', ()=> form.submit());
+      mSel.addEventListener('change', ()=> form.submit());
+
+      // 표 렌더링
+      const tbody = document.getElementById('tbody-rows');
+      const sumT  = document.getElementById('sum-total');
+      const sumS  = document.getElementById('sum-supply');
+      const sumV  = document.getElementById('sum-vat');
+
+      const daysInMonth = new Date(yVal, mVal, 0).getDate(); // mVal: 1-12
+      let total = 0, supply = 0, vat = 0;
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const key = dateStr(yVal, mVal, d);
+        const row = (window.DAILY && window.DAILY[key]) ? window.DAILY[key] : null;
+
+        const t = row && typeof row.total  === 'number' ? row.total  : 0;
+        const s = row && typeof row.supply === 'number' ? row.supply : 0;
+        const v = row && typeof row.vat    === 'number' ? row.vat    : 0;
+
+        total  += t;
+        supply += s;
+        vat    += v;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+        <td class="center">${key}</td>
+        <td class="right num">${KR.format(Math.round(t))}</td>
+        <td class="right num">${KR.format(Math.round(s))}</td>
+        <td class="right num">${KR.format(Math.round(v))}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      sumT.textContent = KR.format(Math.round(total));
+      sumS.textContent = KR.format(Math.round(supply));
+      sumV.textContent = KR.format(Math.round(vat));
+    })();
+  </script>
+
+    <script>
+    (function () {
+        const input = document.getElementById('q_purchase');
+        if (!input) return;
+
+        // Enter → 매입처 검색 팝업
+        input.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const q = (this.value || '').trim();
+        const url = `/partners/purchase/?popup=1` + (q ? `&q_name=${encodeURIComponent(q)}` : '');
+        window.open(url, 'purchasePartnerSearch', 'width=900,height=600');
+        });
+
+        // 팝업에서 선택될 때 호출되는 콜백
+        // 팝업 쪽에서: window.opener.selectPurchasePartnerFromPopup({ id, name })
+        window.selectPurchasePartnerFromPopup = function ({ id, name }) {
+        input.value = name;
+        // 자동 검색까지 하려면 아래 주석 해제
+        // input.form?.submit();
+        input.focus();
+        };
+    })();
+    </script>
+</body>
+</html>

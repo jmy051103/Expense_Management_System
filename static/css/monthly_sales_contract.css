@@ -1,4 +1,5 @@
 /* 월별 매출계약통계 전용 스타일 */
+
 /* 레이아웃 */
 .page-wrap {
   max-width: 1200px;
@@ -17,7 +18,7 @@
   margin-bottom: 28px;
 }
 
-/* 필터 */
+/* 공통 필터 기본형 (다른 페이지와 호환) */
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -25,10 +26,7 @@
   align-items: end;
   padding: 16px 18px;
 }
-.filters .grp {
-  display: grid;
-  gap: 6px;
-}
+.filters .grp { display: grid; gap: 6px; }
 .filters .grp label {
   font-size: 12px;
   color: var(--muted, #6b7280);
@@ -49,56 +47,64 @@
   border-radius: 8px;
 }
 
-/* 안내문 */
-.hint { 
-  margin: 0 18px 12px; 
-  color: var(--muted, #6b7280); 
-  font-size: 12px; 
+/* 안내문(공통 hint – 필요 시 사용) */
+.hint {
+  margin: 0 18px 12px;
+  color: var(--muted, #6b7280);
+  font-size: 12px;
 }
 
 /* ====== 표(집계표) – 실제 클래스는 .table-stat ====== */
 .table-wrap { overflow: auto; }
-table.table-stat { width: 100%; border-collapse: collapse; }
 
+/* 구분선이 또렷하게 보이도록 separate 모드 */
+table.table-stat {
+  width: 100%;
+  border-collapse: separate;   /* collapse → separate */
+  border-spacing: 0;
+}
+
+/* 헤더: 파란색 톤 + 흰 글자 + 얇은 세로 경계 */
 table.table-stat thead th {
   position: sticky;
   top: 0;
-  background: #f9fafb;
   z-index: 1;
+  color: #fff;
+  background: var(--thead-bg, #7ea0b8);          /* 파란 헤더 */
+  border-right: 1px solid var(--thead-border, #6f8ea6);
+  padding: 12px 12px;
 }
+table.table-stat thead th:last-child { border-right: 0; }
 
+/* 바디: 가로 구분선(중간 줄) */
 table.table-stat th,
 table.table-stat td {
   padding: 12px 12px;
-  border-bottom: 1px solid var(--line, #e5e7eb);
+  border-bottom: 1px solid var(--line, #e5e7eb);  /* 중간 줄 */
   font-size: 14px;
+  text-align: center;
+  background: #fff;
 }
+table.table-stat tbody tr:nth-child(odd) td { background: #fcfcfd; }
+table.table-stat tbody tr:hover td { background: #f6f9fc; }
 
+/* 정렬 유틸 */
 table.table-stat td.num,
 table.table-stat th.right { text-align: right; }
 table.table-stat td.center { text-align: center; }
-
-table.table-stat tbody tr:nth-child(odd) td { background: #fcfcfd; }
 
 /* ▶ 합계 줄을 두껍게 */
 table.table-stat tfoot td {
   font-weight: 800;
   background: #fff;
-  border-top: 2.5px solid #111827;   /* 두께 업 */
-  padding-top: 14px;                 /* 여백 살짝 */
+  border-top: 2.5px solid #111827;
+  text-align: center;
+  padding-top: 14px;
 }
 
 /* 날짜/서체 */
 .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .muted { color: var(--muted, #6b7280); }
-
-/* 섹션 하단 메모 */
-.section-note {
-  margin: 10px 0 0;
-  padding: 8px 18px 16px;
-  color: var(--muted, #6b7280);
-  font-size: 12px;
-}
 
 /* 버튼(외곽선형) – 공용에 없어서 보강 */
 .btn-outline {
@@ -116,33 +122,28 @@ table.table-stat tfoot td {
 /* 패널 안쪽 테이블 여백 보강(공용 panel 사용 시) */
 .panel .table-wrap { padding: 6px 12px 0; }
 
-/* 반응형 */
-@media (max-width: 720px) {
-  .filters { gap: 8px; }
-  .filters .grp { width: calc(50% - 6px); }
-  .filters .grp:nth-child(odd) { margin-right: 6px; }
-  .filters .grp:nth-child(even) { margin-left: 6px; }
-  .filters .grp label { font-size: 11px; }
-  table.stats th, table.stats td { padding: 10px 10px; font-size: 13px; }
+/* === 검색 필터: 한 줄 정렬(이 페이지 전용) === */
+.monthly-filter {
+  max-width: 960px;
+  margin: 0 auto 16px;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 12px;
+  background: #fff;
 }
-
-/* === 검색 필터: 한 줄 정렬 === */
 .monthly-filter .filters {
   display: flex;
-  flex-wrap: nowrap;   /* 줄바꿈 금지 */
+  flex-wrap: nowrap; /* 줄바꿈 금지 */
   gap: 16px;
   align-items: flex-end;
   justify-content: center;
 }
-
-/* 각 필드 라벨+입력 한 줄 */
 .monthly-filter .filters .field {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: auto;
 }
-.monthly-filter .filters .field span {
+.monthly-filter .filters .field > span {
   font-size: 12px;
   color: var(--muted, #6b7280);
 }
@@ -152,29 +153,59 @@ table.table-stat tfoot td {
   align-items: center;
 }
 
-/* 타이틀 */
 .section-title {
   font-size: 32px;
-  font-weight: 700;
-  text-align: center;     /* 왼쪽 정렬로 변경 */
+  font-weight: 700; 
+  text-align: center;  
   margin: 20px 0 12px;
 }
 
-/* 설명문 */
-.section-note {
-  margin: 12px 0 20px;
-  text-align: left;
-  max-width: none;         /* 기존 max-width 해제 */
-  padding-left: 12px;      /* 표 안쪽 여백과 맞춤 (thead/td padding 12px 기준) */
-}
-.section-note h2 {
-  font-size: 18px;
-  font-weight: 500;
-  margin-bottom: 6px;
-}
-.section-note p {
-  font-size: 13px;
-  color: var(--muted, #6b7280);
-  margin: 2px 0;
+/* static/css/datepicker.css */
+
+/* ===== 달력 ===== */
+:root{
+  --dp-scale: 1.15;
+  --dp-bg: #fff;
+  --dp-ink: #111;
+  --dp-muted: #6b7280;
+  --dp-line: #e5e7eb;
+  --dp-accent: #2e7192;
 }
 
+.dj-datepicker{
+  position: absolute; z-index: 9999;
+  transform: scale(var(--dp-scale));
+  transform-origin: top left;
+  background: var(--dp-bg);
+  color: var(--dp-ink);
+  border: 1px solid var(--dp-line);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.12);
+  width: 260px; user-select: none;
+}
+
+.dj-dp-head{
+  display: grid; grid-template-columns: 32px 1fr 32px; align-items: center;
+  padding: 8px; border-bottom: 1px solid var(--dp-line);
+  font-weight: 700; text-align: center;
+}
+.dj-dp-btn{
+  border: 1px solid var(--dp-line); background: #f9fafb; border-radius: 8px;
+  height: 28px; cursor: pointer;
+}
+
+.dj-dp-grid{ padding: 6px 8px 10px; }
+.dj-dp-dow, .dj-dp-day{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.dj-dp-dow span{ font-size: 12px; color: var(--dp-muted); text-align: center; padding: 4px 0; }
+
+.dj-dp-day button{
+  height: 34px; border: 1px solid var(--dp-line); background: #fff; border-radius: 8px;
+  cursor: pointer; text-align: center;
+}
+.dj-dp-day button:hover{ border-color: var(--dp-accent); }
+.dj-dp-day button.is-today{ border-color: var(--dp-accent); }
+
+.dj-hidden{ display: none !important; }
+
+/* 공백 셀 */
+.dj-dp-day .blank { height: 34px; border-radius: 8px; background: transparent; border: none; }
