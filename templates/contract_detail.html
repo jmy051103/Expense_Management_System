@@ -111,9 +111,12 @@
           <div class="meta-value">{{ contract.created_at|date:"Y-m-d H:i" }}</div>
         </div>
         <div class="meta">
-          <div class="meta-label">문서 ID</div>
-          <div class="meta-value mono">#{{ contract.id }}</div>
+          <div class="meta-label">계약번호</div>
+          <div class="meta-value mono">
+            {% if contract.contract_no %}{{ contract.contract_no }}{% else %}#{{ contract.id }}{% endif %}
+          </div>
         </div>
+
       </div>
     </section>
 
