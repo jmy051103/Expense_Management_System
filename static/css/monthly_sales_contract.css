@@ -54,52 +54,68 @@
   font-size: 12px;
 }
 
-/* ====== 표(집계표) – 실제 클래스는 .table-stat ====== */
+/* ====== 표(집계표) ====== */
 .table-wrap { overflow: auto; }
 
-/* 구분선이 또렷하게 보이도록 separate 모드 */
-table.table-stat {
+table.table-stat{
   width: 100%;
-  border-collapse: separate;   /* collapse → separate */
+  border-collapse: separate;
   border-spacing: 0;
 }
 
-/* 헤더: 파란색 톤 + 흰 글자 + 얇은 세로 경계 */
-table.table-stat thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+/* 헤더: 파란 톤 + 둔탁한 상단 라운드 */
+table.table-stat thead th{
+  position: sticky; top: 0; z-index: 1;
+  padding: 14px 12px;
   color: #fff;
-  background: var(--thead-bg, #7ea0b8);          /* 파란 헤더 */
-  border-right: 1px solid var(--thead-border, #6f8ea6);
-  padding: 12px 12px;
-}
-table.table-stat thead th:last-child { border-right: 0; }
-
-/* 바디: 가로 구분선(중간 줄) */
-table.table-stat th,
-table.table-stat td {
-  padding: 12px 12px;
-  border-bottom: 1px solid var(--line, #e5e7eb);  /* 중간 줄 */
+  background: var(--thead-bg, #7ea0b8);
   font-size: 14px;
-  text-align: center;
-  background: #fff;
+  border-right: 1px solid var(--thead-border, #6f8ea6);
 }
-table.table-stat tbody tr:nth-child(odd) td { background: #fcfcfd; }
-table.table-stat tbody tr:hover td { background: #f6f9fc; }
+table.table-stat thead th:first-child{ border-left: 0; }
+table.table-stat thead th:last-child{ border-right: 0; }
 
-/* 정렬 유틸 */
+
+/* 바디 공통 */
+table.table-stat td{
+  padding: 14px 12px;
+  font-size: 13px;
+  color: #1f2937;
+  background: #fff;
+  border-bottom: 1px solid var(--line, #e5e7eb);
+  border-right: 1px solid var(--line, #e5e7eb);  
+  text-align: left;  /* 기본은 왼쪽 */
+}
+
+/* 숫자 전용: 항상 오른쪽 정렬 */
 table.table-stat td.num,
-table.table-stat th.right { text-align: right; }
-table.table-stat td.center { text-align: center; }
+table.table-stat td.right{
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
 
-/* ▶ 합계 줄을 두껍게 */
-table.table-stat tfoot td {
+/* 지브라 + hover */
+table.table-stat tbody tr:nth-child(odd) td{ background:#fcfdff; }
+table.table-stat tbody tr:hover td{ background:#f6f9fc; }
+
+/* 매입처 헤더/소계 톤 */
+table.table-stat tr.group-head td{
+  background:#eef2f7;
+  border-top: 1px solid var(--line, #e5e7eb);
+  font-weight: 700;
+}
+table.table-stat tr.group-subtotal td{
+  background:#f3f6ff;
+  font-weight: 700;
+}
+
+/* 푸터(전체 합계) 두꺼운 상단 라인 */
+table.table-stat tfoot td{
   font-weight: 800;
   background: #fff;
-  border-top: 2.5px solid #111827;
-  text-align: center;
+  border-top: 3px solid #111827;
   padding-top: 14px;
+  text-align: center;
 }
 
 /* 날짜/서체 */
@@ -209,3 +225,4 @@ table.table-stat tfoot td {
 
 /* 공백 셀 */
 .dj-dp-day .blank { height: 34px; border-radius: 8px; background: transparent; border: none; }
+

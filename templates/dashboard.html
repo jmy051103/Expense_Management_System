@@ -162,6 +162,7 @@
           <table>
             <thead>
               <tr>
+                <th style="width:160px">총계약건수</th>
                 <th style="width:160px">총매입</th>
                 <th style="width:160px">총매출</th>
                 <th style="width:120px">마진율</th>
@@ -169,20 +170,30 @@
             </thead>
             <tbody>
               <tr>
+                <!-- 이번 달 생성된 Contract 개수 -->
                 <td class="center">
-                  <div class="num">{{ monthly.buy_count|default:"-" }}건</div>
-                  <div class="num strong">445,009,889.5<span class="won"></span></div>
+                  <div class="num strong">{{ monthly_kpis.contract_count|default:0|intcomma }}건</div>
+                </td>
+
+                <!-- 총매입/총매출 -->
+                <td class="center">
+                  <div class="num strong won">{{ monthly_kpis.buy_total|intcomma }}</div>
                 </td>
                 <td class="center">
-                  <div class="num">72건</div>
-                  <div class="num strong">518,860,760.9<span class="won"></span></div>
+                  <div class="num strong won">{{ monthly_kpis.sales_total|intcomma }}</div>
                 </td>
-                <td class="center"><strong>14.23%</strong></td>
+
+                <!-- 마진율 -->
+                <td class="center">
+                  <strong>{{ monthly_kpis.margin_rate|floatformat:2 }}%</strong>
+                </td>
               </tr>
+
+              <!-- 버튼 줄: colspan=4 로 변경 -->
               <tr>
-                <td colspan="3" class="center">
-                  <a class="btn" href="#">매입계약등록 +</a>
-                  <a class="btn" href="#">매출계약등록 +</a>
+                <td colspan="4" class="center">
+                  <a class="btn" href="{% url 'monthly_purchase_contract' %}">매입계약통계 +</a>
+                  <a class="btn" href="{% url 'monthly_sales_contract' %}">매출계약통계 +</a>
                 </td>
               </tr>
             </tbody>

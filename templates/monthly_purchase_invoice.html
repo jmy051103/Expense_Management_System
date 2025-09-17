@@ -53,6 +53,7 @@
         <ul id="menu-work" class="dropdown" role="menu" aria-label="업무관리 메뉴">
           <li role="none"><a role="menuitem" href="{% url 'sales_partner_list' %}">매출처정보</a></li>
           <li role="none"><a role="menuitem" href="{% url 'purchase_partner_list' %}">매입처정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'item_list' %}">품목정보</a></li>
         </ul>
       </div>
 
@@ -117,37 +118,34 @@
           <tbody>
             {% for g in groups %}
               <!-- 매입처 헤더 -->
-              <tr class="vendor-head">
+              <tr class="group-head">
                 <td class="center">{{ g.no }}</td>
                 <td class="left strong" colspan="6">{{ g.vendor }}</td>
               </tr>
 
-              <!-- 품목 행 -->
+              <!-- 품목 행 (※ 여기서 '소계' 셀 제거) -->
               {% for r in g.rows %}
                 <tr>
                   <td class="center"></td>
-                  <td class="left muted">소계</td>
+                  <td class="left"></td>
                   <td class="left">{{ r.name }}</td>
-                  <td class="right num">{{ r.qty|intcomma }}</td>
-                  <td class="right num">{{ r.total|floatformat:0|intcomma }}</td>
-                  <td class="right num">{{ r.supply|floatformat:0|intcomma }}</td>
-                  <td class="right num">{{ r.vat|floatformat:0|intcomma }}</td>
+                  <td class="center num">{{ r.qty|intcomma }}</td>
+                  <td class="center num">{{ r.total|floatformat:0|intcomma }}</td>
+                  <td class="center num">{{ r.supply|floatformat:0|intcomma }}</td>
+                  <td class="center num">{{ r.vat|floatformat:0|intcomma }}</td>
                 </tr>
               {% endfor %}
 
               <!-- 매입처 소계 -->
-              <tr class="vendor-subtotal">
+              <tr class="group-subtotal">
                 <td class="center"></td>
                 <td class="left strong">소계</td>
                 <td></td>
-                <td class="right strong num">{{ g.subtotal.qty|intcomma }}</td>
-                <td class="right strong num">{{ g.subtotal.total|floatformat:0|intcomma }}</td>
-                <td class="right strong num">{{ g.subtotal.supply|floatformat:0|intcomma }}</td>
-                <td class="right strong num">{{ g.subtotal.vat|floatformat:0|intcomma }}</td>
+                <td class="center strong num">{{ g.subtotal.qty|intcomma }}</td>
+                <td class="center strong num">{{ g.subtotal.total|floatformat:0|intcomma }}</td>
+                <td class="center strong num">{{ g.subtotal.supply|floatformat:0|intcomma }}</td>
+                <td class="center strong num">{{ g.subtotal.vat|floatformat:0|intcomma }}</td>
               </tr>
-
-              <!-- 섹션 구분선 -->
-              <tr class="group-sep"><td colspan="7"></td></tr>
             {% empty %}
               <tr><td class="center" colspan="7">해당 월의 매입 내역이 없습니다.</td></tr>
             {% endfor %}

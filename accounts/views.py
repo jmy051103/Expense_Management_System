@@ -1,5 +1,6 @@
 # accounts/views.py
 from decimal import Decimal, InvalidOperation
+from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -7,9 +8,14 @@ from django.contrib.auth.models import User
 from django.core.exceptions import FieldDoesNotExist
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
-from django.db.models import Q
+from django.db.models import Q, Sum, Value, DecimalField
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
+
+# 대시보드 KPI 집계에 사용
+from expenses.models import ContractItem
 
 from .forms import ProfileEditForm, UserEditForm
 from .models import Profile
@@ -25,8 +31,8 @@ try:
 except Exception:
     Contract = None
 
+# 품목(Catalog) 화면에서 사용할 Item 모델 별칭
 try:
-    # 보통 expenses 앱에 둠
     from expenses.models import ContractItem as Item
 except Exception:
     try:
@@ -115,11 +121,49 @@ def dashboard(request):
         stats["in_progress"] = qs.filter(status="processing").count()
         stats["done"] = qs.filter(status="completed").count()
 
+    # ===== 이번 달 합계/마진율 집계 추가 =====
+    today = timezone.localdate()
+    month_start = today.replace(day=1)
+    # 다음달 1일(배타)
+    if month_start.month == 12:
+        month_end_excl = date(month_start.year + 1, 1, 1)
+    else:
+        month_end_excl = date(month_start.year, month_start.month + 1, 1)
+
+    monthly_kpis = {"sales_total": 0, "buy_total": 0, "margin_rate": 0.0, "contract_count": 0}
+    
+    # 이번 달 계약 건수 (Contract 기준)
+    if Contract:
+        monthly_kpis["contract_count"] = Contract.objects.filter(
+            created_at__date__gte=month_start,
+            created_at__date__lt=month_end_excl,
+        ).count()
+
+    # ContractItem 기준으로 합산
+    qi = ContractItem.objects.filter(
+        contract__created_at__date__gte=month_start,
+        contract__created_at__date__lt=month_end_excl,
+    )
+    agg = qi.aggregate(
+        sales_total=Coalesce(Sum("sell_total"), Value(0, output_field=DecimalField(max_digits=18, decimal_places=2))),
+        buy_total=Coalesce(Sum("buy_total"), Value(0, output_field=DecimalField(max_digits=18, decimal_places=2))),
+    )
+    sales_total = Decimal(agg["sales_total"] or 0)
+    buy_total = Decimal(agg["buy_total"] or 0)
+    margin_amt = sales_total - buy_total
+    margin_rate = float((margin_amt / sales_total * 100) if sales_total else 0)
+
+    monthly_kpis["sales_total"] = int(sales_total)
+    monthly_kpis["buy_total"] = int(buy_total)
+    monthly_kpis["margin_rate"] = margin_rate
+    # ======================================
+
     return render(request, "dashboard.html", {
         "groups": groups,
         "role": role,
         "recent_reports": recent_reports,
         "stats": stats,
+        "monthly_kpis": monthly_kpis, 
     })
 
 
