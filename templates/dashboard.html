@@ -36,7 +36,7 @@
     <!-- 탭 -->
     <nav class="tabs" role="tablist" aria-label="상단 메뉴">
       {% with acc=request.user.profile.access|default_if_none:"" %}
-        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" or acc == "실장모드"%}
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">
               계정관리
@@ -76,15 +76,21 @@
       </div>
 
       <!-- 통계 드롭다운 -->
-      <div class="tab-group has-dropdown">
-        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
-        <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
-          <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
-        </ul>
-      </div>
+      {% with acc=request.user.profile.access|default_if_none:"" %}
+        {% if request.user.is_superuser or acc == "사장모드" or acc == "실장모드"%}
+          <div class="tab-group has-dropdown">
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
+            <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
+              <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
+            </ul>
+          </div>
+        {% else %}
+          <span class="tab tab-disabled" aria-disabled="true">통계</span>
+        {% endif %}
+      {% endwith %}
     </nav>
   </div>
 
@@ -155,54 +161,57 @@
     </section>
 
 
-    <!-- 이번달 거래 -->
-    <h2 class="section-title">이달의 거래 진행 현황</h2>
-    <section class="panel">
-      <div class="grid-1">
-        <div class="side-box">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:160px">총계약건수</th>
-                <th style="width:160px">총매입</th>
-                <th style="width:160px">총매출</th>
-                <th style="width:120px">마진율</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <!-- 이번 달 생성된 Contract 개수 -->
-                <td class="center">
-                  <div class="num strong">{{ monthly_kpis.contract_count|default:0|intcomma }}건</div>
-                </td>
+    {% with acc=request.user.profile.access|default_if_none:"" %}
+      {% if request.user.is_superuser or acc == "실장모드" or acc == "사장모드" %}
+        <!-- 이번달 거래 -->
+        <h2 class="section-title">이달의 거래 진행 현황</h2>
+        <section class="panel">
+          <div class="grid-1">
+            <div class="side-box">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:160px">총계약건수</th>
+                    <th style="width:160px">총매입</th>
+                    <th style="width:160px">총매출</th>
+                    <th style="width:120px">마진율</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <!-- 이번 달 생성된 Contract 개수 -->
+                    <td class="center">
+                      <div class="num strong">{{ monthly_kpis.contract_count|default:0|intcomma }}건</div>
+                    </td>
 
-                <!-- 총매입/총매출 -->
-                <td class="center">
-                  <div class="num strong won">{{ monthly_kpis.buy_total|intcomma }}</div>
-                </td>
-                <td class="center">
-                  <div class="num strong won">{{ monthly_kpis.sales_total|intcomma }}</div>
-                </td>
+                    <!-- 총매입/총매출 -->
+                    <td class="center">
+                      <div class="num strong won">{{ monthly_kpis.buy_total|intcomma }}</div>
+                    </td>
+                    <td class="center">
+                      <div class="num strong won">{{ monthly_kpis.sales_total|intcomma }}</div>
+                    </td>
 
-                <!-- 마진율 -->
-                <td class="center">
-                  <strong>{{ monthly_kpis.margin_rate|floatformat:2 }}%</strong>
-                </td>
-              </tr>
+                    <!-- 마진율 -->
+                    <td class="center">
+                      <strong>{{ monthly_kpis.margin_rate|floatformat:2 }}%</strong>
+                    </td>
+                  </tr>
 
-              <!-- 버튼 줄: colspan=4 로 변경 -->
-              <tr>
-                <td colspan="4" class="center">
-                  <a class="btn" href="{% url 'monthly_purchase_contract' %}">매입계약통계 +</a>
-                  <a class="btn" href="{% url 'monthly_sales_contract' %}">매출계약통계 +</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </main>
+                  <!-- 버튼 줄: colspan=4 로 변경 -->
+                  <tr>
+                    <td colspan="4" class="center">
+                      <a class="btn" href="{% url 'monthly_purchase_contract' %}">매입계약통계 +</a>
+                      <a class="btn" href="{% url 'monthly_sales_contract' %}">매출계약통계 +</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      {% endif %}
+    {% endwith %}
 
   <!-- 하단 회사 정보 -->
   <footer class="site-footer">
