@@ -497,3 +497,13 @@ body {
 .dj-dp-day button.is-today{ border-color: var(--dp-accent); }
 .dj-hidden{ display: none !important; }
 .dj-dp-day .blank { height: 34px; border-radius: 8px; background: transparent; border: none; }
+
+/* 계약상태: 밑줄 제거 (색상은 주변 글자색 상속) */
+.status-link,
+.status-link:link,
+.status-link:visited,
+.status-link:hover,
+.status-link:active{
+  text-decoration: none !important;
+  color: black;
+}

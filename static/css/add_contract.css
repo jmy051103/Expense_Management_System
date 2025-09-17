@@ -516,3 +516,9 @@ table.form-table { width: 100%; border-collapse: collapse; table-layout: fixed; 
 /* 검색 버튼을 조금 더 진하게 */
 .btn.gray{ background:#e5e7eb; font-weight:600; }
 .btn.gray:hover{ filter:brightness(.98); }
+
+/* 링크 버튼 밑줄 제거 */
+a.btn, a.btn:link, a.btn:visited, a.btn:hover, a.btn:active {
+  text-decoration: none !important;
+  color: black;
+}
