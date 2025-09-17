@@ -14,22 +14,23 @@ class UserEditForm(forms.ModelForm):
             "is_staff": "스태프 여부",
         }
         widgets = {
-            "username": forms.TextInput(attrs={"class": "inp"}),
-            "first_name": forms.TextInput(attrs={"class": "inp"}),
-            "email": forms.EmailInput(attrs={"class": "inp"}),
+            "username": forms.TextInput(attrs={"class": "inp", "placeholder": "아이디"}),
+            "first_name": forms.TextInput(attrs={"class": "inp", "placeholder": "이름"}),
+            "email": forms.EmailInput(attrs={"class": "inp", "placeholder": "이메일"}),
         }
 
 class ProfileEditForm(forms.ModelForm):
+    department = forms.ChoiceField(choices=Profile.DEPT_CHOICES, required=True)
+    role       = forms.ChoiceField(choices=Profile.ROLE_CHOICES, required=True)
+    access     = forms.ChoiceField(choices=Profile.ACCESS_CHOICES, required=True)
+
     class Meta:
         model = Profile
         fields = ["department", "role", "access"]
-        labels = {
-            "department": "부서",
-            "role": "직책",
-            "access": "권한",
-        }
-        widgets = {
-            "department": forms.TextInput(attrs={"class": "inp"}),
-            "role": forms.TextInput(attrs={"class": "inp"}),
-            "access": forms.TextInput(attrs={"class": "inp"}),
-        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in ("department", "role", "access"):
+            f = self.fields[name]
+            f.choices = [(k, v) for k, v in f.choices if str(k) != ""]
+            f.widget.choices = f.choices 
