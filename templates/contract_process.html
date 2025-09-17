@@ -251,14 +251,52 @@
   </footer>
 
   <script>
-    // 행 클릭 → 상세 이동 (미니테이블/버튼/폼 클릭은 무시)
-    document.querySelector('.table-list')?.addEventListener('click', (e) => {
-      if (e.target.closest('a,button,form,input,select,textarea,.mini-items')) return;
-      const tr = e.target.closest('tr[data-href]');
-      if (!tr) return;
-      const href = tr.getAttribute('data-href');
-      if (href) window.location.href = href;
+  document.addEventListener("DOMContentLoaded", function(){
+    const KR = new Intl.NumberFormat('ko-KR');
+    const toNum = v => {
+      if (typeof v === 'number') return v;
+      if (!v) return 0;
+      return parseFloat(String(v).replace(/[,\s원]/g, '')) || 0;
+    };
+    const fmtMoneyText = n => KR.format(Math.round(n)) + '원';
+
+    // 행(계약)별로 품목 미니테이블을 훑어 매출/매입 합계 → 이익/이익률 표시
+    document.querySelectorAll('tr.row-block').forEach(blockTr => {
+      let sellTotalSum = 0;
+      let buyTotalSum  = 0;
+
+      blockTr.querySelectorAll('.mini-items tbody tr').forEach(row => {
+        const tds = row.children;
+        if (!tds || tds.length < 7) return;
+
+        // 미니 테이블의 컬럼 인덱스: 매출금액 = 4, 매입금액 = 6  (contract_list.html과 동일 구조)
+        const sellTotalSpan = tds[4]?.querySelector('span[data-krw], span');
+        const buyTotalSpan  = tds[6]?.querySelector('span[data-krw], span');
+
+        const sellTotal = toNum(sellTotalSpan?.getAttribute('data-krw') || sellTotalSpan?.textContent);
+        const buyTotal  = toNum(buyTotalSpan?.getAttribute('data-krw')  || buyTotalSpan?.textContent);
+
+        sellTotalSum += sellTotal;
+        buyTotalSum  += buyTotal;
+
+        // 각 품목 금액 표기도 원화 포맷으로 교체
+        if (sellTotalSpan) sellTotalSpan.textContent = fmtMoneyText(sellTotal);
+        if (buyTotalSpan)  buyTotalSpan.textContent  = fmtMoneyText(buyTotal);
+      });
+
+      const profit = sellTotalSum - buyTotalSum;
+      const margin = sellTotalSum > 0 ? (profit / sellTotalSum) * 100 : 0;
+
+      // 오른쪽 고정 셀: 첫 번째 .right.strong = 이익금액, 두 번째 .right = 이익률 (contract_list와 동일)
+      const profitCell = blockTr.querySelector('td.right.strong');
+      const rightCells = blockTr.querySelectorAll('td.right');
+      const marginCell = rightCells.length >= 2 ? rightCells[1] : null;
+
+      if (profitCell) profitCell.textContent = fmtMoneyText(profit);
+      if (marginCell) marginCell.textContent = Math.round(margin) + '%';
     });
+  });
   </script>
+
 </body>
 </html>
