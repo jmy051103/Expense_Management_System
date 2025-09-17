@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!doctype html>
 <html lang="ko">
 <head>
@@ -9,7 +10,7 @@
   <!-- 공통 프레임 -->
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-17-00">
   <!-- 이 페이지 전용 -->
-  <link rel="stylesheet" href="{% static 'css/monthly_sales_contract.css' %}?v=2025-09-17-01">
+  <link rel="stylesheet" href="{% static 'css/monthly_sales_contract.css' %}?v=2025-09-17-09">
 </head>
 <body>
 
@@ -81,18 +82,20 @@
   </div>
 
   <main class="container">
-    <h1 class="section-title" style="margin-bottom:12px;">월별 매출계약통계</h1>
+    <h1 class="section-title">월별 매출계약통계</h1>
 
     <!-- 필터 -->
     <form class="panel toolbar monthly-filter" method="get" action="">
       <div class="filters">
-        <label class="field">
-          <span>기간</span>
-          <div class="row">
-            <select id="year" name="year" class="sel w-80" aria-label="연도 선택"></select>
-            <select id="month" name="month" class="sel w-80" aria-label="월 선택"></select>
-          </div>
-        </label>
+      <label class="field">
+        <span>기간</span>
+        <div class="row">
+          <select id="year" name="year" class="sel w-80" aria-label="연도 선택"></select>
+          <span class="ym-suffix">년</span>
+          <select id="month" name="month" class="sel w-80" aria-label="월 선택"></select>
+          <span class="ym-suffix">월</span>
+        </div>
+      </label>
 
         <label class="field">
           <span>거래처명</span>
@@ -119,10 +122,10 @@
     </form>
 
     <!-- 도움말 -->
-    <div class="muted small" style="max-width:980px;margin:8px auto 10px;">
-      | 월별 매출계약통계<br>
-      계약보고작성 기준으로 산정합니다.<br>
-      계약등록 즉시 반영됩니다.
+    <div class="section-note">
+      <h2>| 월별 매출계약통계</h2>
+      <p>계약보고작성 기준으로 산정합니다.</p>
+      <p>계약등록 즉시 반영됩니다.</p>
     </div>
 
     <!-- 표 -->
@@ -141,9 +144,9 @@
           <tfoot>
             <tr>
               <td class="center strong">합계</td>
-              <td class="right strong"><span id="sum-total" class="num">0</span></td>
-              <td class="right strong"><span id="sum-supply" class="num">0</span></td>
-              <td class="right strong"><span id="sum-vat" class="num">0</span></td>
+              <td class="right strong"><span id="sum-total"  class="num">{{ month_total|default:0|intcomma }}</span></td>
+              <td class="right strong"><span id="sum-supply" class="num">{{ month_supply|default:0|intcomma }}</span></td>
+              <td class="right strong"><span id="sum-vat"    class="num">{{ month_vat|default:0|intcomma }}</span></td>
             </tr>
           </tfoot>
         </table>

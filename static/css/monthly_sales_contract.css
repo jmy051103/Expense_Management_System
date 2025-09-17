@@ -56,29 +56,36 @@
   font-size: 12px; 
 }
 
-/* 표 */
+/* ====== 표(집계표) – 실제 클래스는 .table-stat ====== */
 .table-wrap { overflow: auto; }
-table.stats { width: 100%; border-collapse: collapse; }
-table.stats thead th {
+table.table-stat { width: 100%; border-collapse: collapse; }
+
+table.table-stat thead th {
   position: sticky;
   top: 0;
   background: #f9fafb;
   z-index: 1;
 }
-table.stats th,
-table.stats td {
+
+table.table-stat th,
+table.table-stat td {
   padding: 12px 12px;
   border-bottom: 1px solid var(--line, #e5e7eb);
   font-size: 14px;
 }
-table.stats td.num,
-table.stats th.right { text-align: right; }
-table.stats td.center { text-align: center; }
 
-table.stats tbody tr:nth-child(odd) td { background: #fcfcfd; }
-table.stats tfoot td {
+table.table-stat td.num,
+table.table-stat th.right { text-align: right; }
+table.table-stat td.center { text-align: center; }
+
+table.table-stat tbody tr:nth-child(odd) td { background: #fcfcfd; }
+
+/* ▶ 합계 줄을 두껍게 */
+table.table-stat tfoot td {
   font-weight: 800;
   background: #fff;
+  border-top: 2.5px solid #111827;   /* 두께 업 */
+  padding-top: 14px;                 /* 여백 살짝 */
 }
 
 /* 날짜/서체 */
@@ -118,3 +125,56 @@ table.stats tfoot td {
   .filters .grp label { font-size: 11px; }
   table.stats th, table.stats td { padding: 10px 10px; font-size: 13px; }
 }
+
+/* === 검색 필터: 한 줄 정렬 === */
+.monthly-filter .filters {
+  display: flex;
+  flex-wrap: nowrap;   /* 줄바꿈 금지 */
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* 각 필드 라벨+입력 한 줄 */
+.monthly-filter .filters .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: auto;
+}
+.monthly-filter .filters .field span {
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+}
+.monthly-filter .filters .row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* 타이틀 */
+.section-title {
+  font-size: 32px;
+  font-weight: 700;
+  text-align: center;     /* 왼쪽 정렬로 변경 */
+  margin: 20px 0 12px;
+}
+
+/* 설명문 */
+.section-note {
+  margin: 12px 0 20px;
+  text-align: left;
+  max-width: none;         /* 기존 max-width 해제 */
+  padding-left: 12px;      /* 표 안쪽 여백과 맞춤 (thead/td padding 12px 기준) */
+}
+.section-note h2 {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.section-note p {
+  font-size: 13px;
+  color: var(--muted, #6b7280);
+  margin: 2px 0;
+}
+
