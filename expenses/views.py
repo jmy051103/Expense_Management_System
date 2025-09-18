@@ -27,6 +27,34 @@ from openpyxl.styles import Alignment, Border, Font, NamedStyle, PatternFill, Si
 from .forms import ExpenseReportForm, ExpenseItemFormSet, ContractForm
 from .models import ExpenseReport, Contract, ContractImage, ContractItem
 
+def _has_contract_permission(user, contract=None, action="view") -> bool:
+    """
+    action: "view" | "edit" | "delete"
+    contract는 edit/delete 때 작성자 비교에 필요
+    """
+    # 1) 슈퍼유저는 전체 허용
+    if getattr(user, "is_superuser", False):
+        return True
+
+    # 2) profile.access 안전 추출 + 공백 제거
+    access = ""
+    try:
+        access = (getattr(getattr(user, "profile", None), "access", "") or "").strip()
+    except Exception:
+        pass
+
+    # 3) 액션별 판정
+    if action in ("edit", "delete"):
+        # 사장/실장/관리자 모드면 허용
+        if access in ("사장모드", "실장모드", "관리자모드"):
+            return True
+        # 작성자면 허용(계약 주체 필요)
+        if contract is not None and user.id == getattr(contract, "writer_id", None):
+            return True
+        return False
+
+    # view는 제한 없다고 가정
+    return True
 
 def _open_pil_from_field(file_field):
     if not file_field:
@@ -241,9 +269,10 @@ def contract_edit(request, pk):
         pk=pk
     )
 
-    # next 계산(생략 가능: 기존 그대로 사용)
+    # next 계산 (요청 우선, 아니면 리퍼러, 최종 fallback: 상세)
     if request.method == "POST":
-        raw_next = request.POST.get("next") or request.GET.get("next")
+        raw_next = request.POST.get("next") or request.GET.get("next") \
+                   or reverse("expenses:contract_detail", args=[contract.pk])
     else:
         raw_next = (
             request.GET.get("next")
@@ -256,9 +285,8 @@ def contract_edit(request, pk):
     ):
         next_url = reverse("expenses:contract_detail", args=[contract.pk])
 
-    # 권한
-    if not (request.user.is_superuser or request.user == contract.writer):
-        messages.error(request, "수정 권한이 없습니다. (작성자만 수정 가능)")
+    if not _has_contract_permission(request.user, contract, action="edit"):
+        messages.error(request, "수정 권한이 없습니다. (사장/실장/관리자/작성자만 가능)")
         return redirect(next_url)
 
     sales_people = (
@@ -279,14 +307,8 @@ def contract_edit(request, pk):
                 contract = form.save(commit=False)
                 contract.title = contract.customer_company or (contract.title or "무제 계약")
 
-                # ✅ 상태 결정 로직 변경
-                if is_submit:
-                    # 사용자가 '결재요청' 버튼을 누른 경우에만 제출 상태로
-                    contract.status = "submitted"
-                else:
-                    # 그 외(일반 저장)는 기존 상태를 그대로 유지
-                    contract.status = prev_status
-
+                # 상태 결정: 결재요청일 때만 submitted, 아니면 기존 유지
+                contract.status = "submitted" if is_submit else prev_status
                 contract.save()
 
                 # 이미지 삭제/추가
@@ -367,31 +389,25 @@ def contract_edit(request, pk):
 @login_required
 @require_POST
 def contract_delete(request, pk):
-    """계약 삭제: 작성자 또는 superuser만. 삭제 후 원래 보던 목록으로 리다이렉트"""
-    # 사용자가 보던 페이지(쿼리스트링 포함)를 next로 전달받거나, 없으면 Referer 사용
+    """계약 삭제: 사장/실장/관리자/슈퍼 또는 작성자만. 삭제 후 원래 보던 목록으로 리다이렉트"""
     next_url = (
         request.POST.get("next")
         or request.GET.get("next")
         or request.META.get("HTTP_REFERER")
         or reverse("expenses:contract_list")
     )
-    # 안전한 내부 URL인지 검증
     if not url_has_allowed_host_and_scheme(
-        next_url,
-        allowed_hosts={request.get_host()},
-        require_https=request.is_secure(),
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
     ):
         next_url = reverse("expenses:contract_list")
 
     contract = get_object_or_404(Contract, pk=pk)
 
-    if not (request.user.is_superuser or request.user == contract.writer):
-        from django.contrib import messages
-        messages.error(request, "삭제 권한이 없습니다. (작성자만 삭제 가능)")
+    if not _has_contract_permission(request.user, contract):
+        messages.error(request, "삭제 권한이 없습니다. (사장/실장/관리자/작성자만 가능)")
         return redirect(next_url)
 
     contract.delete()
-    from django.contrib import messages
     messages.success(request, "계약이 성공적으로 삭제되었습니다.")
     return redirect(next_url)
 
