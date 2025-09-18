@@ -384,6 +384,7 @@ def contract_list(request):
 
     return render(request, "contract_list.html", {
         "page_obj": page_obj,
+        "contracts": page_obj,
         "per_page_options": per_page_options,
         "per_page": per_page,
         "qs": qs_without_page,

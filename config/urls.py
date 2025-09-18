@@ -45,7 +45,6 @@ urlpatterns = [
     path("contracts/<int:pk>/submit/",   accounts_views.contract_submit,   name="contract_submit"),   # draft -> submitted
     path("contracts/<int:pk>/approve/",  accounts_views.contract_approve,  name="contract_approve"),  # submitted -> processing
     path("contracts/<int:pk>/complete/", accounts_views.contract_complete, name="contract_complete"), # processing -> completed
-    path("contracts/<int:pk>/delete/",   accounts_views.contract_delete,   name="contract_delete"),   # optional, used by template
 
 ]
 
