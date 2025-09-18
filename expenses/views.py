@@ -10,6 +10,7 @@ from django.db import transaction
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import F
+from django.core.paginator import Paginator
 
 from .forms import ExpenseReportForm, ExpenseItemFormSet, ContractForm
 from .models import ExpenseReport, Contract, ContractImage, ContractItem
@@ -318,22 +319,74 @@ def contract_delete(request, pk):
 
 @login_required
 def contract_list(request):
+    """계약 목록 (검색 + per_page 선택 + 숫자 페이지네이션 + 행 선택 체크박스만)"""
     sales_people = (
         User.objects.filter(is_active=True)
         .select_related("profile")
         .order_by("first_name", "username")
     )
-    contracts = (
+
+    qs = (
         Contract.objects
         .select_related("writer", "sales_owner")
         .prefetch_related("images", "items")
-        .order_by(                             # ⬅️ 여기 추가/수정
-            F('collect_invoice_date').desc(nulls_last=True),
-            '-created_at',
+        .order_by(
+            F("collect_invoice_date").desc(nulls_last=True),
+            "-created_at",
+            "-id",
         )
     )
+
+    # ===== 검색/필터 =====
+    date_from   = (request.GET.get("date_from") or "").strip()
+    date_to     = (request.GET.get("date_to") or "").strip()
+    q_customer  = (request.GET.get("q_customer") or "").strip()
+    q_vendor    = (request.GET.get("q_vendor") or "").strip()
+    owner_id    = (request.GET.get("owner") or "").strip()
+    q_item      = (request.GET.get("q_item") or "").strip()
+    contract_no = (request.GET.get("contract_no") or "").strip()
+    status      = (request.GET.get("status") or "").strip()
+
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+    if q_customer:
+        qs = qs.filter(customer_company__icontains=q_customer)
+    if q_vendor:
+        qs = qs.filter(items__vendor__icontains=q_vendor).distinct()
+    if owner_id:
+        qs = qs.filter(sales_owner_id=owner_id)
+    if q_item:
+        qs = qs.filter(items__name__icontains=q_item).distinct()
+    if contract_no:
+        qs = qs.filter(contract_no__icontains=contract_no)
+    if status:
+        qs = qs.filter(status=status)
+
+    # ===== per_page & 페이지네이션 =====
+    per_page_options = [10, 20, 30, 50, 100]
+    try:
+        per_page = int(request.GET.get("per_page", 10))
+    except (TypeError, ValueError):
+        per_page = 10
+    if per_page not in per_page_options:
+        per_page = 10
+
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page") or 1
+    page_obj = paginator.get_page(page_number)
+
+    # page 파라미터 제거한 쿼리스트링 (숫자 페이지네이션 링크에 사용)
+    qs_keep = request.GET.copy()
+    qs_keep.pop("page", None)
+    qs_without_page = qs_keep.urlencode()
+
     return render(request, "contract_list.html", {
-        "contracts": contracts,
+        "page_obj": page_obj,
+        "per_page_options": per_page_options,
+        "per_page": per_page,
+        "qs": qs_without_page,
         "sales_people": sales_people,
     })
 
