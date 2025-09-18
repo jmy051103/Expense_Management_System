@@ -86,11 +86,56 @@
     <h1 class="page-title">임시저장 목록</h1>
     <p class="page-sub">계약상태가 <b>임시저장</b>인 계약만 표시합니다.</p>
 
+    <!-- ▶ 추가: 검색/필터 툴바 + 엑셀 -->
+    <form class="panel toolbar compact" method="get" action="">
+      {% if per_page_options %}
+        <select class="sel w-120" name="per_page" onchange="this.form.submit()">
+          {% for n in per_page_options %}
+            <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>목록수 {{ n }}</option>
+          {% endfor %}
+        </select>
+      {% endif %}
+
+      <input class="inp w-100" type="date" name="date_from" value="{{ request.GET.date_from }}" placeholder="작성일">
+      <span class="dash">~</span>
+      <input class="inp w-100" type="date" name="date_to" value="{{ request.GET.date_to }}" placeholder="작성일">
+
+      <input class="inp w-100" type="text" name="q_customer" value="{{ request.GET.q_customer }}" placeholder="매출처">
+      <input class="inp w-100" type="text" name="q_vendor"   value="{{ request.GET.q_vendor }}"   placeholder="매입처">
+
+      <!-- ▶ 추가: 작성자 셀렉트 -->
+      <select class="sel w-50" name="owner">
+        <option value="">작성자</option>
+        {% for u in sales_people %}
+          <option value="{{ u.id }}" {% if request.GET.owner == u.id|stringformat:'s' %}selected{% endif %}>
+            {{ u.first_name|default:u.username }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <input class="inp w-100" type="text" name="q_item" value="{{ request.GET.q_item }}" placeholder="상품명">
+      <input class="inp w-100" type="text" name="contract_no" value="{{ request.GET.contract_no }}" placeholder="계약번호">
+
+      <div class="toolbar-actions">
+        <button class="btn gray" type="submit">검색하기</button>
+        <a id="btn-export" class="btn gray"
+           href="{% url 'contract_export' %}?{% if qs %}{{ qs }}{% endif %}">엑셀저장</a>
+        <a class="btn primary" href="{% url 'add_contract' %}">등록하기</a>
+      </div>
+    </form>
+
+    <!-- ▶ 추가: 검색건수 -->
+    {% if page_obj %}
+      <p class="page-sub" style="text-align:left;">검색 {{ page_obj.paginator.count }}건</p>
+    {% endif %}
+
     <section class="panel">
       <div class="table-wrap">
         <table class="form-table table-list">
           <thead>
             <tr>
+              <!-- ▶ 추가: 전체선택 -->
+              <th style="width:40px"><input type="checkbox" id="check-all"></th>
               <th style="width:80px">계약번호<br><small class="muted">계약상태</small></th>
               <th style="width:120px">매출처<br><small class="muted">담당자</small></th>
               <th>품목</th>
@@ -106,6 +151,11 @@
             {% for c in contracts %}
               {% with items=c.items.all %}
               <tr class="row-block" data-href="{% url 'contract_detail' c.id %}">
+                <!-- ▶ 추가: 개별 선택 -->
+                <td class="center">
+                  <input type="checkbox" class="row-check" value="{{ c.id }}" onclick="event.stopPropagation()">
+                </td>
+
                 <!-- 계약번호/상태 -->
                 <td class="meta meta-no" rowspan="1">
                   <div class="mono">{{ c.contract_no|default:c.id }}</div>
@@ -115,13 +165,14 @@
                   </a>
                 </td>
 
-                <!-- 매출처/담당자 -->
+                <!-- 매출처/담당자 (고객 담당자/툴팁: 전화·메일) -->
                 <td class="meta meta-cust" rowspan="1">
                   <div class="cust">{{ c.customer_company|default:c.title }}</div>
                   <div class="owner">
-                    {% if c.sales_owner %}
-                      {{ c.sales_owner.first_name|default:c.sales_owner.username }}
-                    {% else %}-{% endif %}
+                    <span class="cust-manager"
+                          title="{{ c.customer_phone }}{% if c.customer_phone and c.customer_email %} · {% endif %}{{ c.customer_email }}">
+                      {{ c.customer_manager|default:"-" }}
+                    </span>
                   </div>
                 </td>
 
@@ -201,14 +252,12 @@
                 <!-- 액션 -->
                 <td class="actions">
                   {% with acc=request.user.profile.access|default_if_none:"" %}
-                    {# 수정 #}
                     {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
                       <a class="btn light" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
                     {% elif acc == '직원모드' and c.writer_id == request.user.id %}
                       <a class="btn light" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
                     {% endif %}
 
-                    {# 결재요청: 관리자/실장/사장/슈퍼 또는 직원(본인)만 #}
                     {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
                       <form method="post" action="{% url 'contract_submit' c.id %}" style="display:inline"
                             onsubmit="event.stopPropagation(); return confirm('결재요청으로 전송하시겠습니까?');">
@@ -223,7 +272,6 @@
                       </form>
                     {% endif %}
 
-                    {# 삭제 #}
                     {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
                       <form method="post" action="{% url 'contract_delete' c.id %}"
                             onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
@@ -244,11 +292,36 @@
               </tr>
               {% endwith %}
             {% empty %}
-              <tr><td colspan="8" class="empty">임시저장된 계약이 없습니다.</td></tr>
+              <tr><td colspan="9" class="empty">임시저장된 계약이 없습니다.</td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
+
+      <!-- ▶ 추가: 숫자 페이지네이션 -->
+      {% if page_obj %}
+        <nav class="pagination" aria-label="페이지 이동">
+          {% if page_obj.has_previous %}
+            <a class="page-btn" href="?page={{ page_obj.previous_page_number }}{% if qs %}&{{ qs }}{% endif %}" aria-label="이전 페이지">‹</a>
+          {% else %}
+            <span class="page-btn disabled" aria-disabled="true">‹</span>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+              <span class="page current" aria-current="page">{{ num }}</span>
+            {% else %}
+              <a class="page" href="?page={{ num }}{% if qs %}&{{ qs }}{% endif %}">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <a class="page-btn" href="?page={{ page_obj.next_page_number }}{% if qs %}&{{ qs }}{% endif %}" aria-label="다음 페이지">›</a>
+          {% else %}
+            <span class="page-btn disabled" aria-disabled="true">›</span>
+          {% endif %}
+        </nav>
+      {% endif %}
     </section>
   </main>
 
@@ -283,7 +356,7 @@
         const tds = row.children;
         if (!tds || tds.length < 7) return;
 
-        // 미니 테이블의 컬럼 인덱스: 매출금액 = 4, 매입금액 = 6  (contract_list.html과 동일 구조)
+        // 미니 테이블의 컬럼 인덱스: 매출금액 = 4, 매입금액 = 6
         const sellTotalSpan = tds[4]?.querySelector('span[data-krw], span');
         const buyTotalSpan  = tds[6]?.querySelector('span[data-krw], span');
 
@@ -293,7 +366,6 @@
         sellTotalSum += sellTotal;
         buyTotalSum  += buyTotal;
 
-        // 각 품목 금액 표기도 원화 포맷으로 교체
         if (sellTotalSpan) sellTotalSpan.textContent = fmtMoneyText(sellTotal);
         if (buyTotalSpan)  buyTotalSpan.textContent  = fmtMoneyText(buyTotal);
       });
@@ -301,7 +373,6 @@
       const profit = sellTotalSum - buyTotalSum;
       const margin = sellTotalSum > 0 ? (profit / sellTotalSum) * 100 : 0;
 
-      // 오른쪽 고정 셀: 첫 번째 .right.strong = 이익금액, 두 번째 .right = 이익률 (contract_list와 동일)
       const profitCell = blockTr.querySelector('td.right.strong');
       const rightCells = blockTr.querySelectorAll('td.right');
       const marginCell = rightCells.length >= 2 ? rightCells[1] : null;
@@ -310,6 +381,174 @@
       if (marginCell) marginCell.textContent = Math.round(margin) + '%';
     });
   });
+  </script>
+
+  <!-- ▶ 추가: 전용 달력( contract_list.html 과 동일 ) -->
+  <script>
+  (function(){
+    const pad = n => (n<10?'0':'') + n;
+    const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+    function buildPicker(){
+      const wrap = document.createElement('div');
+      wrap.className = 'dj-datepicker dj-hidden';
+      wrap.innerHTML = `
+        <div class="dj-dp-head">
+          <button type="button" class="dj-dp-btn" data-prev aria-label="이전달">◀</button>
+          <div class="dj-dp-title"></div>
+          <button type="button" class="dj-dp-btn" data-next aria-label="다음달">▶</button>
+        </div>
+        <div class="dj-dp-grid">
+          <div class="dj-dp-dow">
+            <span>Su</span><span>Mo</span><span>Tu</span>
+            <span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+          </div>
+          <div class="dj-dp-day"></div>
+        </div>`;
+      document.body.appendChild(wrap);
+      return wrap;
+    }
+
+    const picker = buildPicker();
+    const titleEl = picker.querySelector('.dj-dp-title');
+    const daysEl  = picker.querySelector('.dj-dp-day');
+
+    let activeInput = null;
+    let viewYear = 0, viewMonth = 0;
+
+    function render(year, month){
+      viewYear = year; viewMonth = month;
+      titleEl.textContent = `${year}년 ${String(month+1).padStart(2,'0')}월`;
+      daysEl.innerHTML = '';
+
+      const first = new Date(year, month, 1);
+      const startDay = first.getDay();
+      const lastDate = new Date(year, month+1, 0).getDate();
+
+      const frag = document.createDocumentFragment();
+      for (let i=0; i<startDay; i++){
+        const div = document.createElement('div');
+        div.className = 'blank';
+        frag.appendChild(div);
+      }
+
+      const todayStr = fmt(new Date());
+      for (let d=1; d<=lastDate; d++){
+        const btn = document.createElement('button');
+        btn.type='button';
+        btn.textContent = d;
+        const thisStr = fmt(new Date(year, month, d));
+        if (thisStr === todayStr) btn.classList.add('is-today');
+        btn.addEventListener('click', ()=>{
+          if (!activeInput) return;
+          activeInput.value = thisStr;
+        });
+        btn.addEventListener('dblclick', ()=>{
+          if (!activeInput) return;
+          activeInput.value = thisStr;
+          closePicker();
+        });
+        frag.appendChild(btn);
+      }
+
+      const filled = startDay + lastDate;
+      const tail = (7 - (filled % 7)) % 7;
+      for (let i=0; i<tail; i++){
+        const div = document.createElement('div');
+        div.className = 'blank';
+        frag.appendChild(div);
+      }
+
+      daysEl.appendChild(frag);
+    }
+
+    function openPicker(input){
+      activeInput = input;
+      const base = (input.value && /^\d{4}-\d{2}-\d{2}$/.test(input.value))
+        ? new Date(input.value)
+        : new Date();
+      render(base.getFullYear(), base.getMonth());
+
+      const rect = input.getBoundingClientRect();
+      picker.style.left = (window.scrollX + rect.left) + 'px';
+      picker.style.top  = (window.scrollY + rect.bottom + 6) + 'px';
+      picker.classList.remove('dj-hidden');
+    }
+    function closePicker(){
+      picker.classList.add('dj-hidden');
+      activeInput = null;
+    }
+
+    picker.querySelector('[data-prev]').addEventListener('click', ()=>{
+      const m = viewMonth===0?11:viewMonth-1;
+      const y = viewMonth===0?viewYear-1:viewYear;
+      render(y,m);
+    });
+    picker.querySelector('[data-next]').addEventListener('click', ()=>{
+      const m = viewMonth===11?0:viewMonth+1;
+      const y = viewMonth===11?viewYear+1:viewYear;
+      render(y,m);
+    });
+
+    document.addEventListener('mousedown', (e)=>{
+      if(!picker.classList.contains('dj-hidden') && !picker.contains(e.target) && e.target !== activeInput){
+        closePicker();
+      }
+    });
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closePicker(); });
+
+    // 날짜 인풋 연결 (date_from/date_to)
+    const dateInputs = Array.from(document.querySelectorAll('input[name="date_from"], input[name="date_to"]'));
+    dateInputs.forEach(inp=>{
+      if (inp.type === 'date'){
+        inp.setAttribute('data-original-type','date');
+        inp.type = 'text';
+      }
+      inp.placeholder = '작성일';
+      inp.inputMode = 'numeric';
+
+      inp.addEventListener('focus', ()=> openPicker(inp));
+      inp.addEventListener('click', ()=> openPicker(inp));
+    });
+  })();
+  </script>
+
+  <!-- ▶ 추가: 전체선택 + 엑셀 선택 ids 전달 -->
+  <script>
+    (function(){
+      const all = document.getElementById('check-all');
+      if (all) {
+        const rows = () => Array.from(document.querySelectorAll('.row-check'));
+        all.addEventListener('change', () => rows().forEach(cb => cb.checked = all.checked));
+      }
+    })();
+
+    document.getElementById('btn-export')?.addEventListener('click', function(e){
+      e.preventDefault();
+      const base = new URL(this.href, window.location.origin);
+      const ids = Array.from(document.querySelectorAll('.row-check:checked'))
+                    .map(cb => cb.value).filter(Boolean);
+      if (ids.length) base.searchParams.set('ids', ids.join(','));
+      window.location.href = base.toString();
+    });
+  </script>
+
+  <script>
+    (function () {
+      if (window.__dj_rowclick_bound__) return;  // 중복 바인딩 방지
+      window.__dj_rowclick_bound__ = true;
+
+      document.querySelector('.table-list')?.addEventListener('click', (e) => {
+        // 링크/버튼/폼/입력/셀렉트/텍스트에어리어/미니테이블 클릭은 무시
+        if (e.target.closest('a,button,form,input,select,textarea,.mini-items')) return;
+
+        const tr = e.target.closest('tr[data-href]');
+        if (!tr) return;
+
+        const href = tr.getAttribute('data-href');
+        if (href) window.location.href = href;
+      });
+    })();
   </script>
 
 </body>

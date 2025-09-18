@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import FieldDoesNotExist
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
-from django.db.models import Q, Sum, Value, DecimalField
+from django.db.models import Q, Sum, Value, DecimalField, F
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -341,39 +341,246 @@ def contract_temporary_list(request):
 
 @login_required
 def contract_processing_list(request):
-    qs = (Contract.objects
-          .select_related("writer", "sales_owner")
-          .prefetch_related("items")
-          .filter(status="submitted")
-          .order_by("-created_at"))
+    """
+    결재요청 목록 (status=submitted)
+    - contract_list/temporary 와 동일한 검색/정렬/페이지네이션/엑셀 선택 동작
+    """
+    # 작성자 드롭다운용
+    sales_people = (
+        User.objects.filter(is_active=True)
+        .select_related("profile")
+        .order_by("first_name", "username")
+    )
+
+    # 기본 쿼리 (정렬: 세금계산서발행일 최신 → 작성일 최신 → id 최신)
+    qs = (
+        Contract.objects
+        .select_related("writer", "sales_owner")
+        .prefetch_related("items")
+        .filter(status="submitted")
+        .order_by(
+            F("collect_invoice_date").desc(nulls_last=True),
+            "-created_at",
+            "-id",
+        )
+    )
+
+    # ===== 검색 파라미터 =====
+    date_from   = (request.GET.get("date_from") or "").strip()
+    date_to     = (request.GET.get("date_to") or "").strip()
+    q_customer  = (request.GET.get("q_customer") or "").strip()
+    q_vendor    = (request.GET.get("q_vendor") or "").strip()
+    owner_id    = (request.GET.get("owner") or "").strip()
+    q_item      = (request.GET.get("q_item") or "").strip()
+    contract_no = (request.GET.get("contract_no") or "").strip()
+
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+    if q_customer:
+        qs = qs.filter(customer_company__icontains=q_customer)
+    if q_vendor:
+        qs = qs.filter(items__vendor__icontains=q_vendor).distinct()
+    if owner_id:
+        try:
+            qs = qs.filter(writer_id=int(owner_id))
+        except (TypeError, ValueError):
+            pass
+    if q_item:
+        qs = qs.filter(items__name__icontains=q_item).distinct()
+    if contract_no:
+        qs = qs.filter(contract_no__icontains=contract_no)
+
+    # ===== 페이지 사이즈 & 페이지네이션 =====
+    per_page_options = [10, 20, 30, 50, 100]
+    try:
+        per_page = int(request.GET.get("per_page", 10))
+    except (TypeError, ValueError):
+        per_page = 10
+    if per_page not in per_page_options:
+        per_page = 10
+
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page") or 1
+    page_obj = paginator.get_page(page_number)
+
+    # page 파라미터만 제거한 쿼리스트링 (페이지 번호 링크/엑셀에 사용)
+    qs_keep = request.GET.copy()
+    qs_keep.pop("page", None)
+    qs_without_page = qs_keep.urlencode()
+
     return render(request, "processing.html", {
-        "contracts": qs,
+        "contracts": page_obj,            # 템플릿에서 for c in contracts
+        "page_obj": page_obj,             # 숫자 페이지네이션/검색건수
+        "per_page_options": per_page_options,
+        "per_page": per_page,
+        "qs": qs_without_page,            # 엑셀/페이지 링크에 유지용
+        "sales_people": sales_people,     # 작성자 셀렉트
         "page_title": "결재요청 목록",
     })
 
 
 @login_required
 def contract_process_page(request):
-    qs = (Contract.objects
-          .select_related("writer", "sales_owner")
-          .prefetch_related("items")
-          .filter(status="processing")
-          .order_by("-created_at"))
+    """
+    결재처리중 목록 (status=processing)
+    - 검색/작성자 필터/페이지네이션/엑셀 선택과 동일 정렬 적용
+    """
+    # 작성자 드롭다운용
+    sales_people = (
+        User.objects.filter(is_active=True)
+        .select_related("profile")
+        .order_by("first_name", "username")
+    )
+
+    # 기본 쿼리 (정렬: 세금계산서발행일 최신 → 작성일 최신 → id 최신)
+    qs = (
+        Contract.objects
+        .select_related("writer", "sales_owner")
+        .prefetch_related("items")
+        .filter(status="processing")
+        .order_by(
+            F("collect_invoice_date").desc(nulls_last=True),
+            "-created_at",
+            "-id",
+        )
+    )
+
+    # ===== 검색 파라미터 =====
+    date_from   = (request.GET.get("date_from") or "").strip()
+    date_to     = (request.GET.get("date_to") or "").strip()
+    q_customer  = (request.GET.get("q_customer") or "").strip()
+    q_vendor    = (request.GET.get("q_vendor") or "").strip()
+    owner_id    = (request.GET.get("owner") or "").strip()
+    q_item      = (request.GET.get("q_item") or "").strip()
+    contract_no = (request.GET.get("contract_no") or "").strip()
+
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+    if q_customer:
+        qs = qs.filter(customer_company__icontains=q_customer)
+    if q_vendor:
+        qs = qs.filter(items__vendor__icontains=q_vendor).distinct()
+    if owner_id:
+        try:
+            qs = qs.filter(writer_id=int(owner_id))
+        except (TypeError, ValueError):
+            pass
+    if q_item:
+        qs = qs.filter(items__name__icontains=q_item).distinct()
+    if contract_no:
+        qs = qs.filter(contract_no__icontains=contract_no)
+
+    # ===== 페이지 사이즈 & 페이지네이션 =====
+    per_page_options = [10, 20, 30, 50, 100]
+    try:
+        per_page = int(request.GET.get("per_page", 10))
+    except (TypeError, ValueError):
+        per_page = 10
+    if per_page not in per_page_options:
+        per_page = 10
+
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page") or 1
+    page_obj = paginator.get_page(page_number)
+
+    # page 파라미터 제거한 쿼리스트링 (페이지 링크/엑셀 유지)
+    qs_keep = request.GET.copy()
+    qs_keep.pop("page", None)
+    qs_without_page = qs_keep.urlencode()
+
     return render(request, "contract_process.html", {
-        "contracts": qs,
+        "contracts": page_obj,            # for c in contracts
+        "page_obj": page_obj,             # 페이지네이션/검색건수
+        "per_page_options": per_page_options,
+        "per_page": per_page,
+        "qs": qs_without_page,            # 엑셀/페이지 링크 유지
+        "sales_people": sales_people,     # 작성자 셀렉트
         "page_title": "결재처리중 목록",
     })
 
 
 @login_required
 def contract_approved_list(request):
-    qs = (Contract.objects
-          .select_related("writer", "sales_owner")
-          .prefetch_related("items")
-          .filter(status="completed")
-          .order_by("-created_at"))
+    """
+    결재완료 목록 (status=completed)
+    - 검색/작성자 필터/페이지네이션
+    - 정렬: 세금계산서발행일 최신 → 작성일 최신 → id 최신
+    """
+    # 작성자 드롭다운용
+    sales_people = (
+        User.objects.filter(is_active=True)
+        .select_related("profile")
+        .order_by("first_name", "username")
+    )
+
+    qs = (
+        Contract.objects
+        .select_related("writer", "sales_owner")
+        .prefetch_related("items")
+        .filter(status="completed")
+        .order_by(
+            F("collect_invoice_date").desc(nulls_last=True),
+            "-created_at",
+            "-id",
+        )
+    )
+
+    # ===== 검색 파라미터 =====
+    date_from   = (request.GET.get("date_from") or "").strip()
+    date_to     = (request.GET.get("date_to") or "").strip()
+    q_customer  = (request.GET.get("q_customer") or "").strip()
+    q_vendor    = (request.GET.get("q_vendor") or "").strip()
+    owner_id    = (request.GET.get("owner") or "").strip()
+    q_item      = (request.GET.get("q_item") or "").strip()
+    contract_no = (request.GET.get("contract_no") or "").strip()
+
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+    if q_customer:
+        qs = qs.filter(customer_company__icontains=q_customer)
+    if q_vendor:
+        qs = qs.filter(items__vendor__icontains=q_vendor).distinct()
+    if owner_id:
+        try:
+            qs = qs.filter(writer_id=int(owner_id))
+        except (TypeError, ValueError):
+            pass
+    if q_item:
+        qs = qs.filter(items__name__icontains=q_item).distinct()
+    if contract_no:
+        qs = qs.filter(contract_no__icontains=contract_no)
+
+    # ===== 페이지 사이즈 & 페이지네이션 =====
+    per_page_options = [10, 20, 30, 50, 100]
+    try:
+        per_page = int(request.GET.get("per_page", 10))
+    except (TypeError, ValueError):
+        per_page = 10
+    if per_page not in per_page_options:
+        per_page = 10
+
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page") or 1
+    page_obj = paginator.get_page(page_number)
+
+    # page 파라미터 제외한 쿼리스트링 (페이지 링크/엑셀에서 사용)
+    qs_keep = request.GET.copy()
+    qs_keep.pop("page", None)
+    qs_without_page = qs_keep.urlencode()
+
     return render(request, "approved.html", {
-        "contracts": qs,
+        "contracts": page_obj,            # 템플릿에서 for c in contracts
+        "page_obj": page_obj,
+        "per_page_options": per_page_options,
+        "per_page": per_page,
+        "qs": qs_without_page,
+        "sales_people": sales_people,     # 작성자 셀렉트 옵션
         "page_title": "결재완료 목록",
     })
 
