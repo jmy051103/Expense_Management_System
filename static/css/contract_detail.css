@@ -209,7 +209,7 @@ body {
 
 /* 푸터 */
 .site-footer {
-  margin-top: 32px;
+  margin-top: auto;
   background: var(--footer-bg);
   color: var(--footer-ink);
 }
