@@ -211,10 +211,10 @@
                         {# ✅ 직원모드는 삭제 버튼 숨김 #}
                         {% if request.user.is_superuser or acc != '직원모드' %}
                           <form method="post" action="{% url 'contract_delete' c.id %}"
-                                onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');"
-                                style="display:inline">
+                                onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
                             {% csrf_token %}
-                            <button type="submit" class="btn danger">삭제</button>
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="btn small gray">삭제</button>
                           </form>
                         {% endif %}
                       {% endwith %}
