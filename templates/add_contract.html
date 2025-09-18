@@ -216,8 +216,9 @@
                   <th colspan="2" class="center">매출가</th>
                   <th colspan="2" class="center">매입가</th>
                   <th rowspan="2" style="width:110px" class="center">매입처</th>
-                  <th rowspan="2" style="width:110px" class="center">품목관리</th>
                   <th rowspan="2" style="width:100px" class="center">과세여부</th>
+                  <th rowspan="2" style="width:110px" class="center">품목관리</th>
+                  
                 </tr>
                 <tr>
                   <th class="right hide-sm">매출단가</th>
@@ -230,14 +231,16 @@
                 {% if is_edit %}
                   {% for it in contract.items.all %}
                     <tr data-row>
-                      <td><input class="inp" name="item_name[]" placeholder="검색어 입력 후 Enter" required></td>
-                      <td><input class="inp right" name="qty[]" inputmode="numeric"></td>
-                      <td class="center"><input class="inp right" name="spec[]"></td>
-                      <td class="hide-sm"><input class="inp right" name="sell_unit[]" inputmode="decimal" placeholder="0"></td>
-                      <td><input class="inp right" name="sell_total[]" inputmode="decimal" placeholder="0"></td>
-                      <td class="hide-sm"><input class="inp right" name="buy_unit[]" inputmode="decimal" placeholder="0"></td>
-                      <td><input class="inp right" name="buy_total[]" inputmode="decimal" placeholder="0"></td>
-                      <td><input class="inp" name="vendor[]" placeholder="매입처"></td>
+                      <td><input class="inp" name="item_name[]" value="{{ it.name }}" required></td>
+                      <td><input class="inp right" name="qty[]" value="{{ it.qty|default_if_none:'' }}" inputmode="numeric"></td>
+
+                      <td class="center"><input class="inp right" name="spec[]" value="{{ it.spec }}"></td>
+
+                      <td class="hide-sm"><input class="inp right" name="sell_unit[]" value="{{ it.sell_unit|default_if_none:'' }}" inputmode="decimal"></td>
+                      <td><input class="inp right" name="sell_total[]" value="{{ it.sell_total|default_if_none:'' }}" inputmode="decimal"></td>
+                      <td class="hide-sm"><input class="inp right" name="buy_unit[]" value="{{ it.buy_unit|default_if_none:'' }}" inputmode="decimal"></td>
+                      <td><input class="inp right" name="buy_total[]" value="{{ it.buy_total|default_if_none:'' }}" inputmode="decimal"></td>
+                      <td><input class="inp" name="vendor[]" value="{{ it.vendor }}"></td>
 
                       <td>
                         <select class="sel" name="item_vat_mode[]">
@@ -303,10 +306,6 @@
                     </td>
                     <td class="center">
                       <div class="row-actions" style="display:flex; gap:8px; justify-content:flex-start; align-items:center;">
-                        <div class="arrows-col">
-                          <button type="button" class="mini" data-up>▲</button>
-                          <button type="button" class="mini" data-down>▼</button>
-                        </div>
                         <button type="button" class="btn danger" data-remove>품목삭제</button>
                       </div>
                     </td>
