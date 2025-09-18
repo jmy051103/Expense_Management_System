@@ -132,7 +132,8 @@
       <!-- 버튼들 -->
       <div class="toolbar-actions">
         <button class="btn gray" type="submit">검색하기</button>
-        <a class="btn gray" href="{% url 'contract_export' %}?{% if qs %}{{ qs }}{% endif %}">엑셀저장</a>
+        <a id="btn-export" class="btn gray"
+          href="{% url 'contract_export' %}?{% if qs %}{{ qs }}{% endif %}">엑셀저장</a>
         <a class="btn primary" href="{% url 'add_contract' %}">등록하기</a>
       </div>
     </form>
@@ -553,5 +554,27 @@
       all.addEventListener('change', () => rows().forEach(cb => cb.checked = all.checked));
     })();
   </script>
+
+  <script>
+    // 엑셀저장: 체크된 행 ids를 쿼리스트링에 붙여서 이동
+    document.getElementById('btn-export')?.addEventListener('click', function(e){
+      // 기본 이동 막고 우리가 만든 URL로 이동
+      e.preventDefault();
+      const base = new URL(this.href, window.location.origin);
+
+      // 체크된 체크박스 수집 (name은 템플릿에서 사용한 것으로 맞춰주세요)
+      const checked = Array.from(document.querySelectorAll('.row-check:checked'));
+      if (checked.length > 0) {
+        const ids = checked.map(cb => cb.value || cb.dataset.id).filter(Boolean);
+        if (ids.length > 0) {
+          // ids=1,2,3 형태로 붙임 (여러 개 지원)
+          base.searchParams.set('ids', ids.join(','));
+        }
+      }
+      // 현재 필터 유지(querystring은 이미 href에 들어있음). 이동!
+      window.location.href = base.toString();
+    });
+  </script>
+
 </body>
 </html>
