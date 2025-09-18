@@ -33,7 +33,7 @@
     <!-- 탭 -->
     <nav class="tabs" role="tablist" aria-label="상단 메뉴">
       {% with acc=request.user.profile.access|default_if_none:"" %}
-        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" or acc == "실장모드"%}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드"%}
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">
               계정관리
