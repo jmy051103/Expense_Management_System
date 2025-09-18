@@ -259,13 +259,82 @@ def edit_account(request, user_id):
 # ---------------------
 @login_required
 def contract_temporary_list(request):
-    qs = (Contract.objects
-          .select_related("writer", "sales_owner")
-          .prefetch_related("items")
-          .filter(status="draft")
-          .order_by("-created_at"))
+    """
+    임시저장(status='draft') 전용 목록
+    - contract_list와 동일한 검색/페이지네이션/엑셀(선택 id 전달) UX
+    """
+    # 작성자 셀렉트용
+    sales_people = (
+        User.objects.filter(is_active=True)
+        .select_related("profile")
+        .order_by("first_name", "username")
+    )
+
+    qs = (
+        Contract.objects
+        .select_related("writer", "sales_owner")
+        .prefetch_related("items")
+        .filter(status="draft")   # ★ 임시저장만
+        .order_by(
+            # collect_invoice_date 최신 우선 → 없으면 작성일 최신
+            F("collect_invoice_date").desc(nulls_last=True),
+            "-created_at",
+            "-id",
+        )
+    )
+
+    # ===== 검색/필터 =====
+    date_from   = (request.GET.get("date_from") or "").strip()
+    date_to     = (request.GET.get("date_to") or "").strip()
+    q_customer  = (request.GET.get("q_customer") or "").strip()
+    q_vendor    = (request.GET.get("q_vendor") or "").strip()
+    owner_id    = (request.GET.get("owner") or "").strip()
+    q_item      = (request.GET.get("q_item") or "").strip()
+    contract_no = (request.GET.get("contract_no") or "").strip()
+    # status 필터는 임시저장 화면에선 고정이므로 없음
+
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+    if q_customer:
+        qs = qs.filter(customer_company__icontains=q_customer)
+    if q_vendor:
+        qs = qs.filter(items__vendor__icontains=q_vendor).distinct()
+    if owner_id:
+        try:
+            qs = qs.filter(writer_id=int(owner_id))
+        except (TypeError, ValueError):
+            pass
+    if q_item:
+        qs = qs.filter(items__name__icontains=q_item).distinct()
+    if contract_no:
+        qs = qs.filter(contract_no__icontains=contract_no)
+
+    # ===== per_page & 페이지네이션 =====
+    per_page_options = [10, 20, 30, 50, 100]
+    try:
+        per_page = int(request.GET.get("per_page", 10))
+    except (TypeError, ValueError):
+        per_page = 10
+    if per_page not in per_page_options:
+        per_page = 10
+
+    paginator = Paginator(qs, per_page)
+    page_obj = paginator.get_page(request.GET.get("page") or 1)
+
+    # page 제외 쿼리스트링 (엑셀/페이지 링크에 재사용)
+    qs_keep = request.GET.copy()
+    qs_keep.pop("page", None)
+    qs_without_page = qs_keep.urlencode()
+
     return render(request, "temporary.html", {
-        "contracts": qs,
+        "contracts": page_obj,             # ← 반복에 그대로 사용
+        "page_obj": page_obj,
+        "per_page_options": per_page_options,
+        "per_page": per_page,
+        "qs": qs_without_page,             # ← 엑셀/페이지 링크에서 재사용
+        "sales_people": sales_people,      # ← 작성자 드롭다운
         "page_title": "임시저장 목록",
     })
 
