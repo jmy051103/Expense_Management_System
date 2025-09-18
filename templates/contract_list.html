@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-18-08">
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-18-10">
 </head>
 <body>
 
@@ -93,6 +93,12 @@
 
     <!-- 툴바(검색/필터) -->
     <form class="panel toolbar compact" method="get" action="">
+      <select class="sel w-120" name="per_page" onchange="this.form.submit()">
+        {% for n in per_page_options %}
+          <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>목록수 {{ n }}</option>
+        {% endfor %}
+      </select>
+
       <!-- 작성일 범위 -->
       <input class="inp w-100" type="date" name="date_from" value="{{ request.GET.date_from }}" placeholder="작성일">
       <span class="dash">~</span>
@@ -125,11 +131,14 @@
 
       <!-- 버튼들 -->
       <div class="toolbar-actions">
-        <button class="btn gray" type="submit">검색</button>
-
-        <a class="btn primary" href="{% url 'add_contract' %}">등록</a>
+        <button class="btn gray" type="submit">검색하기</button>
+        <button class="btn gray" type="button">엑셀저장</button>
+        <a class="btn primary" href="{% url 'add_contract' %}">등록하기</a>
       </div>
     </form>
+
+    <!-- ✅ 검색건수 표시 -->
+    <p class="page-sub" style="text-align:left;">검색 {{ page_obj.paginator.count }}건</p>
 
     <!-- 목록 테이블 -->
     <section class="panel">
@@ -137,6 +146,10 @@
         <table class="form-table table-list">
           <thead>
             <tr>
+              <!-- ✅ 전체선택 -->
+              <th style="width:40px">
+                <input type="checkbox" id="check-all">
+              </th>
               <th style="width:80px">계약번호<br><small class="muted">계약상태</small></th>
               <th style="width:100px">매출처<br><small class="muted">담당자</small></th>
               <th>품목</th>
@@ -154,6 +167,11 @@
                 {% with rows=1 %}
                   <!-- first row (left/right columns use rowspan) -->
                   <tr class="row-block" data-href="{% url 'contract_detail' c.id %}">
+                    <!-- ✅ 개별 선택 -->
+                    <td class="center">
+                      <input type="checkbox" class="row-check" value="{{ c.id }}" onclick="event.stopPropagation()">
+                    </td>
+
                     <!-- 계약번호/상태 -->
                     <td class="meta meta-no" rowspan="{{ rows }}">
                       <div class="mono">{{ c.contract_no|default:c.id }}</div>
@@ -251,28 +269,35 @@
                 {% endwith %}
               {% endwith %}
             {% empty %}
-              <tr><td colspan="7" class="empty">등록된 계약이 없습니다.</td></tr>
+              <tr><td colspan="9" class="empty">등록된 계약이 없습니다.</td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
 
+      <!-- ✅ 숫자 페이지네이션 -->
       {% if page_obj %}
-        <div class="btn-row" style="justify-content:center; margin-top:16px;">
+        <nav class="pagination" aria-label="페이지 이동">
           {% if page_obj.has_previous %}
-            <a class="btn" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">이전</a>
+            <a class="page-btn" href="?page={{ page_obj.previous_page_number }}{% if qs %}&{{ qs }}{% endif %}" aria-label="이전 페이지">‹</a>
           {% else %}
-            <button class="btn" disabled>이전</button>
+            <span class="page-btn disabled" aria-disabled="true">‹</span>
           {% endif %}
 
-          <span class="pill">페이지 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+              <span class="page current" aria-current="page">{{ num }}</span>
+            {% else %}
+              <a class="page" href="?page={{ num }}{% if qs %}&{{ qs }}{% endif %}">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
 
           {% if page_obj.has_next %}
-            <a class="btn" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">다음</a>
+            <a class="page-btn" href="?page={{ page_obj.next_page_number }}{% if qs %}&{{ qs }}{% endif %}" aria-label="다음 페이지">›</a>
           {% else %}
-            <button class="btn" disabled>다음</button>
+            <span class="page-btn disabled" aria-disabled="true">›</span>
           {% endif %}
-        </div>
+        </nav>
       {% endif %}
     </section>
   </main>
@@ -517,6 +542,16 @@
 
     });
   });
+  </script>
+
+  <!-- ✅ 전체선택 스크립트 -->
+  <script>
+    (function(){
+      const all = document.getElementById('check-all');
+      if (!all) return;
+      const rows = () => Array.from(document.querySelectorAll('.row-check'));
+      all.addEventListener('change', () => rows().forEach(cb => cb.checked = all.checked));
+    })();
   </script>
 </body>
 </html>

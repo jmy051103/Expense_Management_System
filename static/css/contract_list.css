@@ -10,6 +10,10 @@
   --title-bg: #2e7192;
   --footer-bg: #2e7192;
   --footer-ink: #e5e7eb;
+
+  /* 테이블 헤더(매입처정보 톤) */
+  --thead-bg: #7ea0b8;
+  --thead-border: #6f8ea6;
 }
 
 /* 바디 */
@@ -343,13 +347,11 @@ body {
   flex-wrap:nowrap;              /* 한 줄 고정 */
   overflow-x:auto;               /* 화면이 좁으면 가로 스크롤 */
 }
-
 .toolbar.compact .dash{
   color:#9ca3af;
   padding:0 2px;
   user-select:none;
 }
-
 .toolbar-actions{
   margin-left:auto;
   display:flex;
@@ -364,16 +366,19 @@ body {
 .w-180{width:180px}
 
 /* 버튼 톤(스크린샷 스타일) */
-.btn.gray{
-  background:#f0f2f5; color:#374151; border-color:#d1d5db; font-size: 13px;
+/* 엑셀저장 버튼도 기존 gray 톤과 동일 */
+.btn.gray {
+  background:#f0f2f5; 
+  color:#374151; 
+  border-color:#d1d5db; 
+  font-size: 13px;
+  height:34px;   /* 등록, 검색 버튼과 동일 */
 }
 .btn.gray:hover{ filter:brightness(0.95); }
-
 .btn.light{
   background:#e5e7eb; color:#111; border-color:#d1d5db;
 }
 .btn.light:hover{ filter:brightness(0.97); }
-
 .btn.primary{
   background:#2563eb; border-color:#2563eb; color:#fff; font-size: 14px;
 }
@@ -417,7 +422,6 @@ body {
   text-decoration:none;
 }
 
-
 /* ===== 품목 셀 안의 '거래내역' 미니 테이블 ===== */
 .items-cell{ padding:0 !important; }
 .mini-items{
@@ -430,14 +434,12 @@ body {
 }
 .mini-items td{ border-top:1px solid var(--line); padding:6px 8px; }
 .mini-items tbody tr:hover{ background:#fafafa; }
-
 .mini-items .txt{ text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
 .mini-items .num{ text-align:right; }
 .mini-items .strong{ font-weight:700; }
 .mini-items .sell{ color:#b91c1c; }  /* 매출금액: red */
 .mini-items .buy { color:#2563eb; }  /* 매입금액: blue */
 .mini-items .vendor{ color:#4b5563; }
-
 .mini-items .w-item{ width:28%; }
 .mini-items .w-qty { width:7%; }
 .mini-items .w-spec{ width:10%; }
@@ -510,9 +512,7 @@ body {
 }
 
 /* 작은 버튼 크기(수정/삭제) */
-.btn.small{ height:34px; padding:0 12px; font-size:14px; border-radius:8px; color: #374151;
-; }
-
+.btn.small{ height:34px; padding:0 12px; font-size:14px; border-radius:8px; color: #374151; }
 
 /* 툴바 버튼 높이 맞춤(선택) */
 .toolbar-actions .btn{ height:34px; }
@@ -533,21 +533,19 @@ body {
 
 /* === meta 칼럼(계약번호/상태 + 매출처/담당자)만 더 작게 === */
 .form-table.table-list > tbody td.meta{
-  padding: 6px 8px;           /* 살짝 더 컴팩트 */
+  padding: 6px 8px;
   line-height: 1.25;
 }
-
-.form-table.table-list > tbody td.meta .mono,      /* 계약번호 */
-.form-table.table-list > tbody td.meta .cust{      /* 매출처 */
-  font-size: 13px;            /* 메인 줄 */
+.form-table.table-list > tbody td.meta .mono,
+.form-table.table-list > tbody td.meta .cust{
+  font-size: 13px;
   font-weight: 600;
 }
-
-.form-table.table-list > tbody td.meta .status-link,  /* (계약상태) */
-.form-table.table-list > tbody td.meta .owner{        /* (담당자) */
+.form-table.table-list > tbody td.meta .status-link,
+.form-table.table-list > tbody td.meta .owner{
   display: inline-block;
   margin-top: 2px;
-  font-size: 11px;            
+  font-size: 11px;
   color: var(--muted);
 }
 
@@ -555,14 +553,110 @@ body {
 .form-table.table-list thead th:nth-child(1){ width: 80px; }
 .form-table.table-list thead th:nth-child(2){ width: 100px; }
 
-
-
 /* 본문도 4, 5번째 칸 오른쪽 정렬 */
 .form-table.table-list > tbody > tr > td:nth-child(4),
 .form-table.table-list > tbody > tr > td:nth-child(5) { 
   text-align: right; 
 }
-
 .form-table.table-list > tbody > tr > td:nth-child(6) { 
   font-size: 13px;
 }
+
+/* === 숫자 페이지네이션 기본 === */
+.pagination{
+  display:flex; gap:6px; justify-content:center; align-items:center;
+  margin-top:16px; flex-wrap:wrap;
+}
+.pagination .page,
+.pagination .page-btn,
+.pagination .current{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:34px; height:34px; padding:0 10px;
+  border:1px solid var(--line); border-radius:8px;
+  background:#fff; text-decoration:none; color:#374151; font-size:14px;
+}
+.pagination .disabled{ opacity:.5; pointer-events:none; }
+
+/* === 체크박스 칼럼(선택) === */
+.form-table.table-list thead th:first-child{ width:40px; text-align:center; }
+.form-table.table-list tbody td:first-child{ text-align:center; }
+#check-all, .row-check{ width:16px; height:16px; }
+
+/* (선택) 툴바의 '목록수' 셀렉트 폭 */
+.w-120{ width:120px; }
+
+/* =========================
+   ▶ 계약목록 헤더를 '매입처정보' 스타일로 (파란 배경 + 파란 경계)
+   ========================= */
+.form-table.table-list { 
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+.form-table.table-list thead th{
+  background: var(--thead-bg) !important;
+  color: #fff !important;
+  border-top: 1px solid var(--thead-border) !important;
+  border-bottom: 1px solid var(--thead-border) !important;
+  border-right: 1px solid var(--thead-border) !important;
+}
+.form-table.table-list thead th:first-child{
+  border-left: 1px solid var(--thead-border) !important;
+}
+.form-table.table-list thead th:last-child{
+  border-right: 1px solid var(--thead-border) !important;
+}
+/* 헤더 안의 작은 라벨(계약상태/담당자/작성일)도 흰색 */
+.form-table.table-list thead th small{
+  color:#fff !important;
+  opacity:1 !important;
+}
+/* hover 시 헤더가 흐려 보이는 현상 제거 */
+.form-table.table-list thead th:hover{
+  background: var(--thead-bg) !important;
+  opacity:1 !important;
+}
+
+/* 본문 hover 색상 고정(투명 X) */
+.form-table.table-list tbody tr:hover td{
+  background:#f6f9fc;
+  opacity:1;
+}
+
+/* =========================
+   ▶ 페이지네이션 호버/포커스 투명 문제 해결
+   ========================= */
+.pagination .page,
+.pagination .page-btn,
+.pagination .current{
+  -webkit-appearance: none;
+  appearance: none;
+  outline:none !important;
+  box-shadow:none !important;
+}
+
+/* 좌우 화살표/숫자 hover */
+.pagination .page:hover,
+.pagination .page-btn:hover{
+  background:#f3f4f6 !important;
+  border-color:#d1d5db !important;
+  color:#111 !important;
+  opacity:1 !important;
+}
+
+/* 현재 페이지(hover/focus 때도 동일 유지) */
+.pagination .current,
+.pagination .current:hover,
+.pagination .current:focus{
+  background:#2563eb !important;
+  color:#fff !important;
+  border-color:#2563eb !important;
+  box-shadow:none !important;
+  opacity:1 !important;
+}
+
+/* 헤더 셀 사이 구분선 흰색 → 파란색으로 고정 */
+.form-table.table-list thead th {
+  border-left: 1px solid #6f8ea6 !important;  /* 파란색 구분선 */
+  border-right: 1px solid #6f8ea6 !important; /* 오른쪽도 동일하게 */
+}
+
