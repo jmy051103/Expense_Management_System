@@ -547,3 +547,20 @@ body {
 .pagination .current:focus{
   background:#2563eb !important; color:#fff !important; border-color:#2563eb !important; box-shadow:none !important; opacity:1 !important;
 }
+
+/* 1) 바깥 리스트 테이블: 기본적으로 줄바꿈 허용 */
+.form-table.table-list th,
+.form-table.table-list td{
+  white-space: normal !important;     /* 줄바꿈 허용 */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* 숫자/금액/퍼센트 등은 한 줄 유지 (기존 정렬 유지) */
+.form-table.table-list td.num-cell,
+.form-table.table-list td.center,
+.form-table.table-list td .num-val,
+.form-table.table-list td [data-krw]{
+  white-space: nowrap !important;
+}
+
