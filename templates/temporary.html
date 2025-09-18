@@ -225,16 +225,18 @@
 
                     {# 삭제 #}
                     {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
-                      <form method="post" action="{% url 'contract_delete' c.id %}" style="display:inline"
+                      <form method="post" action="{% url 'contract_delete' c.id %}"
                             onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn danger">삭제</button>
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn small gray">삭제</button>
                       </form>
                     {% elif acc == '직원모드' and c.writer_id == request.user.id %}
-                      <form method="post" action="{% url 'contract_delete' c.id %}" style="display:inline"
+                      <form method="post" action="{% url 'contract_delete' c.id %}"
                             onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn danger">삭제</button>
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn small gray">삭제</button>
                       </form>
                     {% endif %}
                   {% endwith %}

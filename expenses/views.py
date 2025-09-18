@@ -23,16 +23,8 @@ from openpyxl.drawing.image import Image as XLImage
 from decimal import Decimal
 from django.db.models import F
 import datetime
-import io
-import datetime
-from decimal import Decimal
-from PIL import Image as PILImage
-from django.core.files.storage import default_storage
-from django.http import HttpResponse
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font, PatternFill, Border, Side, NamedStyle
-from openpyxl.drawing.image import Image as XLImage
-from django.db.models import F
+from django.utils.http import url_has_allowed_host_and_scheme
+
 
 def _open_pil_from_field(file_field):
     if not file_field:
@@ -342,21 +334,51 @@ def contract_edit(request, pk):
     }
     return render(request, "add_contract.html", ctx)
 
+# @login_required
+# @require_POST
+# def contract_delete(request, pk):
+#     """계약 삭제: 작성자 또는 superuser만"""
+#     contract = get_object_or_404(Contract, pk=pk)
+#     if not (request.user.is_superuser or request.user == contract.writer):
+#         from django.contrib import messages
+#         messages.error(request, "삭제 권한이 없습니다. (작성자만 삭제 가능)")
+#         return redirect("contract_detail", pk=contract.pk)  # 상세 페이지로 되돌리기
+
+#     contract.delete()
+#     from django.contrib import messages
+#     messages.success(request, "계약이 성공적으로 삭제되었습니다.")
+#     return redirect("contract_list")
+
 @login_required
 @require_POST
 def contract_delete(request, pk):
-    """계약 삭제: 작성자 또는 superuser만"""
+    """계약 삭제: 작성자 또는 superuser만. 삭제 후 원래 보던 목록으로 리다이렉트"""
+    # 사용자가 보던 페이지(쿼리스트링 포함)를 next로 전달받거나, 없으면 Referer 사용
+    next_url = (
+        request.POST.get("next")
+        or request.GET.get("next")
+        or request.META.get("HTTP_REFERER")
+        or reverse("contract_list")
+    )
+    # 안전한 내부 URL인지 검증
+    if not url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        next_url = reverse("contract_list")
+
     contract = get_object_or_404(Contract, pk=pk)
+
     if not (request.user.is_superuser or request.user == contract.writer):
         from django.contrib import messages
         messages.error(request, "삭제 권한이 없습니다. (작성자만 삭제 가능)")
-        return redirect("contract_detail", pk=contract.pk)  # 상세 페이지로 되돌리기
+        return redirect(next_url)
 
     contract.delete()
     from django.contrib import messages
     messages.success(request, "계약이 성공적으로 삭제되었습니다.")
-    return redirect("contract_list")
-
+    return redirect(next_url)
 
 @login_required
 def contract_list(request):
