@@ -58,7 +58,7 @@ def sales_partner_list(request):
         ids = request.POST.getlist("ids")
         if ids:
             SalesPartner.objects.filter(id__in=ids).delete()
-        return redirect("sales_partner_list")
+        return redirect("partners:sales_partner_list")
 
     qs = SalesPartner.objects.prefetch_related("contacts").order_by("-id")
 
@@ -107,7 +107,7 @@ def sales_partner_create(request):
             partner = form.save()
             formset.instance = partner
             formset.save()
-            return redirect("sales_partner_list")
+            return redirect("partners:sales_partner_list")
     else:
         form = SalesPartnerForm()
         # GET: 등록 화면에서만 기본 1줄 노출 (extra=1)
@@ -131,7 +131,7 @@ def sales_partner_edit(request, pk):
         if form.is_valid() and formset.is_valid():
             form.save()
             formset.save()
-            return redirect("sales_partner_list")
+            return redirect("partners:sales_partner_list")
     else:
         form = SalesPartnerForm(instance=partner)
         formset = SalesPartnerContactFormSetEdit(instance=partner, prefix="contacts")
@@ -147,8 +147,8 @@ def sales_partner_delete(request, pk):
     partner = get_object_or_404(SalesPartner, pk=pk)
     if request.method == "POST":
         partner.delete()
-        return redirect("sales_partner_list")
-    return redirect("sales_partner_list")
+        return redirect("partners:sales_partner_list")
+    return redirect("partners:sales_partner_list")
 
 
 def purchase_partner_list(request):
@@ -196,7 +196,7 @@ def purchase_partner_list(request):
         ids = request.POST.getlist("ids")
         if ids:
             PurchasePartner.objects.filter(id__in=ids).delete()
-        return redirect("purchase_partner_list")
+        return redirect("partners:purchase_partner_list")
 
     qs = PurchasePartner.objects.prefetch_related("contacts").order_by("-id")
 
@@ -243,7 +243,7 @@ def purchase_partner_create(request):
             partner = form.save()
             formset.instance = partner
             formset.save()
-            return redirect("purchase_partner_list")
+            return redirect("partners:purchase_partner_list")
     else:
         form = PurchasePartnerForm()
         formset = PurchasePartnerContactFormSetCreate(prefix="contacts")
@@ -265,7 +265,7 @@ def purchase_partner_edit(request, pk):
         if form.is_valid() and formset.is_valid():
             form.save()
             formset.save()
-            return redirect("purchase_partner_list")
+            return redirect("partners:purchase_partner_list")
     else:
         form = PurchasePartnerForm(instance=partner)
         formset = PurchasePartnerContactFormSetEdit(instance=partner, prefix="contacts")
@@ -281,5 +281,5 @@ def purchase_partner_delete(request, pk):
     partner = get_object_or_404(PurchasePartner, pk=pk)
     if request.method == "POST":
         partner.delete()
-        return redirect("purchase_partner_list")
-    return redirect("purchase_partner_list")
+        return redirect("partners:purchase_partner_list")
+    return redirect("partners:purchase_partner_list")

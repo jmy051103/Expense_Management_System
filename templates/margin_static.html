@@ -24,7 +24,7 @@
   <div class="sticky-wrap">
     <div class="titlebar">
       <h1>
-        <a href="{% url 'dashboard' %}" class="title-link">
+        <a href="{% url 'accounts:dashboard' %}" class="title-link">
           (주)대진아이엔티 업무지원시스템
         </a>
       </h1>
@@ -43,8 +43,8 @@
               계정관리
             </a>
             <ul id="menu-accounts" class="dropdown" role="menu" aria-label="계정관리 메뉴">
-              <li role="none"><a role="menuitem" href="{% url 'create_profile' %}">계정 만들기</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'view_profile' %}">계정 보기</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'accounts:create_profile' %}">계정 만들기</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'accounts:view_profile' %}">계정 보기</a></li>
             </ul>
           </div>
         {% else %}
@@ -59,9 +59,9 @@
         </a>
         <ul id="menu-work" class="dropdown" role="menu" aria-label="업무관리 메뉴">
           <!-- URL 이름은 프로젝트 상황에 맞게 변경 -->
-          <li role="none"><a role="menuitem" href="{% url 'sales_partner_list' %}">매출처정보</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'purchase_partner_list' %}">매입처정보</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'item_list' %}">품목정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'partners:sales_partner_list' %}">매출처정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'partners:purchase_partner_list' %}">매입처정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'accounts:item_list' %}">품목정보</a></li>
         </ul>
       </div>
 
@@ -71,8 +71,8 @@
           계약정보
         </a>
         <ul id="menu-contract" class="dropdown" role="menu" aria-label="계약정보 메뉴">
-          <li role="none"><a role="menuitem" href="{% url 'add_contract' %}">계약정보 등록</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'expenses:add_contract' %}">계약정보 등록</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'expenses:contract_list' %}">계약정보 목록</a></li>
         </ul>
       </div>
 
@@ -82,10 +82,10 @@
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
             <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
-              <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_sales_contract' %}">월별 매출계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_purchase_contract' %}">월별 매입계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:margin_static' %}">마진통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
             </ul>
           </div>
         {% else %}
@@ -336,34 +336,34 @@
   })();
   </script>
 
-    <script>
-    (function () {
-        const input = document.getElementById('q_customer');
-        if (!input) return;
+  <script>
+  (function () {
+      const input = document.getElementById('q_customer');
+      if (!input) return;
 
-        // Enter로 팝업 열기 (add_contract와 동일한 URL)
-        input.addEventListener('keydown', function (e) {
-        if (e.key !== 'Enter') return;
-        e.preventDefault();
-        const q = (this.value || '').trim();
-        const url = `/partners/sales/?popup=1` + (q ? `&q_name=${encodeURIComponent(q)}` : '');
-        // 이름은 아무거나, 창 하나만 재사용
-        window.open(url, 'partnerSearch', 'width=900,height=600');
-        });
+      // Enter로 팝업 열기 (add_contract와 동일한 URL)
+      input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const q = (this.value || '').trim();
+      const url = `/partners/sales/?popup=1` + (q ? `&q_name=${encodeURIComponent(q)}` : '');
+      // 이름은 아무거나, 창 하나만 재사용
+      window.open(url, 'partnerSearch', 'width=900,height=600');
+      });
 
-        // 팝업에서 호출하는 콜백 (선택된 매출처를 입력칸에 채우고 바로 검색하려면 submit)
-        window.selectPartnerFromPopup = function ({ id, name }) {
-        input.value = name;
-        // 필요하면 hidden으로 id도 보낼 수 있음:
-        // let hid = document.getElementById('q_customer_id');
-        // if (!hid) { hid = document.createElement('input'); hid.type='hidden'; hid.id='q_customer_id'; hid.name='q_customer_id'; input.form.appendChild(hid); }
-        // hid.value = id;
+      // 팝업에서 호출하는 콜백 (선택된 매출처를 입력칸에 채우고 바로 검색하려면 submit)
+      window.selectPartnerFromPopup = function ({ id, name }) {
+      input.value = name;
+      // 필요하면 hidden으로 id도 보낼 수 있음:
+      // let hid = document.getElementById('q_customer_id');
+      // if (!hid) { hid = document.createElement('input'); hid.type='hidden'; hid.id='q_customer_id'; hid.name='q_customer_id'; input.form.appendChild(hid); }
+      // hid.value = id;
 
-        // 자동으로 검색 실행하고 싶으면 주석 해제
-        // input.form?.submit();
-        input.focus();
-        };
-    })();
-    </script>
+      // 자동으로 검색 실행하고 싶으면 주석 해제
+      // input.form?.submit();
+      input.focus();
+      };
+  })();
+  </script>
 </body>
 </html>

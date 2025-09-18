@@ -19,7 +19,7 @@
   <div class="sticky-wrap">
     <div class="titlebar">
       <h1>
-        <a href="{% url 'dashboard' %}" class="title-link">
+        <a href="{% url 'accounts:dashboard' %}" class="title-link">
           (주)대진아이엔티 업무지원시스템
         </a>
       </h1>
@@ -38,8 +38,8 @@
               계정관리
             </a>
             <ul id="menu-accounts" class="dropdown" role="menu" aria-label="계정관리 메뉴">
-              <li role="none"><a role="menuitem" href="{% url 'create_profile' %}">계정 만들기</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'view_profile' %}">계정 보기</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'accounts:create_profile' %}">계정 만들기</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'accounts:view_profile' %}">계정 보기</a></li>
             </ul>
           </div>
         {% else %}
@@ -54,9 +54,9 @@
         </a>
         <ul id="menu-work" class="dropdown" role="menu" aria-label="업무관리 메뉴">
           <!-- URL 이름은 프로젝트 상황에 맞게 변경 -->
-          <li role="none"><a role="menuitem" href="{% url 'sales_partner_list' %}">매출처정보</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'purchase_partner_list' %}">매입처정보</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'item_list' %}">품목정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'partners:sales_partner_list' %}">매출처정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'partners:purchase_partner_list' %}">매입처정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'accounts:item_list' %}">품목정보</a></li>
         </ul>
       </div>
 
@@ -66,8 +66,8 @@
           계약정보
         </a>
         <ul id="menu-contract" class="dropdown" role="menu" aria-label="계약정보 메뉴">
-          <li role="none"><a role="menuitem" href="{% url 'add_contract' %}">계약정보 등록</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'expenses:add_contract' %}">계약정보 등록</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'expenses:contract_list' %}">계약정보 목록</a></li>
         </ul>
       </div>
 
@@ -77,10 +77,10 @@
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
             <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
-              <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_sales_contract' %}">월별 매출계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_purchase_contract' %}">월별 매입계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:margin_static' %}">마진통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
             </ul>
           </div>
         {% else %}
@@ -128,8 +128,8 @@
       <div class="toolbar-actions">
         <button class="btn gray" type="submit">검색하기</button>
         <a id="btn-export" class="btn gray"
-           href="{% url 'contract_export' %}?{% if qs %}{{ qs }}{% endif %}">엑셀저장</a>
-        <a class="btn primary" href="{% url 'add_contract' %}">등록하기</a>
+           href="{% url 'expenses:contract_export' %}?{% if qs %}{{ qs }}{% endif %}">엑셀저장</a>
+        <a class="btn primary" href="{% url 'expenses:add_contract' %}">등록하기</a>
       </div>
     </form>
 
@@ -159,7 +159,7 @@
           <tbody>
             {% for c in contracts %}
               {% with items=c.items.all %}
-              <tr class="row-block" data-href="{% url 'contract_detail' c.id %}">
+              <tr class="row-block" data-href="{% url 'expenses:contract_detail' c.id %}">
                 <!-- ▶ 추가: 개별 선택 -->
                 <td class="center">
                   <input type="checkbox" class="row-check" value="{{ c.id }}" onclick="event.stopPropagation()">
@@ -168,7 +168,7 @@
                 <!-- 계약번호/상태 -->
                 <td class="meta meta-no" rowspan="1">
                   <div class="mono">{{ c.contract_no|default:c.id }}</div>
-                  <a href="{% url 'contract_detail' c.id %}"
+                  <a href="{% url 'expenses:contract_detail' c.id %}"
                      class="status-link" onclick="event.stopPropagation()">
                     {{ c.get_status_display }}
                   </a>
@@ -262,19 +262,19 @@
                 <td class="actions">
                   {% with acc=request.user.profile.access|default_if_none:"" %}
                     {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
-                      <a class="btn light" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
+                      <a class="btn light" href="{% url 'expenses:contract_edit' c.id %}">수정</a>
                     {% elif acc == '직원모드' and c.writer_id == request.user.id %}
-                      <a class="btn light" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
+                      <a class="btn light" href="{% url 'expenses:contract_edit' c.id %}">수정</a>
                     {% endif %}
 
                     {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
-                      <form method="post" action="{% url 'contract_submit' c.id %}" style="display:inline"
+                      <form method="post" action="{% url 'accounts:contract_submit' c.id %}" style="display:inline"
                             onsubmit="event.stopPropagation(); return confirm('결재요청으로 전송하시겠습니까?');">
                         {% csrf_token %}
                         <button type="submit" class="btn primary">결재요청</button>
                       </form>
                     {% elif acc == '직원모드' and c.writer_id == request.user.id %}
-                      <form method="post" action="{% url 'contract_submit' c.id %}" style="display:inline"
+                      <form method="post" action="{% url 'accounts:contract_submit' c.id %}" style="display:inline"
                             onsubmit="event.stopPropagation(); return confirm('결재요청으로 전송하시겠습니까?');">
                         {% csrf_token %}
                         <button type="submit" class="btn primary">결재요청</button>
@@ -282,15 +282,15 @@
                     {% endif %}
 
                     {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
-                      <form method="post" action="{% url 'contract_delete' c.id %}"
-                            onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
+                      <form method="post" action="{% url 'expenses:contract_delete' c.id %}"
+                            onsubmit="return confirm('정말 삭제하시겠습니까?');">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
                         <button type="submit" class="btn small gray">삭제</button>
                       </form>
                     {% elif acc == '직원모드' and c.writer_id == request.user.id %}
-                      <form method="post" action="{% url 'contract_delete' c.id %}"
-                            onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
+                      <form method="post" action="{% url 'expenses:contract_delete' c.id %}"
+                            onsubmit="return confirm('정말 삭제하시겠습니까?');">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
                         <button type="submit" class="btn small gray">삭제</button>
@@ -543,21 +543,25 @@
   </script>
 
   <script>
-    (function () {
-      if (window.__dj_rowclick_bound__) return;  // 중복 바인딩 방지
-      window.__dj_rowclick_bound__ = true;
+  (function () {
+    if (window.__dj_rowclick_bound__) return;
+    window.__dj_rowclick_bound__ = true;
 
-      document.querySelector('.table-list')?.addEventListener('click', (e) => {
-        // 링크/버튼/폼/입력/셀렉트/텍스트에어리어/미니테이블 클릭은 무시
-        if (e.target.closest('a,button,form,input,select,textarea,.mini-items')) return;
+    const table = document.querySelector('.table-list');
+    if (!table) return;
 
-        const tr = e.target.closest('tr[data-href]');
-        if (!tr) return;
+    table.addEventListener('click', (e) => {
+      // ▶ 액션 영역/인터랙티브 요소는 행-네비게이션을 절대 가로채지 않음
+      if (e.target.closest('.actions, a, button, form, input, select, textarea, label, .mini-items')) {
+        return;
+      }
+      const tr = e.target.closest('tr[data-href]');
+      if (!tr) return;
 
-        const href = tr.getAttribute('data-href');
-        if (href) window.location.href = href;
-      });
-    })();
+      const href = tr.getAttribute('data-href');
+      if (href) window.location.href = href;
+    });
+  })();
   </script>
 
 </body>

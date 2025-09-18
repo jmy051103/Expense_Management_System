@@ -20,7 +20,7 @@
   <div class="sticky-wrap">
     <div class="titlebar">
       <h1>
-        <a href="{% url 'dashboard' %}" class="title-link">
+        <a href="{% url 'accounts:dashboard' %}" class="title-link">
           (주)대진아이엔티 업무지원시스템
         </a>
       </h1>
@@ -29,7 +29,6 @@
         <button type="submit" class="logout-btn">로그아웃</button>
       </form>
     </div>
-
 
     <!-- 탭 -->
     <nav class="tabs" role="tablist" aria-label="상단 메뉴">
@@ -40,8 +39,8 @@
               계정관리
             </a>
             <ul id="menu-accounts" class="dropdown" role="menu" aria-label="계정관리 메뉴">
-              <li role="none"><a role="menuitem" href="{% url 'create_profile' %}">계정 만들기</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'view_profile' %}">계정 보기</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'accounts:create_profile' %}">계정 만들기</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'accounts:view_profile' %}">계정 보기</a></li>
             </ul>
           </div>
         {% else %}
@@ -56,9 +55,9 @@
         </a>
         <ul id="menu-work" class="dropdown" role="menu" aria-label="업무관리 메뉴">
           <!-- URL 이름은 프로젝트 상황에 맞게 변경 -->
-          <li role="none"><a role="menuitem" href="{% url 'sales_partner_list' %}">매출처정보</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'purchase_partner_list' %}">매입처정보</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'item_list' %}">품목정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'partners:sales_partner_list' %}">매출처정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'partners:purchase_partner_list' %}">매입처정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'accounts:item_list' %}">품목정보</a></li>
         </ul>
       </div>
 
@@ -68,8 +67,8 @@
           계약정보
         </a>
         <ul id="menu-contract" class="dropdown" role="menu" aria-label="계약정보 메뉴">
-          <li role="none"><a role="menuitem" href="{% url 'add_contract' %}">계약정보 등록</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'expenses:add_contract' %}">계약정보 등록</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'expenses:contract_list' %}">계약정보 목록</a></li>
         </ul>
       </div>
 
@@ -79,10 +78,10 @@
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
             <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
-              <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_sales_contract' %}">월별 매출계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_purchase_contract' %}">월별 매입계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:margin_static' %}">마진통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
             </ul>
           </div>
         {% else %}
@@ -97,7 +96,7 @@
     <section class="cards" aria-label="핵심 지표">
       <article class="card"
         role="link" tabindex="0"
-        data-url="{% url 'contract_temporary' %}"
+        data-url="{% url 'accounts:contract_temporary' %}"
         onclick="location.href=this.dataset.url"
         onkeydown="if(event.key==='Enter'||event.key===' ')location.href=this.dataset.url"
         style="cursor:pointer">
@@ -110,7 +109,7 @@
     </article>
     <article class="card"
       role="link" tabindex="0"
-      data-url="{% url 'contract_processing' %}"
+      data-url="{% url 'accounts:contract_processing' %}"
       onclick="location.href=this.dataset.url"
       onkeydown="if(event.key==='Enter'||event.key===' ')location.href=this.dataset.url"
       style="cursor:pointer">
@@ -123,7 +122,7 @@
 
     <article class="card"
       role="link" tabindex="0"
-      data-url="{% url 'contract_process_list' %}"
+      data-url="{% url 'accounts:contract_process_list' %}"
       onclick="location.href=this.dataset.url"
       onkeydown="if(event.key==='Enter'||event.key===' ')location.href=this.dataset.url"
       style="cursor:pointer">
@@ -136,7 +135,7 @@
 
     <article class="card"
       role="link" tabindex="0"
-      data-url="{% url 'contract_approved' %}"
+      data-url="{% url 'accounts:contract_approved' %}"
       onclick="location.href=this.dataset.url"
       onkeydown="if(event.key==='Enter'||event.key===' ')location.href=this.dataset.url"
       style="cursor:pointer">
@@ -147,7 +146,7 @@
       </div>
     </article>
 
-    <div class="card-link" role="link" tabindex="0"onclick="location.href='{% url 'sales_partner_list' %}'"onkeydown="if(event.key==='Enter'||event.key===' ')location.href='{% url 'sales_partner_list' %}'">
+    <div class="card-link" role="link" tabindex="0"onclick="location.href='{% url 'partners:sales_partner_list' %}'"onkeydown="if(event.key==='Enter'||event.key===' ')location.href='{% url 'partners:sales_partner_list' %}'">
       <article class="card">
         <div class="meta">
           <div class="label">거래 매출처</div>
@@ -199,8 +198,8 @@
                   <!-- 버튼 줄: colspan=4 로 변경 -->
                   <tr>
                     <td colspan="4" class="center">
-                      <a class="btn" href="{% url 'monthly_purchase_contract' %}">매입계약통계 +</a>
-                      <a class="btn" href="{% url 'monthly_sales_contract' %}">매출계약통계 +</a>
+                      <a class="btn" href="{% url 'reports:monthly_purchase_contract' %}">매입계약통계 +</a>
+                      <a class="btn" href="{% url 'reports:monthly_sales_contract' %}">매출계약통계 +</a>
                     </td>
                   </tr>
                 </tbody>

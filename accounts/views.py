@@ -66,11 +66,11 @@ def _is_employee(user) -> bool:
 
 def _redirect_by_status(status: str) -> str:
     return {
-        "draft": "contract_temporary",
-        "submitted": "contract_processing",
-        "processing": "contract_process",
-        "completed": "contract_approved",
-    }.get(status, "dashboard")
+        "draft": "accounts:contract_temporary",
+        "submitted": "accounts:contract_processing",
+        "processing": "accounts:contract_process",
+        "completed": "accounts:contract_approved",
+    }.get(status, "accounts:dashboard")
 
 
 def can_manage_accounts(user):
@@ -207,7 +207,7 @@ def create_profile(request):
                     Profile.objects.create(
                         user=user, role=role, department=department, access=access
                     )
-                return redirect("dashboard")
+                return redirect("accounts:dashboard")
             except IntegrityError:
                 messages.error(request, "이미 존재하는 아이디입니다. 다른 아이디를 입력하세요.")
 
@@ -254,7 +254,7 @@ def edit_account(request, user_id):
         if uform.is_valid() and pform.is_valid():
             uform.save()
             pform.save()
-            return redirect("view_profile")
+            return redirect("accounts:view_profile")
         messages.error(request, "입력값을 확인해주세요.")
     else:
         uform = UserEditForm(instance=target)
@@ -604,16 +604,16 @@ def contract_submit(request, pk: int):
 
     if _is_employee(request.user) and contract.writer_id != request.user.id:
         messages.error(request, "직원모드는 본인이 작성한 계약만 결재요청할 수 있습니다.")
-        return redirect("contract_temporary")
+        return redirect("accounts:contract_temporary")
 
     if contract.status != "draft":
         messages.warning(request, "임시저장 상태에서만 결재요청이 가능합니다.")
-        return redirect("contract_temporary")
+        return redirect("accounts:contract_temporary")
 
     contract.status = "submitted"
     contract.save(update_fields=["status"])
 
-    return redirect("contract_processing")
+    return redirect("accounts:contract_processing")
 
 
 @login_required
@@ -622,10 +622,10 @@ def contract_process(request, pk: int):
     contract = get_object_or_404(Contract, pk=pk)
     if contract.status != "submitted":
         messages.warning(request, "결재요청 상태에서만 결재처리로 전환할 수 있습니다.")
-        return redirect("contract_process")
+        return redirect("accounts:contract_process")
     contract.status = "processing"
     contract.save(update_fields=["status"])
-    return redirect("contract_process")
+    return redirect("accounts:contract_process")
 
 
 @login_required
@@ -634,10 +634,10 @@ def contract_mark_processing(request, pk: int):
     contract = get_object_or_404(Contract, pk=pk)
     if contract.status != "submitted":
         messages.warning(request, "결재요청 상태에서만 결재처리로 전환 가능합니다.")
-        return redirect("contract_processing")
+        return redirect("accounts:contract_processing")
     contract.status = "processing"
     contract.save(update_fields=["status"])
-    return redirect("contract_process")
+    return redirect("accounts:contract_process")
 
 
 def _can_approve(user) -> bool:
@@ -657,14 +657,14 @@ def _can_complete(user) -> bool:
 def contract_approve(request, pk: int):
     if not _can_approve(request.user):
         messages.error(request, "실장/사장만 결재처리가 가능합니다.")
-        return redirect("contract_processing")
+        return redirect("accounts:contract_processing")
     contract = get_object_or_404(Contract, pk=pk)
     if contract.status != "submitted":
         messages.warning(request, "결재요청 상태에서만 결재처리가 가능합니다.")
-        return redirect("contract_processing")
+        return redirect("accounts:contract_processing")
     contract.status = "processing"
     contract.save(update_fields=["status"])
-    return redirect("contract_process")
+    return redirect("accounts:contract_process")
 
 
 @login_required
@@ -672,14 +672,14 @@ def contract_approve(request, pk: int):
 def contract_complete(request, pk: int):
     if not _can_complete(request.user):
         messages.error(request, "사장만 결재완료 처리가 가능합니다.")
-        return redirect("contract_processing")
+        return redirect("accounts:contract_processing")
     contract = get_object_or_404(Contract, pk=pk)
     if contract.status != "processing":
         messages.warning(request, "결재처리중 상태에서만 결재완료가 가능합니다.")
-        return redirect("contract_processing")
+        return redirect("accounts:contract_processing")
     contract.status = "completed"
     contract.save(update_fields=["status"])
-    return redirect("contract_approved")
+    return redirect("accounts:contract_approved")
 
 
 @login_required
@@ -689,32 +689,30 @@ def contract_delete(request, pk: int):
     if _is_employee(request.user):
         if contract.status != "draft" or contract.writer_id != request.user.id:
             messages.error(request, "직원모드는 임시저장 상태의 본인 계약만 삭제할 수 있습니다.")
-            return redirect("contract_temporary")
+            return redirect("accounts:contract_temporary")
     contract.delete()
-    return redirect("contract_temporary")
+    return redirect("accounts:contract_temporary")
 
 
 @login_required
 def contract_edit(request, pk):
     contract = get_object_or_404(Contract, pk=pk)
-
     acc = _get_access(request.user)
+
+    # ✅ 실장/사장/슈퍼는 어떤 상태든 수정 페이지 진입 허용
+    if request.user.is_superuser or acc in ("실장모드", "사장모드"):
+        return render(request, "contract_edit.html", {"contract": contract})
+
+    # 직원모드만 제한
     if acc == "직원모드" and contract.status != "draft":
         messages.error(request, "직원모드는 임시저장 상태만 수정할 수 있습니다.")
-        if contract.status == "submitted":
-            return redirect("contract_processing")
-        elif contract.status == "processing":
-            return redirect("contract_process_list")
-        elif contract.status == "completed":
-            return redirect("contract_approved")
-        return redirect("contract_temporary")
+        return redirect("accounts:contract_temporary")
 
     if _is_employee(request.user):
         if contract.writer_id != request.user.id or contract.status != "draft":
             messages.error(request, "직원모드는 본인이 작성한 '임시저장' 계약만 수정할 수 있습니다.")
             return redirect(_redirect_by_status(contract.status))
 
-    # (편집 폼 렌더/처리는 다른 파일에 있을 것으로 가정)
     return render(request, "contract_edit.html", {"contract": contract})
 
 
@@ -791,7 +789,7 @@ def item_list(request):
 def item_add(request):
     if Item is None:
         messages.error(request, "ContractItem 모델을 찾을 수 없습니다.")
-        return redirect("item_list")
+        return redirect("accounts:item_list")
 
     # datalist 후보
     vendor_names = []
@@ -874,7 +872,7 @@ def item_add(request):
             pass
 
         obj.save()
-        return redirect("item_list")
+        return redirect("accounts:item_list")
 
     return render(request, "item_form.html", {
         "mode": "create",
@@ -887,7 +885,7 @@ def item_add(request):
 def item_edit(request, pk: int):
     if Item is None:
         messages.error(request, "ContractItem 모델을 찾을 수 없습니다.")
-        return redirect("item_list")
+        return redirect("accounts:item_list")
 
     obj = get_object_or_404(Item, pk=pk)
 
@@ -931,7 +929,7 @@ def item_edit(request, pk: int):
 
             try:
                 obj.save()
-                return redirect("item_list")
+                return redirect("accounts:item_list")
             except Exception as e:
                 messages.error(request, f"저장 중 오류: {e}")
 
@@ -959,10 +957,10 @@ def item_edit(request, pk: int):
 def item_delete(request, pk: int):
     if Item is None:
         messages.error(request, "ContractItem 모델을 찾을 수 없습니다.")
-        return redirect("item_list")
+        return redirect("accounts:item_list")
     obj = get_object_or_404(Item, pk=pk)
     obj.delete()
-    return redirect("item_list")
+    return redirect("accounts:item_list")
 
 @login_required
 @user_passes_test(can_manage_accounts)
@@ -973,12 +971,12 @@ def delete_account(request, user_id: int):
 
     if target.id == request.user.id:
         messages.error(request, "본인 계정은 삭제할 수 없습니다.")
-        return redirect("view_profile")
+        return redirect("accounts:view_profile")
 
     if target.is_superuser and not request.user.is_superuser:
         messages.error(request, "슈퍼유저 계정은 슈퍼유저만 삭제할 수 있습니다.")
-        return redirect("view_profile")
+        return redirect("accounts:view_profile")
 
     username = target.username
     target.delete()  # Profile는 OneToOne(CASCADE)라면 함께 삭제됩니다.
-    return redirect("view_profile")
+    return redirect("accounts:view_profile")

@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+app_name = "expenses"  
 
 urlpatterns = [
     path("reports/", views.report_list, name="report_list"),

@@ -81,7 +81,7 @@ def report_create(request):
                 report.save()
                 formset.instance = report
                 formset.save()
-            return redirect(reverse("report_detail", args=[report.id]))
+            return redirect(reverse("expenses:report_detail", args=[report.id]))
     else:
         form = ExpenseReportForm()
         formset = ExpenseItemFormSet()
@@ -102,7 +102,7 @@ def report_edit(request, pk):
             with transaction.atomic():
                 form.save()
                 formset.save()
-            return redirect(reverse("report_detail", args=[report.id]))
+            return redirect(reverse("expenses:report_detail", args=[report.id]))
     else:
         form = ExpenseReportForm(instance=report)
         formset = ExpenseItemFormSet(instance=report)
@@ -132,7 +132,7 @@ def report_delete(request, pk):
         raise PermissionDenied("You do not have permission to delete this report.")
     report = get_object_or_404(ExpenseReport, pk=pk)
     report.delete()
-    return redirect("report_list")
+    return redirect("expenses:report_list")
 
 # ------------------- 여기부터 계약(Contract) 뷰 -------------------
 
@@ -207,7 +207,7 @@ def add_contract(request):
                         vat_mode=(get(vat, i, "separate") or "separate"),
                     )
 
-            return redirect("contract_detail", pk=contract.pk)
+            return redirect("expenses:contract_detail", pk=contract.pk)
         else:
             # 폼 에러를 템플릿에서 표시할 수 있게 넘김
             ctx = {
@@ -248,13 +248,13 @@ def contract_edit(request, pk):
         raw_next = (
             request.GET.get("next")
             or request.META.get("HTTP_REFERER")
-            or reverse("contract_detail", args=[contract.pk])
+            or reverse("expenses:contract_detail", args=[contract.pk])
         )
     next_url = raw_next
     if not url_has_allowed_host_and_scheme(
         next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
     ):
-        next_url = reverse("contract_detail", args=[contract.pk])
+        next_url = reverse("expenses:contract_detail", args=[contract.pk])
 
     # 권한
     if not (request.user.is_superuser or request.user == contract.writer):
@@ -373,7 +373,7 @@ def contract_delete(request, pk):
         request.POST.get("next")
         or request.GET.get("next")
         or request.META.get("HTTP_REFERER")
-        or reverse("contract_list")
+        or reverse("expenses:contract_list")
     )
     # 안전한 내부 URL인지 검증
     if not url_has_allowed_host_and_scheme(
@@ -381,7 +381,7 @@ def contract_delete(request, pk):
         allowed_hosts={request.get_host()},
         require_https=request.is_secure(),
     ):
-        next_url = reverse("contract_list")
+        next_url = reverse("expenses:contract_list")
 
     contract = get_object_or_404(Contract, pk=pk)
 

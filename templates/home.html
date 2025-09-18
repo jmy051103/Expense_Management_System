@@ -12,7 +12,7 @@
     <div class="login_wrap">
       <form action="{% url 'login' %}" method="post">
         {% csrf_token %}
-        <input type="hidden" name="next" value="{% url 'dashboard' %}">
+        <input type="hidden" name="next" value="{% url 'accounts:dashboard' %}">
         {% load static %}
         <img class="logo" src="{% static 'image/logo.JPG' %}" alt="Logo">
       

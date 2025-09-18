@@ -21,9 +21,14 @@
   <!-- 타이틀 + 탭(고정) -->
   <div class="sticky-wrap">
     <div class="titlebar">
-      <h1><a href="{% url 'dashboard' %}" class="title-link">(주)대진아이엔티 업무지원시스템</a></h1>
+      <h1>
+        <a href="{% url 'accounts:dashboard' %}" class="title-link">
+          (주)대진아이엔티 업무지원시스템
+        </a>
+      </h1>
       <form action="{% url 'logout' %}" method="post" class="logout-form">
-        {% csrf_token %}<button type="submit" class="logout-btn">로그아웃</button>
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">로그아웃</button>
       </form>
     </div>
 
@@ -36,8 +41,8 @@
               계정관리
             </a>
             <ul id="menu-accounts" class="dropdown" role="menu" aria-label="계정관리 메뉴">
-              <li role="none"><a role="menuitem" href="{% url 'create_profile' %}">계정 만들기</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'view_profile' %}">계정 보기</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'accounts:create_profile' %}">계정 만들기</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'accounts:view_profile' %}">계정 보기</a></li>
             </ul>
           </div>
         {% else %}
@@ -52,9 +57,9 @@
         </a>
         <ul id="menu-work" class="dropdown" role="menu" aria-label="업무관리 메뉴">
           <!-- URL 이름은 프로젝트 상황에 맞게 변경 -->
-          <li role="none"><a role="menuitem" href="{% url 'sales_partner_list' %}">매출처정보</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'purchase_partner_list' %}">매입처정보</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'item_list' %}">품목정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'partners:sales_partner_list' %}">매출처정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'partners:purchase_partner_list' %}">매입처정보</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'accounts:item_list' %}">품목정보</a></li>
         </ul>
       </div>
 
@@ -64,8 +69,8 @@
           계약정보
         </a>
         <ul id="menu-contract" class="dropdown" role="menu" aria-label="계약정보 메뉴">
-          <li role="none"><a role="menuitem" href="{% url 'add_contract' %}">계약정보 등록</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'expenses:add_contract' %}">계약정보 등록</a></li>
+          <li role="none"><a role="menuitem" href="{% url 'expenses:contract_list' %}">계약정보 목록</a></li>
         </ul>
       </div>
 
@@ -75,10 +80,10 @@
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
             <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
-              <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
-              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_sales_contract' %}">월별 매출계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_purchase_contract' %}">월별 매입계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:margin_static' %}">마진통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'reports:monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
             </ul>
           </div>
         {% else %}
@@ -142,7 +147,7 @@
         </table>
 
         <div class="actions">
-          <a class="btn gray" href="{% url 'item_list' %}">목록으로</a>
+          <a class="btn gray" href="{% url 'accounts:item_list' %}">목록으로</a>
           <button class="btn primary" type="submit">
             {% if mode == 'edit' %}수정하기{% else %}저장하기{% endif %}
           </button>
@@ -163,173 +168,7 @@
     </div>
   </footer>
 
-  <!-- 매입처 팝업 연동 -->
-  <script>
-    (function(){
-      // 대상 인풋 찾기
-      const vendorInput = document.querySelector('input[name="vendor"]');
-      if (!vendorInput) return;
 
-      // id가 없으면 콜백 식별용으로 하나 부여
-      if (!vendorInput.id) {
-        vendorInput.id = 'vendor-' + Date.now().toString(36);
-      }
-
-      // 팝업 열기 함수
-      function openPurchasePopup(){
-        const q = (vendorInput.value || '').trim();
-        const url = `/partners/purchase/?popup=1`
-                  + (q ? `&q_name=${encodeURIComponent(q)}` : '')
-                  + `&target=${encodeURIComponent(vendorInput.id)}`;
-        window.open(url, 'purchasePartnerSearch', 'width=900,height=600');
-      }
-
-      // Enter로 팝업
-      vendorInput.addEventListener('keydown', function(e){
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          openPurchasePopup();
-        }
-      });
-
-      // 더블클릭으로도 팝업
-      vendorInput.addEventListener('dblclick', function(){
-        openPurchasePopup();
-      });
-
-      // 팝업에서 호출하는 콜백 (선택된 매입처 반영)
-      // 예상 payload: { id, name, target }
-      window.selectPurchasePartnerFromPopup = function ({ id, name, target }){
-        const inp = document.getElementById(target) || vendorInput;
-        if (!inp) return;
-        inp.value = name || '';
-        inp.focus();
-
-        // 필요 시 hidden으로 id도 함께 보낼 수 있음 (폼에서 사용하지 않으면 무시됨)
-        let hidden = inp.nextElementSibling && inp.nextElementSibling.matches('input[type="hidden"][name="vendor_partner_id"]')
-          ? inp.nextElementSibling
-          : null;
-        if (!hidden) {
-          hidden = document.createElement('input');
-          hidden.type = 'hidden';
-          hidden.name = 'vendor_partner_id';
-          inp.insertAdjacentElement('afterend', hidden);
-        }
-        hidden.value = id || '';
-      };
-    })();
-  </script>  <!-- 매입처 팝업 연동 -->
-  <script>
-    (function(){
-      // 대상 인풋 찾기
-      const vendorInput = document.querySelector('input[name="vendor"]');
-      if (!vendorInput) return;
-
-      // id가 없으면 콜백 식별용으로 하나 부여
-      if (!vendorInput.id) {
-        vendorInput.id = 'vendor-' + Date.now().toString(36);
-      }
-
-      // 팝업 열기 함수
-      function openPurchasePopup(){
-        const q = (vendorInput.value || '').trim();
-        const url = `/partners/purchase/?popup=1`
-                  + (q ? `&q_name=${encodeURIComponent(q)}` : '')
-                  + `&target=${encodeURIComponent(vendorInput.id)}`;
-        window.open(url, 'purchasePartnerSearch', 'width=900,height=600');
-      }
-
-      // Enter로 팝업
-      vendorInput.addEventListener('keydown', function(e){
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          openPurchasePopup();
-        }
-      });
-
-      // 더블클릭으로도 팝업
-      vendorInput.addEventListener('dblclick', function(){
-        openPurchasePopup();
-      });
-
-      // 팝업에서 호출하는 콜백 (선택된 매입처 반영)
-      // 예상 payload: { id, name, target }
-      window.selectPurchasePartnerFromPopup = function ({ id, name, target }){
-        const inp = document.getElementById(target) || vendorInput;
-        if (!inp) return;
-        inp.value = name || '';
-        inp.focus();
-
-        // 필요 시 hidden으로 id도 함께 보낼 수 있음 (폼에서 사용하지 않으면 무시됨)
-        let hidden = inp.nextElementSibling && inp.nextElementSibling.matches('input[type="hidden"][name="vendor_partner_id"]')
-          ? inp.nextElementSibling
-          : null;
-        if (!hidden) {
-          hidden = document.createElement('input');
-          hidden.type = 'hidden';
-          hidden.name = 'vendor_partner_id';
-          inp.insertAdjacentElement('afterend', hidden);
-        }
-        hidden.value = id || '';
-      };
-    })();
-  </script>  <!-- 매입처 팝업 연동 -->
-  <script>
-    (function(){
-      // 대상 인풋 찾기
-      const vendorInput = document.querySelector('input[name="vendor"]');
-      if (!vendorInput) return;
-
-      // id가 없으면 콜백 식별용으로 하나 부여
-      if (!vendorInput.id) {
-        vendorInput.id = 'vendor-' + Date.now().toString(36);
-      }
-
-      // 팝업 열기 함수
-      function openPurchasePopup(){
-        const q = (vendorInput.value || '').trim();
-        const url = `/partners/purchase/?popup=1`
-                  + (q ? `&q_name=${encodeURIComponent(q)}` : '')
-                  + `&target=${encodeURIComponent(vendorInput.id)}`;
-        window.open(url, 'purchasePartnerSearch', 'width=900,height=600');
-      }
-
-      // Enter로 팝업
-      vendorInput.addEventListener('keydown', function(e){
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          openPurchasePopup();
-        }
-      });
-
-      // 더블클릭으로도 팝업
-      vendorInput.addEventListener('dblclick', function(){
-        openPurchasePopup();
-      });
-
-      // 팝업에서 호출하는 콜백 (선택된 매입처 반영)
-      // 예상 payload: { id, name, target }
-      window.selectPurchasePartnerFromPopup = function ({ id, name, target }){
-        const inp = document.getElementById(target) || vendorInput;
-        if (!inp) return;
-        inp.value = name || '';
-        inp.focus();
-
-        // 필요 시 hidden으로 id도 함께 보낼 수 있음 (폼에서 사용하지 않으면 무시됨)
-        let hidden = inp.nextElementSibling && inp.nextElementSibling.matches('input[type="hidden"][name="vendor_partner_id"]')
-          ? inp.nextElementSibling
-          : null;
-        if (!hidden) {
-          hidden = document.createElement('input');
-          hidden.type = 'hidden';
-          hidden.name = 'vendor_partner_id';
-          inp.insertAdjacentElement('afterend', hidden);
-        }
-        hidden.value = id || '';
-      };
-    })();
-  </script>
-  <!-- 매입처 팝업 연동 -->
   <script>
     (function(){
       // 대상 인풋 찾기
