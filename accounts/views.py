@@ -178,11 +178,12 @@ def create_profile(request):
         username   = (request.POST.get("username") or "").strip()
         password   = request.POST.get("password") or ""
         name       = (request.POST.get("name") or "").strip()
+        email      = (request.POST.get("email") or "").strip()     # ✅ 추가
         role       = (request.POST.get("position") or "").strip()
         department = (request.POST.get("department") or "").strip()
         access     = (request.POST.get("access") or "").strip()
 
-        # 기본 검증
+        # 기본 검증 (이메일은 선택 사항으로 처리)
         if not username or not password:
             messages.error(request, "아이디와 패스워드는 필수입니다.")
         elif not role or not department or not access:
@@ -191,9 +192,18 @@ def create_profile(request):
             try:
                 with transaction.atomic():
                     user = User.objects.create_user(username=username, password=password)
+
+                    # ✅ 이름/이메일 업데이트 (있는 값만 저장)
+                    updates = []
                     if name:
                         user.first_name = name
-                        user.save(update_fields=["first_name"])
+                        updates.append("first_name")
+                    if email:
+                        user.email = email
+                        updates.append("email")
+                    if updates:
+                        user.save(update_fields=updates)
+
                     Profile.objects.create(
                         user=user, role=role, department=department, access=access
                     )
@@ -209,6 +219,7 @@ def create_profile(request):
             "form": {
                 "username": username,
                 "name": name,
+                "email": email,                   # ✅ 추가
                 "role": role,
                 "department": department,
                 "access": access,
@@ -220,7 +231,7 @@ def create_profile(request):
         "role_choices": role_choices,
         "dept_choices": dept_choices,
         "access_choices": access_choices,
-        "form": {"username": "", "name": "", "role": "", "department": "", "access": ""},
+        "form": {"username": "", "name": "", "email": "", "role": "", "department": "", "access": ""},  # ✅ 추가
     })
 
 

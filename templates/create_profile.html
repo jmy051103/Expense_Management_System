@@ -12,7 +12,6 @@
 
   <!-- 상단 상태줄 -->
   <div class="topbar">
-    <!-- 날짜: today 컨텍스트 없이도 보이도록 now 태그 사용 -->
     <small>Today {% now "Y.m.d (D)" %}</small>
     <span class="ip" style="margin-left:auto;">현재접속 IP : {{ request.META.REMOTE_ADDR|default:"-" }}</span>
   </div>
@@ -34,7 +33,7 @@
     <!-- 탭 -->
     <nav class="tabs" role="tablist" aria-label="상단 메뉴">
       {% with acc=request.user.profile.access|default_if_none:"" %}
-        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" or acc == "실장모드"%}
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">
               계정관리
@@ -74,15 +73,21 @@
       </div>
 
       <!-- 통계 드롭다운 -->
-      <div class="tab-group has-dropdown">
-        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
-        <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
-          <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
-        </ul>
-      </div>
+      {% with acc=request.user.profile.access|default_if_none:"" %}
+        {% if request.user.is_superuser or acc == "사장모드" or acc == "실장모드"%}
+          <div class="tab-group has-dropdown">
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
+            <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
+              <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
+            </ul>
+          </div>
+        {% else %}
+          <span class="tab tab-disabled" aria-disabled="true">통계</span>
+        {% endif %}
+      {% endwith %}
     </nav>
   </div>
 
@@ -98,6 +103,7 @@
       <input type="password" name="password" placeholder="패스워드" required
             autocomplete="current-password">
       <input type="text" name="name" placeholder="이름" value="{{ form.name }}">
+      <input type="email" name="email" placeholder="이메일" value="{{ form.email }}"> <!-- ✅ 추가 -->
 
       <select name="position" required>
         <option value="" disabled {% if not form.role %}selected{% endif %}>직책</option>
@@ -127,7 +133,6 @@
 
   </div>
 
-  <!-- 푸터 -->
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-left"><strong>(주)대진아이엔티</strong></div>

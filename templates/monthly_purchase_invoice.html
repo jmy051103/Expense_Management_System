@@ -31,11 +31,14 @@
       </form>
     </div>
 
+    <!-- 탭 -->
     <nav class="tabs" role="tablist" aria-label="상단 메뉴">
       {% with acc=request.user.profile.access|default_if_none:"" %}
-        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" %}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" or acc == "실장모드"%}
           <div class="tab-group has-dropdown">
-            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">계정관리</a>
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-accounts">
+              계정관리
+            </a>
             <ul id="menu-accounts" class="dropdown" role="menu" aria-label="계정관리 메뉴">
               <li role="none"><a role="menuitem" href="{% url 'create_profile' %}">계정 만들기</a></li>
               <li role="none"><a role="menuitem" href="{% url 'view_profile' %}">계정 보기</a></li>
@@ -46,32 +49,46 @@
         {% endif %}
       {% endwith %}
 
+      <!-- ✅ 업무관리 드롭다운 추가 -->
       <div class="tab-group has-dropdown">
-        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-work">업무관리</a>
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-work">
+          업무관리
+        </a>
         <ul id="menu-work" class="dropdown" role="menu" aria-label="업무관리 메뉴">
+          <!-- URL 이름은 프로젝트 상황에 맞게 변경 -->
           <li role="none"><a role="menuitem" href="{% url 'sales_partner_list' %}">매출처정보</a></li>
           <li role="none"><a role="menuitem" href="{% url 'purchase_partner_list' %}">매입처정보</a></li>
           <li role="none"><a role="menuitem" href="{% url 'item_list' %}">품목정보</a></li>
         </ul>
       </div>
 
+      <!-- 계약정보 드롭다운(기존) -->
       <div class="tab-group has-dropdown">
-        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">계약정보</a>
+        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-contract">
+          계약정보
+        </a>
         <ul id="menu-contract" class="dropdown" role="menu" aria-label="계약정보 메뉴">
           <li role="none"><a role="menuitem" href="{% url 'add_contract' %}">계약정보 등록</a></li>
           <li role="none"><a role="menuitem" href="{% url 'contract_list' %}">계약정보 목록</a></li>
         </ul>
       </div>
 
-      <div class="tab-group has-dropdown">
-        <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
-        <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
-          <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
-          <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_invoice' %}">매입처 월별 보고서</a></li>
-        </ul>
-      </div>
+      <!-- 통계 드롭다운 -->
+      {% with acc=request.user.profile.access|default_if_none:"" %}
+        {% if request.user.is_superuser or acc == "사장모드" or acc == "실장모드"%}
+          <div class="tab-group has-dropdown">
+            <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
+            <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
+              <li role="none"><a role="menuitem" href="{% url 'monthly_sales_contract' %}">월별 매출계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_contract' %}">월별 매입계약통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'margin_static' %}">마진통계</a></li>
+              <li role="none"><a role="menuitem" href="{% url 'monthly_purchase_invoice' %}">매입처 월별 계산서</a></li>
+            </ul>
+          </div>
+        {% else %}
+          <span class="tab tab-disabled" aria-disabled="true">통계</span>
+        {% endif %}
+      {% endwith %}
     </nav>
   </div>
 
