@@ -16,8 +16,6 @@
 
   <!-- 상단 상태줄 -->
   <div class="topbar">
-    <strong>시험운영</strong>
-    <span class="sep">|</span>
     <small>Today {% now "Y.m.d (D)" %}</small>
     <span class="ip" style="margin-left:auto;">현재접속 IP : {{ request.META.REMOTE_ADDR|default:"-" }}</span>
   </div>
