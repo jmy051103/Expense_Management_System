@@ -407,8 +407,8 @@ body {
 .mini-items .txt{ text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
 .mini-items .num{ text-align:right; }
 .mini-items .strong{ font-weight:700; }
-.mini-items .sell{ color:#b91c1c; }
-.mini-items .buy { color:#2563eb; }
+.mini-items .sell{ color:#b91c1c; font-weight: 700;}
+.mini-items .buy { color:#2563eb; font-weight: 700;}
 .mini-items .vendor{ color:#4b5563; }
 .mini-items .w-item{ width:28%; }
 .mini-items .w-qty { width:7%; }
@@ -488,8 +488,14 @@ body {
 
 /* 본문 4,5열 오른쪽 정렬 + 6열 폰트 */
 .form-table.table-list > tbody > tr > td:nth-child(4),
-.form-table.table-list > tbody > tr > td:nth-child(5){ text-align: right; }
-.form-table.table-list > tbody > tr > td:nth-child(6){ font-size: 13px; }
+.form-table.table-list > tbody > tr > td:nth-child(5),
+.form-table.table-list > tbody > tr > td:nth-child(6){
+  text-align: right;
+}
+.form-table.table-list > tbody > tr > td:nth-child(6),
+.form-table.table-list > tbody > tr > td:nth-child(7){
+  font-size: 13px;
+}
 
 /* 체크박스 칼럼 */
 .form-table.table-list thead th:first-child{ width:40px; text-align:center; }
