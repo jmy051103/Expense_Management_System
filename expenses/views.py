@@ -1,29 +1,31 @@
 # expenses/views.py
 # expenses/views.py (top)
 from decimal import Decimal, InvalidOperation
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.views.decorators.http import require_POST
-from django.db import transaction
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.db.models import F
-from django.core.paginator import Paginator
+
+import datetime
 import io
-from PIL import Image as PILImage
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
 from django.core.files.storage import default_storage
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import F
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
+
+from PIL import Image as PILImage
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image as XLImage
+from openpyxl.styles import Alignment, Border, Font, NamedStyle, PatternFill, Side
+
 from .forms import ExpenseReportForm, ExpenseItemFormSet, ContractForm
 from .models import ExpenseReport, Contract, ContractImage, ContractItem
-from django.http import HttpResponse
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font, PatternFill, Border, Side, NamedStyle
-from openpyxl.drawing.image import Image as XLImage
-from decimal import Decimal
-from django.db.models import F
-import datetime
-from django.utils.http import url_has_allowed_host_and_scheme
 
 
 def _open_pil_from_field(file_field):
