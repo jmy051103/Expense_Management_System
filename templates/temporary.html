@@ -208,16 +208,16 @@
                       <a class="btn light" href="{% url 'contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
                     {% endif %}
 
-                    {# 품의요청: 관리자/실장/사장/슈퍼 또는 직원(본인)만 #}
+                    {# 결재요청: 관리자/실장/사장/슈퍼 또는 직원(본인)만 #}
                     {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
                       <form method="post" action="{% url 'contract_submit' c.id %}" style="display:inline"
-                            onsubmit="event.stopPropagation(); return confirm('품의요청으로 전송하시겠습니까?');">
+                            onsubmit="event.stopPropagation(); return confirm('결재요청으로 전송하시겠습니까?');">
                         {% csrf_token %}
                         <button type="submit" class="btn primary">결재요청</button>
                       </form>
                     {% elif acc == '직원모드' and c.writer_id == request.user.id %}
                       <form method="post" action="{% url 'contract_submit' c.id %}" style="display:inline"
-                            onsubmit="event.stopPropagation(); return confirm('품의요청으로 전송하시겠습니까?');">
+                            onsubmit="event.stopPropagation(); return confirm('결재요청으로 전송하시겠습니까?');">
                         {% csrf_token %}
                         <button type="submit" class="btn primary">결재요청</button>
                       </form>
