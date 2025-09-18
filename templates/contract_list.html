@@ -186,9 +186,11 @@
                     <td class="meta meta-cust" rowspan="{{ rows }}">
                       <div class="cust">{{ c.customer_company|default:c.title }}</div>
                       <div class="owner">
-                        {% if c.sales_owner %}
-                          {{ c.sales_owner.first_name|default:c.sales_owner.username }}
-                        {% else %}-{% endif %}
+                        <span class="cust-manager"
+                              data-raw="{{ c.customer_manager|default_if_none:'' }}"
+                              title="{{ c.customer_phone }}{% if c.customer_phone and c.customer_email %} · {% endif %}{{ c.customer_email }}">
+                          {{ c.customer_manager|default:"-" }}
+                        </span>
                       </div>
                     </td>
 
@@ -576,5 +578,23 @@
     });
   </script>
 
+
+  <script>
+    // 담당자 값이 숫자(예: 연락처 ID)면 화면엔 '-'로 표시
+    (function(){
+      const els = document.querySelectorAll('.cust-manager');
+      els.forEach(el => {
+        const raw = (el.dataset.raw || '').trim();
+        if (!raw) {
+          el.textContent = '-';
+          return;
+        }
+        // 순수 숫자면 숨김 처리
+        if (/^\d+$/.test(raw)) {
+          el.textContent = '-';
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
