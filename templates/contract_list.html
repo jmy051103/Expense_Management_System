@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-18-02">
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-18-04">
 </head>
 <body>
 
@@ -576,25 +576,6 @@
       // 현재 필터 유지(querystring은 이미 href에 들어있음). 이동!
       window.location.href = base.toString();
     });
-  </script>
-
-
-  <script>
-    // 담당자 값이 숫자(예: 연락처 ID)면 화면엔 '-'로 표시
-    (function(){
-      const els = document.querySelectorAll('.cust-manager');
-      els.forEach(el => {
-        const raw = (el.dataset.raw || '').trim();
-        if (!raw) {
-          el.textContent = '-';
-          return;
-        }
-        // 순수 숫자면 숨김 처리
-        if (/^\d+$/.test(raw)) {
-          el.textContent = '-';
-        }
-      });
-    })();
   </script>
 </body>
 </html>

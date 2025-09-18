@@ -177,7 +177,7 @@
                     <select id="customer_manager" class="sel" name="customer_manager">
                       <option value="">선택</option>
                       {% for m in customer_managers %}
-                        <option value="{{ m.id }}">{{ m.name }}</option>
+                        <option value="{{ m.name }}">{{ m.name }}</option>
                       {% endfor %}
                     </select>
                     <div class="help-row">*회사를 선택하면 담당자 정보를 선택할 수 있습니다</div>
@@ -812,8 +812,11 @@
       managerSel.addEventListener('change', function(){
         const opt = this.selectedOptions[0];
         if (!opt) return;
-        phoneInput.value = opt.dataset.phone || '';
-        emailInput.value = opt.dataset.email || '';
+        // 🎯 dataset이 없으면 저장된 CURRENT_* 값으로 폴백
+        const phone = (opt.dataset && opt.dataset.phone) ? opt.dataset.phone : (window.CURRENT_PHONE || '');
+        const email = (opt.dataset && opt.dataset.email) ? opt.dataset.email : (window.CURRENT_EMAIL || '');
+        phoneInput.value = phone;
+        emailInput.value = email;
       });
     }
 
@@ -838,7 +841,7 @@
 
           contacts.forEach(c => {
             const opt = document.createElement('option');
-            opt.value = c.id;
+            opt.value = c.name;
             // 서버가 display를 내려주면 그대로 쓰고, 없으면 "이름 / 부서" 구성
             opt.textContent = (c.display && c.display.trim())
               ? c.display
@@ -984,6 +987,44 @@
   };
 })();
 </script>
+
+<script>
+  // 현재 페이지가 수정 화면인지 + 저장된 값들
+  window.IS_EDIT         = "{{ is_edit|yesno:'true,false' }}" === "true";
+  window.CURRENT_MANAGER = "{% if is_edit %}{{ contract.customer_manager|escapejs }}{% endif %}";
+  window.CURRENT_PHONE   = "{% if is_edit %}{{ contract.customer_phone|escapejs }}{% endif %}";
+  window.CURRENT_EMAIL   = "{% if is_edit %}{{ contract.customer_email|escapejs }}{% endif %}";
+
+  // 수정 화면이면, 담당자 셀렉트에 현재 저장된 값을 "임시 옵션"으로 넣고 선택 상태로 표시
+  (function(){
+    const managerSel = document.getElementById('customer_manager');
+    const phoneInput  = document.querySelector('input[name="customer_phone"]');
+    const emailInput  = document.querySelector('input[name="customer_email"]');
+    if (!managerSel) return;
+
+    if (window.IS_EDIT && window.CURRENT_MANAGER) {
+      const found = Array.from(managerSel.options).find(o => o.value === window.CURRENT_MANAGER);
+      if (found) {
+        // 이미 옵션이 있으면 선택 + dataset 보정(없을 수도 있으니까)
+        if (!found.dataset.phone) found.dataset.phone = window.CURRENT_PHONE || '';
+        if (!found.dataset.email) found.dataset.email = window.CURRENT_EMAIL || '';
+        managerSel.value = window.CURRENT_MANAGER;
+      } else {
+        // 옵션이 없으면 임시 옵션 생성 + dataset 포함
+        const opt = document.createElement('option');
+        opt.value = window.CURRENT_MANAGER;
+        opt.textContent = window.CURRENT_MANAGER;
+        opt.dataset.phone = window.CURRENT_PHONE || '';
+        opt.dataset.email = window.CURRENT_EMAIL || '';
+        opt.selected = true;
+        managerSel.appendChild(opt);
+      }
+      // 🔒 인풋 값도 확실히 채워 넣기
+      phoneInput.value = window.CURRENT_PHONE || '';
+      emailInput.value = window.CURRENT_EMAIL || '';
+    }
+  })();
+</script>
+
 </body>
 </html>
-

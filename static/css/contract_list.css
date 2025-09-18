@@ -420,7 +420,7 @@ body {
 /* 품목 테이블 아래 특이사항 표시 */
 .special-note{
   margin-top:6px; padding:8px 10px; border-top:1px dashed var(--line);
-  background:#fafafa; font-size:12px; color:#374151; white-space:pre-wrap; word-break:break-word;
+  background:#fafafa; font-size:12px; color:#374151; white-space:pre-wrap; word-break:break-word; text-align:left;
 }
 .special-note strong{ color:#111; }
 

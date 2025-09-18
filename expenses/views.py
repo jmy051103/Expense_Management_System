@@ -404,6 +404,7 @@ def contract_list(request):
         .order_by("first_name", "username")
     )
 
+    # ✅ 기본 쿼리셋은 먼저 만들기
     qs = (
         Contract.objects
         .select_related("writer", "sales_owner")
@@ -420,7 +421,7 @@ def contract_list(request):
     date_to     = (request.GET.get("date_to") or "").strip()
     q_customer  = (request.GET.get("q_customer") or "").strip()
     q_vendor    = (request.GET.get("q_vendor") or "").strip()
-    owner_id    = (request.GET.get("owner") or "").strip()
+    owner_id    = (request.GET.get("owner") or "").strip()   # 작성자 드롭다운 값(User.id)
     q_item      = (request.GET.get("q_item") or "").strip()
     contract_no = (request.GET.get("contract_no") or "").strip()
     status      = (request.GET.get("status") or "").strip()
@@ -434,7 +435,11 @@ def contract_list(request):
     if q_vendor:
         qs = qs.filter(items__vendor__icontains=q_vendor).distinct()
     if owner_id:
-        qs = qs.filter(sales_owner_id=owner_id)
+        # ✅ 작성자(id)로 필터
+        try:
+            qs = qs.filter(writer_id=int(owner_id))
+        except (TypeError, ValueError):
+            pass
     if q_item:
         qs = qs.filter(items__name__icontains=q_item).distinct()
     if contract_no:
@@ -492,8 +497,17 @@ def contract_export(request):
     - 체크된 행이 있으면 ?ids=1,2,3 만 내보냄
     - 없으면 현재 검색필터가 적용된 전체를 내보냄
     - 이익금액/이익율은 품목 합계로 즉석 계산
-    - 첫 번째 이미지(thumb→medium→original) 썸네일 삽입
+    - 사진: 여러 장이면 모두 삽입(세로 병합된 '사진' 칸에 세로로 쌓음)
+    - 한 계약에 품목이 여러 개면: 계약 공통 칼럼은 세로 병합, 품목/수량 등만 행별 기재
     """
+    from decimal import Decimal
+    import io, datetime
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side, NamedStyle
+    from openpyxl.drawing.image import Image as XLImage
+    from django.http import HttpResponse
+    from django.db.models import F
+
     # 기본 쿼리 (contract_list와 동일 정렬)
     qs = (
         Contract.objects
@@ -507,7 +521,6 @@ def contract_export(request):
     )
 
     # ===== 선택된 id 우선 처리 =====
-    # ids=1,2,3 또는 ids=1&ids=2 같은 형태 모두 허용
     raw_ids = []
     raw_ids += request.GET.getlist("ids")
     ids_csv = request.GET.get("ids", "")
@@ -522,8 +535,7 @@ def contract_export(request):
     if ids:
         qs = qs.filter(id__in=ids)
 
-    # ===== 검색/필터 (선택 id가 없을 때 전체 필터 적용) =====
-    # 선택이 있어도 필터가 같이 들어오면 교집합으로 동작해도 무방합니다.
+    # ===== 검색/필터 =====
     date_from   = (request.GET.get("date_from") or "").strip()
     date_to     = (request.GET.get("date_to") or "").strip()
     q_customer  = (request.GET.get("q_customer") or "").strip()
@@ -560,23 +572,21 @@ def contract_export(request):
     thin = Side(style="thin", color=line_color)
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    existing_style_names = {
-        (s if isinstance(s, str) else getattr(s, "name", str(s)))
-        for s in wb.named_styles
-    }
+    # 돈 서식
+    existing_style_names = {getattr(s, "name", str(s)) for s in wb.named_styles}
     if "krw" not in existing_style_names:
         money = NamedStyle(name="krw")
         money.number_format = '#,##0"원"'
         try:
             wb.add_named_style(money)
         except ValueError:
-            # 같은 이름이 이미 있다면(일부 버전에서 예외), 그냥 무시
             pass
 
     center = Alignment(horizontal="center", vertical="center", wrap_text=True)
     left   = Alignment(horizontal="left", vertical="center", wrap_text=True)
     right  = Alignment(horizontal="right", vertical="center")
 
+    # A~I: 계약 공통 / J~Q: 품목 / R: 사진
     headers = [
         "계약번호","상태","매출처","담당자",
         "작성자","작성일","마감월",
@@ -595,22 +605,44 @@ def contract_export(request):
         c.border = border
     ws.row_dimensions[1].height = 22
 
-    widths = [13,10,18,12,12,11,10,13,9,18,14,8,12,13,12,13,14,10]
+    widths = [13,10,18,12,12,11,10,13,9,28,16,9,13,14,13,14,16,12]
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[ws.cell(row=1, column=i).column_letter].width = w
 
-    def add_image(row, col, pil_img):
-        if not pil_img:
+    # PIL 로더
+    def _open_pil_from_field(f):
+        try:
+            if not f:
+                return None
+            f.open("rb")
+            from PIL import Image as PILImage
+            return PILImage.open(f).copy()
+        except Exception:
+            return None
+        finally:
+            try:
+                f.close()
+            except Exception:
+                pass
+
+    def add_images_merged(top_row, bottom_row, col_letter, pil_list):
+        """세로 병합된 셀에 이미지를 여러 장 세로로 배치"""
+        if not pil_list:
             return
-        img = pil_img.convert("RGB")
-        img.thumbnail((64, 64))
-        bio = io.BytesIO()
-        img.save(bio, format="PNG")
-        bio.seek(0)
-        xlimg = XLImage(bio)
-        anchor = f"{ws.cell(row=row, column=col).column_letter}{row}"
-        ws.add_image(xlimg, anchor)
-        ws.row_dimensions[row].height = max(ws.row_dimensions[row].height or 15, 52)
+        # 행 높이 조금 넉넉히 잡기 (원본 그대로 쓰면 150~200px 권장)
+        rows = list(range(top_row, bottom_row + 1))
+        for r in rows:
+            ws.row_dimensions[r].height = 120  # 행 높이 크게 조정
+
+        for pil in pil_list:
+            img = pil.convert("RGB")
+            # 🔽 여기서 크기를 줄이지 않거나, 더 크게 지정
+            img.thumbnail((200, 200))   # 필요에 맞게 조정
+            bio = io.BytesIO()
+            img.save(bio, format="PNG")
+            bio.seek(0)
+            xlimg = XLImage(bio)
+            ws.add_image(xlimg, f"{col_letter}{top_row}")
 
     row = 2
     for c in qs:
@@ -619,49 +651,69 @@ def contract_export(request):
         buy_sum  = Decimal("0")
         items_all = list(c.items.all())
         for it in items_all:
-            sell = Decimal(it.sell_total or 0)
-            buy  = Decimal(it.buy_total or 0)
-            sell_sum += sell
-            buy_sum  += buy
+            sell_sum += Decimal(it.sell_total or 0)
+            buy_sum  += Decimal(it.buy_total or 0)
         profit = sell_sum - buy_sum
         margin_rate = (profit / sell_sum * Decimal("100")) if sell_sum > 0 else None
 
-        # 대표 이미지(첫 장)
-        pil = None
+        # 이미지 전부 수집(thumb → medium → original 우선순위)
+        pil_list = []
         if c.images.exists():
-            ci = c.images.first()
-            for field in (getattr(ci, "thumb", None), getattr(ci, "medium", None), getattr(ci, "original", None)):
-                pil = _open_pil_from_field(field)
-                if pil:
-                    break
+            for ci in c.images.all():
+                for field in (getattr(ci, "thumb", None), getattr(ci, "medium", None), getattr(ci, "original", None)):
+                    pil = _open_pil_from_field(field)
+                    if pil:
+                        pil_list.append(pil)
+                        break
 
-        # 품목이 없으면 빈 한 줄로라도 출력
+        # 품목이 없으면 빈 한 줄 보장
         items = items_all or [None]
+        start_row = row
         for idx, it in enumerate(items):
-            values = [
-                (c.contract_no or c.id),
-                c.get_status_display(),
-                (c.customer_company or c.title or ""),
-                (c.sales_owner.first_name or c.sales_owner.username) if c.sales_owner else "",
-                (c.writer.first_name or c.writer.username) if c.writer else "",
-                c.created_at.strftime("%Y-%m-%d") if c.created_at else "",
-                c.margin_month or "",
-                int(profit) if profit is not None else "",
-                (f"{margin_rate:.2f}%") if margin_rate is not None else "",
-                it.name if it else "",
-                it.spec if it else "",
-                it.qty if it else "",
-                it.sell_unit if it else "",
-                it.sell_total if it else "",
-                it.buy_unit if it else "",
-                it.buy_total if it else "",
-                it.vendor if it else "",
-                "",  # 사진(아래에서 삽입)
-            ]
-            ws.append(values)
+            # 첫 행엔 계약 공통 칼럼, 이후 행은 비워두고 나중에 세로 병합
+            if idx == 0:
+                base_vals = [
+                    (c.contract_no or c.id),
+                    c.get_status_display(),
+                    (c.customer_company or c.title or ""),
+                    (c.customer_manager or ""),
+                    (c.writer.first_name or c.writer.username) if c.writer_id else "",
+                    c.created_at.strftime("%Y-%m-%d") if c.created_at else "",
+                    c.margin_month or "",
+                    int(profit) if profit is not None else "",
+                    (f"{margin_rate:.2f}%") if margin_rate is not None else "",
+                ]
+                ws.append(
+                    base_vals + [
+                        it.name if it else "",
+                        it.spec if it else "",
+                        it.qty if it else "",
+                        it.sell_unit if it else "",
+                        it.sell_total if it else "",
+                        it.buy_unit if it else "",
+                        it.buy_total if it else "",
+                        it.vendor if it else "",
+                        "",  # 사진 (아래서 이미지 넣음)
+                    ]
+                )
+            else:
+                # 공통 칸은 빈 값(병합 예정), 품목 칸만 기록
+                ws.append(
+                    [""] * 9 + [
+                        it.name if it else "",
+                        it.spec if it else "",
+                        it.qty if it else "",
+                        it.sell_unit if it else "",
+                        it.sell_total if it else "",
+                        it.buy_unit if it else "",
+                        it.buy_total if it else "",
+                        it.vendor if it else "",
+                        "",
+                    ]
+                )
 
-            # 스타일 지정
-            for col in range(1, len(headers)+1):
+            # 스타일/정렬/테두리/금액 서식
+            for col in range(1, len(headers) + 1):
                 cell = ws.cell(row=row, column=col)
                 cell.border = border
                 if col in (1,2,3,4,5,6,7,10,11,17):
@@ -670,32 +722,36 @@ def contract_export(request):
                     cell.alignment = center
                 else:
                     cell.alignment = right
-                # 금액 서식
-                if col in (13,14,15,16,8):
-                    try:
-                        v = cell.value
-                        if isinstance(v, (int, float, Decimal)):
-                            cell.style = "krw"
-                            # Decimal은 openpyxl이 float로 처리하는 것이 안전
-                            if isinstance(v, Decimal):
-                                cell.value = float(v)
-                    except Exception:
-                        pass
-
-            # 사진은 첫 행에만
-            if idx == 0 and pil:
-                add_image(row, len(headers), pil)
-
+                if col in (13,14,15,16,8):  # 금액 계열 + 이익금액
+                    v = cell.value
+                    if isinstance(v, (int, float, Decimal)):
+                        cell.style = "krw"
+                        if isinstance(v, Decimal):
+                            cell.value = float(v)
             row += 1
+
+        end_row = row - 1
+
+        # 세로 병합: A~I(공통) + R(사진)
+        if end_row > start_row:
+            for col_idx in list(range(1, 10)) + [18]:
+                col_letter = ws.cell(row=1, column=col_idx).column_letter
+                ws.merge_cells(f"{col_letter}{start_row}:{col_letter}{end_row}")
+                # 병합 좌상단 정렬 유지
+                ws.cell(row=start_row, column=col_idx).alignment = left if col_idx in (1,2,3,4,5,6,7,10,11,17) else right
+
+        # 이미지 모두 삽입(병합된 사진 칼럼에)
+        if pil_list:
+            col_letter = ws.cell(row=1, column=18).column_letter  # 사진 열
+            add_images_merged(start_row, end_row, col_letter, pil_list)
 
     today = datetime.date.today().strftime("%Y%m%d")
     fname = f"contract_export_{today}.xlsx"
     mem = io.BytesIO()
     wb.save(mem)
     mem.seek(0)
-    resp = HttpResponse(
+    return HttpResponse(
         mem.getvalue(),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
     )
-    resp["Content-Disposition"] = f'attachment; filename="{fname}"'
-    return resp
