@@ -221,17 +221,6 @@ def add_contract(request):
     ctx = {"sales_people": sales_people, "customer_managers": []}
     return render(request, "add_contract.html", ctx)
 
-# @login_required
-# def contract_detail(request, pk):
-#     """계약 상세"""
-#     contract = get_object_or_404(
-#         Contract.objects
-#         .select_related("writer", "sales_owner")
-#         .prefetch_related("images"),
-#         pk=pk
-#     )
-#     return render(request, "contract_detail.html", {"contract": contract})
-
 @login_required
 def contract_detail(request, pk):
     """계약 상세"""
@@ -243,135 +232,31 @@ def contract_detail(request, pk):
     )
     return render(request, "contract_detail.html", {"contract": contract})
 
-
-
-# @login_required
-# def contract_edit(request, pk):
-#     contract = get_object_or_404(
-#         Contract.objects.select_related("writer", "sales_owner").prefetch_related("images"),
-#         pk=pk
-#     )
-
-#     # (선택) 작성자만 수정 가능
-#     if not (request.user.is_superuser or request.user == contract.writer):
-#         messages.error(request, "수정 권한이 없습니다. (작성자만 수정 가능)")
-#         return redirect("contract_detail", pk=contract.pk)
-
-#     sales_people = (
-#         User.objects.filter(is_active=True)
-#         .select_related("profile")
-#         .order_by("first_name", "username")
-#     )
-
-#     if request.method == "POST":
-#         is_submit = request.POST.get("submit_final") == "1"
-#         form = ContractForm(request.POST, instance=contract)
-#         if form.is_valid():
-#             with transaction.atomic():
-#                 # 1) 계약 저장
-#                 contract = form.save(commit=False)
-#                 contract.status = "submitted" if is_submit else "draft"
-#                 contract.title  = contract.customer_company or (contract.title or "무제 계약")
-#                 contract.save()
-
-#                 # 2) 이미지 삭제/추가
-#                 del_ids = request.POST.getlist("del_image_ids[]")
-#                 if del_ids:
-#                     ContractImage.objects.filter(contract=contract, id__in=del_ids).delete()
-
-#                 for f in request.FILES.getlist("images"):
-#                     ContractImage.objects.create(contract=contract, original=f)
-
-            
-#                 contract.items.all().delete()   # related_name='items'인 경우
-
-#                 # 새 항목 읽기
-#                 names = request.POST.getlist("item_name[]") or []
-#                 qtys  = request.POST.getlist("qty[]") or []
-#                 specs = request.POST.getlist("spec[]") or []
-#                 su    = request.POST.getlist("sell_unit[]") or []
-#                 st    = request.POST.getlist("sell_total[]") or []
-#                 bu    = request.POST.getlist("buy_unit[]") or []
-#                 bt    = request.POST.getlist("buy_total[]") or []
-#                 vend  = request.POST.getlist("vendor[]") or []
-#                 vat   = request.POST.getlist("item_vat_mode[]") or []
-
-#                 # 안전 인덱싱 helper (리스트 길이가 달라도 IndexError 방지)
-#                 def get(lst, i, default=""):
-#                     return lst[i] if i < len(lst) else default
-
-#                 for i in range(len(names)):
-#                     name = (get(names, i, "") or "").strip()
-#                     qty  = int(get(qtys, i, 0) or 0)
-#                     if not name or qty <= 0:
-#                         continue
-
-#                     sell_unit  = _d(get(su, i, 0))
-#                     buy_unit   = _d(get(bu, i, 0))
-#                     sell_total = _d(get(st, i, 0))
-#                     buy_total  = _d(get(bt, i, 0))
-
-#                     if qty and sell_unit: sell_total = (sell_unit * qty).quantize(Decimal("1."))
-#                     if qty and buy_unit:  buy_total  = (buy_unit  * qty).quantize(Decimal("1."))
-                    
-#                     ContractItem.objects.create(
-#                         contract=contract,
-#                         name=name,
-#                         qty=_i(get(qtys, i, 0)),
-#                         spec=get(specs, i, "") or "",
-#                         sell_unit=_d(get(su, i, 0)),
-#                         sell_total=_d(get(st, i, 0)),
-#                         buy_unit=_d(get(bu, i, 0)),
-#                         buy_total=_d(get(bt, i, 0)),
-#                         vendor=get(vend, i, "") or "",
-#                         vat_mode=(get(vat, i, "separate") or "separate"),
-#                     )
-
-#             return redirect("contract_detail", pk=contract.pk)
-
-#         # 폼 에러 → 다시 렌더
-#         ctx = {
-#             "sales_people": sales_people,
-#             "customer_managers": [],
-#             "form_errors": form.errors,
-#             "contract": contract,
-#             "is_edit": True,
-#         }
-#         return render(request, "add_contract.html", ctx)
-
-#     # GET
-#     ctx = {
-#         "sales_people": sales_people,
-#         "customer_managers": [],
-#         "contract": contract,
-#         "is_edit": True,
-#     }
-#     return render(request, "add_contract.html", ctx)
-
 @login_required
 def contract_edit(request, pk):
     contract = get_object_or_404(
         Contract.objects
         .select_related("writer", "sales_owner")
-        .prefetch_related("images", "items"),    # ← 품목/이미지 프리패치
+        .prefetch_related("images", "items"),
         pk=pk
     )
 
-    # 사용자가 보던 페이지로 돌아가기 위한 next 계산
-    next_url = (
-        request.POST.get("next")
-        or request.GET.get("next")
-        or request.META.get("HTTP_REFERER")
-        or reverse("contract_detail", args=[contract.pk])
-    )
+    # next 계산(생략 가능: 기존 그대로 사용)
+    if request.method == "POST":
+        raw_next = request.POST.get("next") or request.GET.get("next")
+    else:
+        raw_next = (
+            request.GET.get("next")
+            or request.META.get("HTTP_REFERER")
+            or reverse("contract_detail", args=[contract.pk])
+        )
+    next_url = raw_next
     if not url_has_allowed_host_and_scheme(
-        next_url,
-        allowed_hosts={request.get_host()},
-        require_https=request.is_secure(),
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
     ):
         next_url = reverse("contract_detail", args=[contract.pk])
 
-    # 작성자 또는 슈퍼만 수정 가능
+    # 권한
     if not (request.user.is_superuser or request.user == contract.writer):
         messages.error(request, "수정 권한이 없습니다. (작성자만 수정 가능)")
         return redirect(next_url)
@@ -387,23 +272,32 @@ def contract_edit(request, pk):
         form = ContractForm(request.POST, instance=contract)
         if form.is_valid():
             with transaction.atomic():
-                # 1) 본문 저장
+                # 기존 상태 보관
+                prev_status = contract.status
+
+                # 본문 저장
                 contract = form.save(commit=False)
-                contract.status = "submitted" if is_submit else "draft"
-                contract.title  = contract.customer_company or (contract.title or "무제 계약")
+                contract.title = contract.customer_company or (contract.title or "무제 계약")
+
+                # ✅ 상태 결정 로직 변경
+                if is_submit:
+                    # 사용자가 '결재요청' 버튼을 누른 경우에만 제출 상태로
+                    contract.status = "submitted"
+                else:
+                    # 그 외(일반 저장)는 기존 상태를 그대로 유지
+                    contract.status = prev_status
+
                 contract.save()
 
-                # 2) 이미지 삭제/추가
+                # 이미지 삭제/추가
                 del_ids = request.POST.getlist("del_image_ids[]")
                 if del_ids:
                     ContractImage.objects.filter(contract=contract, id__in=del_ids).delete()
-
                 for f in request.FILES.getlist("images"):
                     ContractImage.objects.create(contract=contract, original=f)
 
-                # 3) 품목 전체 갈아끼우기 (재계산 포함)
+                # 품목 재작성(서버 재계산)
                 contract.items.all().delete()
-
                 names = request.POST.getlist("item_name[]") or []
                 qtys  = request.POST.getlist("qty[]") or []
                 specs = request.POST.getlist("spec[]") or []
@@ -428,7 +322,6 @@ def contract_edit(request, pk):
                     sell_total = _d(get(st, i, 0))
                     buy_total  = _d(get(bt, i, 0))
 
-                    # 서버 재계산(단가×수량이 우선)
                     if qty and sell_unit:
                         sell_total = (sell_unit * qty).quantize(Decimal("1."))
                     if qty and buy_unit:
@@ -440,9 +333,9 @@ def contract_edit(request, pk):
                         qty=qty,
                         spec=get(specs, i, "") or "",
                         sell_unit=sell_unit,
-                        sell_total=sell_total,   # ← 계산된 값 반영
+                        sell_total=sell_total,
                         buy_unit=buy_unit,
-                        buy_total=buy_total,     # ← 계산된 값 반영
+                        buy_total=buy_total,
                         vendor=get(vend, i, "") or "",
                         vat_mode=(get(vat, i, "separate") or "separate"),
                     )
@@ -450,7 +343,7 @@ def contract_edit(request, pk):
             messages.success(request, "계약이 저장되었습니다.")
             return redirect(next_url)
 
-        # 폼 에러 → 다시 렌더 (next도 전달)
+        # 폼 에러
         ctx = {
             "sales_people": sales_people,
             "customer_managers": [],
@@ -461,11 +354,11 @@ def contract_edit(request, pk):
         }
         return render(request, "add_contract.html", ctx)
 
-    # GET: 수정 폼 렌더 (템플릿에서 프리필할 데이터 제공)
+    # GET
     ctx = {
         "sales_people": sales_people,
         "customer_managers": [],
-        "contract": contract,  # ← add_contract.html에서 이 값으로 input 채우면 됨
+        "contract": contract,
         "is_edit": True,
         "next": next_url,
     }
