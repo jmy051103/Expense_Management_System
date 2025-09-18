@@ -11,9 +11,45 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import F
 from django.core.paginator import Paginator
-
+import io
+from PIL import Image as PILImage
+from django.core.files.storage import default_storage
 from .forms import ExpenseReportForm, ExpenseItemFormSet, ContractForm
 from .models import ExpenseReport, Contract, ContractImage, ContractItem
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill, Border, Side, NamedStyle
+from openpyxl.drawing.image import Image as XLImage
+from decimal import Decimal
+from django.db.models import F
+import datetime
+
+def _open_pil_from_field(file_field):
+    """
+    ImageField(thumb/medium/original)를 받아 Pillow Image로 열어 반환.
+    로컬/원격 스토리지 모두 대응.
+    """
+    if not file_field:
+        return None
+    try:
+        # 1) 파일 시스템 경로가 있으면 경로로 연다
+        path = getattr(file_field, "path", None)
+        if path:
+            return PILImage.open(path)
+    except Exception:
+        pass
+
+    # 2) 원격 스토리지 등: storage.open으로 바이너리 열기
+    try:
+        name = getattr(file_field, "name", None)
+        if not name:
+            return None
+        with default_storage.open(name, "rb") as f:
+            bio = io.BytesIO(f.read())
+            bio.seek(0)
+            return PILImage.open(bio)
+    except Exception:
+        return None
 
 def _is_approver(user) -> bool:
     """approver 그룹 또는 superuser라면 True"""
@@ -405,3 +441,177 @@ def _i(v):
         return int(_d(v))
     except Exception:
         return 0
+    
+
+@login_required
+def contract_export(request):
+    # === contract_list와 동일한 베이스 쿼리 ===
+    qs = (
+        Contract.objects
+        .select_related("writer", "sales_owner")
+        .prefetch_related("images", "items")
+        .order_by(
+            F("collect_invoice_date").desc(nulls_last=True),
+            "-created_at",
+            "-id",
+        )
+    )
+
+    # 동일 필터 적용
+    date_from   = (request.GET.get("date_from") or "").strip()
+    date_to     = (request.GET.get("date_to") or "").strip()
+    q_customer  = (request.GET.get("q_customer") or "").strip()
+    q_vendor    = (request.GET.get("q_vendor") or "").strip()
+    owner_id    = (request.GET.get("owner") or "").strip()
+    q_item      = (request.GET.get("q_item") or "").strip()
+    contract_no = (request.GET.get("contract_no") or "").strip()
+    status      = (request.GET.get("status") or "").strip()
+
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+    if q_customer:
+        qs = qs.filter(customer_company__icontains=q_customer)
+    if q_vendor:
+        qs = qs.filter(items__vendor__icontains=q_vendor).distinct()
+    if owner_id:
+        qs = qs.filter(sales_owner_id=owner_id)
+    if q_item:
+        qs = qs.filter(items__name__icontains=q_item).distinct()
+    if contract_no:
+        qs = qs.filter(contract_no__icontains=contract_no)
+    if status:
+        qs = qs.filter(status=status)
+
+    # === 워크북 ===
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "계약목록"
+
+    # 헤더 스타일(매입처 화면과 같은 톤)
+    header_fill = PatternFill("solid", fgColor="7EA0B8")
+    line_color = "6F8EA6"
+    thin = Side(style="thin", color=line_color)
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    money = NamedStyle(name="krw")
+    money.number_format = '#,##0"원"'
+    if "krw" not in wb.named_styles:
+        wb.add_named_style(money)
+
+    center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left   = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    right  = Alignment(horizontal="right", vertical="center")
+
+    # 컬럼 정의 (규격/사진 포함)
+    headers = [
+        "계약번호","상태","매출처","담당자",
+        "작성자","작성일","마감월",
+        "이익금액","이익율",
+        "품목","규격","수량",
+        "매출단가","매출금액",
+        "매입단가","매입금액",
+        "매입처",
+        "사진",   # 썸네일
+    ]
+    ws.append(headers)
+    for c in ws[1]:
+        c.font = Font(bold=True, color="FFFFFF")
+        c.fill = header_fill
+        c.alignment = center
+        c.border = border
+    ws.row_dimensions[1].height = 22
+
+    # 열 너비
+    widths = [13,10,18,12,12,11,10,13,9,18,14,8,12,13,12,13,14,10]
+    for i, w in enumerate(widths, start=1):
+        ws.column_dimensions[ws.cell(row=1, column=i).column_letter].width = w
+
+    def add_image(ws, row, col, pil_img):
+        if not pil_img: 
+            return
+        # 최대 64px로 썸네일링
+        img = pil_img.convert("RGB")
+        img.thumbnail((64, 64))
+        bio = io.BytesIO()
+        img.save(bio, format="PNG")
+        bio.seek(0)
+        xlimg = XLImage(bio)
+        anchor = f"{ws.cell(row=row, column=col).column_letter}{row}"
+        ws.add_image(xlimg, anchor)
+        # 행 높이 조금 키움
+        ws.row_dimensions[row].height = max(ws.row_dimensions[row].height or 15, 52)
+
+    row = 2
+    for c in qs:
+        # 이미지(thumb → medium → original)
+        pil = None
+        if c.images.exists():
+            ci = c.images.first()
+            for field in (getattr(ci, "thumb", None), getattr(ci, "medium", None), getattr(ci, "original", None)):
+                pil = _open_pil_from_field(field)
+                if pil: break
+
+        items = list(c.items.all()) or [None]
+        for idx, it in enumerate(items):
+            values = [
+                (c.contract_no or c.id),
+                c.get_status_display(),
+                (c.customer_company or c.title or ""),
+                (c.sales_owner.first_name or c.sales_owner.username) if c.sales_owner else "",
+                (c.writer.first_name or c.writer.username) if c.writer else "",
+                c.created_at.strftime("%Y-%m-%d") if c.created_at else "",
+                c.margin_month or "",
+                c.profit if c.profit is not None else "",
+                f"{c.margin_rate:.2f}%" if c.margin_rate is not None else "",
+                it.name if it else "",
+                it.spec if it else "",
+                it.qty if it else "",
+                it.sell_unit if it else "",
+                it.sell_total if it else "",
+                it.buy_unit if it else "",
+                it.buy_total if it else "",
+                it.vendor if it else "",
+                "",  # 사진(아래에서 삽입)
+            ]
+            ws.append(values)
+
+            # 스타일
+            for col in range(1, len(headers) + 1):
+                cell = ws.cell(row=row, column=col)
+                cell.border = border
+                if col in (1,2,3,4,5,6,7,10,11,17):
+                    cell.alignment = left
+                elif col in (12,):
+                    cell.alignment = center
+                else:
+                    cell.alignment = right
+                # 금액 서식
+                if col in (13,14,15,16):
+                    try:
+                        # 숫자/Decimal만 KRW 서식
+                        if isinstance(cell.value, (int, float, Decimal)) or str(cell.value).replace(",", "").replace(".", "").isdigit():
+                            cell.style = "krw"
+                    except Exception:
+                        pass
+
+            # 사진은 계약의 첫 품목 행에만 넣자
+            if idx == 0 and pil:
+                add_image(ws, row, len(headers), pil)
+
+            row += 1
+
+    # 파일명
+    today = datetime.date.today().strftime("%Y%m%d")
+    fname = f"contract_export_{today}.xlsx"
+
+    bio = io.BytesIO()
+    wb.save(bio)
+    bio.seek(0)
+    resp = HttpResponse(
+        bio.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    resp["Content-Disposition"] = f'attachment; filename="{fname}"'
+    return resp

@@ -132,7 +132,7 @@
       <!-- 버튼들 -->
       <div class="toolbar-actions">
         <button class="btn gray" type="submit">검색하기</button>
-        <button class="btn gray" type="button">엑셀저장</button>
+        <a class="btn gray" href="{% url 'contract_export' %}?{% if qs %}{{ qs }}{% endif %}">엑셀저장</a>
         <a class="btn primary" href="{% url 'add_contract' %}">등록하기</a>
       </div>
     </form>
