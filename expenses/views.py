@@ -421,7 +421,7 @@ def contract_list(request):
     date_to     = (request.GET.get("date_to") or "").strip()
     q_customer  = (request.GET.get("q_customer") or "").strip()
     q_vendor    = (request.GET.get("q_vendor") or "").strip()
-    owner_id    = (request.GET.get("owner") or "").strip()   # 작성자 드롭다운 값(User.id)
+    owner_id    = (request.GET.get("owner") or "").strip()  
     q_item      = (request.GET.get("q_item") or "").strip()
     contract_no = (request.GET.get("contract_no") or "").strip()
     status      = (request.GET.get("status") or "").strip()
