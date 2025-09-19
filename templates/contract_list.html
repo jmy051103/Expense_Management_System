@@ -136,8 +136,15 @@
       <!-- 버튼들 -->
       <div class="toolbar-actions">
         <button class="btn gray" type="submit">검색하기</button>
-        <a id="btn-export" class="btn gray"
-          href="{% url 'expenses:contract_export' %}?{% if qs %}{{ qs }}{% endif %}">엑셀저장</a>
+
+        {# ⬇︎ 권한 있는 사람에게만 노출 #}
+        {% with acc=request.user.profile.access|default_if_none:"" %}
+          {% if request.user.is_superuser or acc == "사장모드" or acc == "실장모드" or acc == "관리자모드" %}
+            <a id="btn-export" class="btn gray"
+              href="{% url 'expenses:contract_export' %}?{% if qs %}{{ qs }}{% endif %}">엑셀저장</a>
+          {% endif %}
+        {% endwith %}
+
         <a class="btn primary" href="{% url 'expenses:add_contract' %}">등록하기</a>
       </div>
     </form>
