@@ -271,12 +271,30 @@
                       <small class="muted">{{ c.created_at|date:"Y-m-d" }}</small>
                     </td>
                     <td class="actions" rowspan="{{ rows }}">
-                      <a class="btn small" href="{% url 'expenses:contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
-                      <form method="post" action="{% url 'expenses:contract_delete' c.id %}"
-                            onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn small gray">삭제</button>
-                      </form>
+                      {% with acc=request.user.profile.access|default_if_none:"" %}
+                        {# 상위권한: 모두 수정/삭제 가능 #}
+                        {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
+                          <a class="btn small" href="{% url 'expenses:contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
+                          <form method="post" action="{% url 'expenses:contract_delete' c.id %}"
+                                onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');"
+                                style="display:inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn small gray">삭제</button>
+                          </form>
+
+                        {# 직원모드: 본인이 작성한 건만 수정/삭제 노출 #}
+                        {% elif acc == '직원모드' %}
+                          {% if c.writer_id == request.user.id %}
+                            <a class="btn small" href="{% url 'expenses:contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
+                            <form method="post" action="{% url 'expenses:contract_delete' c.id %}"
+                                  onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');"
+                                  style="display:inline">
+                              {% csrf_token %}
+                              <button type="submit" class="btn small gray">삭제</button>
+                            </form>
+                          {% endif %}
+                        {% endif %}
+                      {% endwith %}
                     </td>
 
                   </tr>
