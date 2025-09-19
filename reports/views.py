@@ -33,8 +33,14 @@ def monthly_sales_contract(request):
     )
     if q_customer:
         qs = qs.filter(contract__customer_company__icontains=q_customer)
+
+    # ✅ 담당자=작성자 기준으로 필터
     if owner_id:
-        qs = qs.filter(contract__sales_owner_id=owner_id)
+        try:
+            owner_id_int = int(owner_id)
+            qs = qs.filter(contract__writer_id=owner_id_int)
+        except (TypeError, ValueError):
+            pass
 
     daily = defaultdict(lambda: {"total": ZERO, "supply": ZERO, "vat": ZERO})
     month_total  = ZERO
@@ -50,7 +56,7 @@ def monthly_sales_contract(request):
             vat = supply * TEN
             total = supply + vat
         else:
-            vat   = ZERO                
+            vat   = ZERO
             total = supply
 
         daily[key]["supply"] += supply
@@ -105,13 +111,17 @@ def monthly_purchase_contract(request):
                 contract__created_at__month=month)
     )
     if q_customer:
-        # 매입쪽은 아이템의 vendor에도 걸어줌 (고객사명과 OR)
         qs = qs.filter(
             Q(contract__customer_company__icontains=q_customer) |
             Q(vendor__icontains=q_customer)
         )
+
+    # ✅ 담당자=작성자 기준으로 변경
     if owner_id:
-        qs = qs.filter(contract__sales_owner_id=owner_id)
+        try:
+            qs = qs.filter(contract__writer_id=int(owner_id))
+        except (TypeError, ValueError):
+            pass
 
     daily = defaultdict(lambda: {"total": ZERO, "supply": ZERO, "vat": ZERO})
     month_total = month_supply = month_vat = ZERO
@@ -124,7 +134,7 @@ def monthly_purchase_contract(request):
             vat = supply * TEN
             total = supply + vat
         else:
-            vat   = ZERO                  # 면세 등: 부가세 0
+            vat   = ZERO
             total = supply
 
         daily[day_key]["supply"] += supply
@@ -167,7 +177,6 @@ def margin_static(request):
     """
     today = timezone.localdate()
 
-    # 기본값: 이번 달 1일 ~ 오늘
     date_from = (request.GET.get("date_from") or "").strip()
     date_to   = (request.GET.get("date_to") or "").strip()
     if not date_from:
@@ -197,13 +206,17 @@ def margin_static(request):
 
     if q_customer:
         qs = qs.filter(customer_company__icontains=q_customer)
+
+    # ✅ 담당자=작성자 기준으로 변경
     if owner_id:
-        qs = qs.filter(sales_owner_id=owner_id)
+        try:
+            qs = qs.filter(writer_id=int(owner_id))
+        except (TypeError, ValueError):
+            pass
 
     rows = []
     total_sales = total_buy = total_margin = ZERO
 
-    # 평균 마진율 계산용
     rate_sum = ZERO
     rate_cnt = 0
 
@@ -214,13 +227,11 @@ def margin_static(request):
         sales = c.sales_amount or ZERO
         buy   = c.purchase_amount or ZERO
 
-        # 마진금액
         if has_profit_field and c.profit is not None:
             margin_amt = Decimal(c.profit)
         else:
             margin_amt = (sales - buy)
 
-        # 개별 계약 마진율
         if has_margin_field and c.margin_rate is not None:
             margin_rate = Decimal(c.margin_rate)
         else:
@@ -238,11 +249,9 @@ def margin_static(request):
         total_buy    += buy
         total_margin += margin_amt
 
-        # 평균용 누적 (유효한 값만)
         rate_sum += margin_rate
         rate_cnt += 1
 
-    # ✅ 합계행 마진율 = 개별 계약 마진율의 '평균'
     avg_rate = (rate_sum / rate_cnt) if rate_cnt else ZERO
 
     context = {
