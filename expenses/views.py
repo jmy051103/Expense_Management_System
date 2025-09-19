@@ -516,6 +516,11 @@ def contract_export(request):
     - 사진: 여러 장이면 모두 삽입(세로 병합된 '사진' 칸에 세로로 쌓음)
     - 한 계약에 품목이 여러 개면: 계약 공통 칼럼은 세로 병합, 품목/수량 등만 행별 기재
     """
+
+    acc = getattr(getattr(request.user, "profile", None), "access", "")
+    if not (request.user.is_superuser or acc in ("사장모드", "실장모드", "관리자모드")):
+        raise PermissionDenied("엑셀 내보내기 권한이 없습니다.")
+
     from decimal import Decimal
     import io, datetime
     from openpyxl import Workbook
