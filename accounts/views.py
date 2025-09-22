@@ -13,6 +13,8 @@ from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 
 # 대시보드 KPI 집계에 사용
 from expenses.models import ContractItem
@@ -254,6 +256,14 @@ def edit_account(request, user_id):
         if uform.is_valid() and pform.is_valid():
             uform.save()
             pform.save()
+
+            new_pw = (uform.cleaned_data.get("password1") or "").strip()
+            if new_pw:
+                target.set_password(new_pw)
+                target.save(update_fields=["password"])
+                if request.user.id == target.id:
+                    update_session_auth_hash(request, target)  # 본인 비번 변경 시 로그아웃 방지
+
             return redirect("accounts:view_profile")
         messages.error(request, "입력값을 확인해주세요.")
     else:
@@ -263,6 +273,8 @@ def edit_account(request, user_id):
     return render(request, "edit_account.html", {
         "uform": uform, "pform": pform, "target": target
     })
+
+
 
 
 # ---------------------
@@ -980,3 +992,4 @@ def delete_account(request, user_id: int):
     username = target.username
     target.delete()  # Profile는 OneToOne(CASCADE)라면 함께 삭제됩니다.
     return redirect("accounts:view_profile")
+

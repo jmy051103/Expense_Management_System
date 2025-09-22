@@ -3,6 +3,16 @@ from django.contrib.auth.models import User
 from .models import Profile
 
 class UserEditForm(forms.ModelForm):
+    password1 = forms.CharField(
+        label="새 비밀번호",
+        widget=forms.PasswordInput(attrs={"class": "inp", "placeholder": "새 비밀번호"}),
+        required=False,
+    )
+    password2 = forms.CharField(
+        label="새 비밀번호 확인",
+        widget=forms.PasswordInput(attrs={"class": "inp", "placeholder": "새 비밀번호 확인"}),
+        required=False,
+    )
     class Meta:
         model = User
         fields = ["username", "first_name", "email", "is_staff"]
