@@ -115,9 +115,7 @@
 
       <!-- ProfileEditForm: 드롭다운을 폼 choices로 렌더 -->
       <select name="role" id="{{ pform.role.id_for_label }}" required>
-        {% if not pform.role.value %}
-          <option value="" disabled selected hidden>직책</option>
-        {% endif %}
+        <option value="" disabled {% if not pform.role.value %}selected{% endif %}>직책</option>
         {% for val, label in pform.fields.role.choices %}
           <option value="{{ val }}" {% if pform.role.value == val %}selected{% endif %}>{{ label }}</option>
         {% endfor %}

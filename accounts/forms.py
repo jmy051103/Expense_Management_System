@@ -8,11 +8,6 @@ class UserEditForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={"class": "inp", "placeholder": "새 비밀번호"}),
         required=False,
     )
-    password2 = forms.CharField(
-        label="새 비밀번호 확인",
-        widget=forms.PasswordInput(attrs={"class": "inp", "placeholder": "새 비밀번호 확인"}),
-        required=False,
-    )
     class Meta:
         model = User
         fields = ["username", "first_name", "email", "is_staff"]
@@ -30,15 +25,15 @@ class UserEditForm(forms.ModelForm):
 
 class ProfileEditForm(forms.ModelForm):
     department = forms.ChoiceField(
-        choices=[("", "부서 선택")] + Profile.DEPT_CHOICES,
+        choices=Profile.DEPT_CHOICES,
         required=True
     )
     role = forms.ChoiceField(
-        choices=[("", "직책 선택")] + Profile.ROLE_CHOICES,
+        choices=Profile.ROLE_CHOICES,
         required=True
     )
     access = forms.ChoiceField(
-        choices=[("", "권한 선택")] + Profile.ACCESS_CHOICES,
+        choices=Profile.ACCESS_CHOICES,
         required=True
     )
 
