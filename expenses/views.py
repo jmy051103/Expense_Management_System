@@ -56,6 +56,22 @@ def _has_contract_permission(user, contract=None, action="view") -> bool:
     # view는 제한 없다고 가정
     return True
 
+def _pagination_block(page_obj, paginator, block_size=10):
+    cur = page_obj.number
+    num_pages = paginator.num_pages
+    block_idx = (cur - 1) // block_size
+    start_page = block_idx * block_size + 1
+    end_page = min(start_page + block_size - 1, num_pages)
+    prev_block = start_page - block_size if start_page > 1 else None
+    next_block = start_page + block_size if end_page < num_pages else None
+    return {
+        "start_page": start_page,
+        "end_page": end_page,
+        "prev_block": prev_block,
+        "next_block": next_block,
+        "num_pages": num_pages,
+    }
+
 def _open_pil_from_field(file_field):
     if not file_field:
         return None
@@ -481,6 +497,9 @@ def contract_list(request):
     qs_keep.pop("page", None)
     qs_without_page = qs_keep.urlencode()
 
+    block = _pagination_block(page_obj, paginator)
+    page_nums = range(block["start_page"], block["end_page"] + 1)
+
     return render(request, "contract_list.html", {
         "page_obj": page_obj,
         "contracts": page_obj,
@@ -488,6 +507,8 @@ def contract_list(request):
         "per_page": per_page,
         "qs": qs_without_page,
         "sales_people": sales_people,
+        **block,
+        "page_nums": page_nums,
     })
 
 def _d(v):

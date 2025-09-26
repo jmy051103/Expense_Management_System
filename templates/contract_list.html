@@ -311,41 +311,31 @@
       <!-- ✅ 숫자 페이지네이션 -->
       {% if page_obj %}
         <nav class="pagination" aria-label="페이지 이동">
+          {# ◀ 이전 10개 #}
           {% if prev_block %}
-            <a class="page-btn" href="?page={{ prev_block }}{% if qs %}&{{ qs }}{% endif %}" aria-label="이전 10페이지">«</a>
+            <a class="page-btn" href="?page={{ prev_block }}{% if qs %}&{{ qs }}{% endif %}" aria-label="이전 10페이지">‹</a>
           {% else %}
-            <span class="page-btn disabled">«</span>
+            <span class="page-btn disabled" aria-disabled="true">‹</span>
           {% endif %}
 
-          {% if page_obj.has_previous %}
-            <a class="page-btn" href="?page={{ page_obj.previous_page_number }}{% if qs %}&{{ qs }}{% endif %}" aria-label="이전 페이지">‹</a>
-          {% else %}
-            <span class="page-btn disabled">‹</span>
-          {% endif %}
-
-          {% for num in page_obj.paginator.page_range %}
-            {% if num >= start_page and num <= end_page %}
-              {% if num == page_obj.number %}
-                <span class="page current">{{ num }}</span>
-              {% else %}
-                <a class="page" href="?page={{ num }}{% if qs %}&{{ qs }}{% endif %}">{{ num }}</a>
-              {% endif %}
+          {# 1~10, 11~20 ... 현재 블록 숫자만 출력 #}
+          {% for num in page_nums %}
+            {% if num == page_obj.number %}
+              <span class="page current" aria-current="page">{{ num }}</span>
+            {% else %}
+              <a class="page" href="?page={{ num }}{% if qs %}&{{ qs }}{% endif %}">{{ num }}</a>
             {% endif %}
           {% endfor %}
 
-          {% if page_obj.has_next %}
-            <a class="page-btn" href="?page={{ page_obj.next_page_number }}{% if qs %}&{{ qs }}{% endif %}" aria-label="다음 페이지">›</a>
-          {% else %}
-            <span class="page-btn disabled">›</span>
-          {% endif %}
-
+          {# ▶ 다음 10개 #}
           {% if next_block %}
-            <a class="page-btn" href="?page={{ next_block }}{% if qs %}&{{ qs }}{% endif %}" aria-label="다음 10페이지">»</a>
+            <a class="page-btn" href="?page={{ next_block }}{% if qs %}&{{ qs }}{% endif %}" aria-label="다음 10페이지">›</a>
           {% else %}
-            <span class="page-btn disabled">»</span>
+            <span class="page-btn disabled" aria-disabled="true">›</span>
           {% endif %}
         </nav>
       {% endif %}
+
 
     </section>
   </main>
