@@ -351,6 +351,16 @@ def contract_temporary_list(request):
     qs_keep.pop("page", None)
     qs_without_page = qs_keep.urlencode()
 
+    BLOCK_SIZE = 10
+    cur = page_obj.number
+    num_pages = paginator.num_pages
+    block_index = (cur - 1) // BLOCK_SIZE
+    start_page = block_index * BLOCK_SIZE + 1
+    end_page = min(start_page + BLOCK_SIZE - 1, num_pages)
+
+    prev_block = start_page - BLOCK_SIZE if start_page > 1 else None
+    next_block = start_page + BLOCK_SIZE if end_page < num_pages else None
+
     return render(request, "temporary.html", {
         "contracts": page_obj,             # ← 반복에 그대로 사용
         "page_obj": page_obj,
@@ -359,6 +369,12 @@ def contract_temporary_list(request):
         "qs": qs_without_page,             # ← 엑셀/페이지 링크에서 재사용
         "sales_people": sales_people,      # ← 작성자 드롭다운
         "page_title": "임시저장 목록",
+
+        "start_page": start_page,
+        "end_page": end_page,
+        "prev_block": prev_block,
+        "next_block": next_block,
+        "num_pages": num_pages,
     })
 
 
