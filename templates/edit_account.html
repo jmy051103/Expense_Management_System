@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>계정 수정</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-10-11">
-  <link rel="stylesheet" href="{% static 'css/create_profile.css' %}?v=2025-09-10-11">
+  <link rel="stylesheet" href="{% static 'css/create_profile.css' %}?v=2025-09-26-03">
 </head>
 <body>
 
@@ -115,11 +115,14 @@
 
       <!-- ProfileEditForm: 드롭다운을 폼 choices로 렌더 -->
       <select name="role" id="{{ pform.role.id_for_label }}" required>
-        <option value="" disabled {% if not pform.role.value %}selected{% endif %}>직책</option>
+        {% if not pform.role.value %}
+          <option value="" disabled selected hidden>직책</option>
+        {% endif %}
         {% for val, label in pform.fields.role.choices %}
           <option value="{{ val }}" {% if pform.role.value == val %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
+
 
       <select name="department" id="{{ pform.department.id_for_label }}" required>
         <option value="" disabled {% if not pform.department.value %}selected{% endif %}>부서</option>
