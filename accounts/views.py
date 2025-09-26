@@ -74,6 +74,21 @@ def _redirect_by_status(status: str) -> str:
         "completed": "accounts:contract_approved",
     }.get(status, "accounts:dashboard")
 
+def _pagination_block(page_obj, paginator, block_size=10):
+    cur = page_obj.number
+    num_pages = paginator.num_pages
+    block_idx = (cur - 1) // block_size
+    start_page = block_idx * block_size + 1
+    end_page = min(start_page + block_size - 1, num_pages)
+    prev_block = start_page - block_size if start_page > 1 else None
+    next_block = start_page + block_size if end_page < num_pages else None
+    return {
+        "start_page": start_page,
+        "end_page": end_page,
+        "prev_block": prev_block,
+        "next_block": next_block,
+        "num_pages": num_pages,
+    }
 
 def can_manage_accounts(user):
     """'관리자모드' 또는 '사장모드'만 허용 (슈퍼유저는 항상 허용)"""
@@ -346,6 +361,8 @@ def contract_temporary_list(request):
     paginator = Paginator(qs, per_page)
     page_obj = paginator.get_page(request.GET.get("page") or 1)
 
+    block = _pagination_block(page_obj, paginator)
+
     # page 제외 쿼리스트링 (엑셀/페이지 링크에 재사용)
     qs_keep = request.GET.copy()
     qs_keep.pop("page", None)
@@ -370,11 +387,7 @@ def contract_temporary_list(request):
         "sales_people": sales_people,      # ← 작성자 드롭다운
         "page_title": "임시저장 목록",
 
-        "start_page": start_page,
-        "end_page": end_page,
-        "prev_block": prev_block,
-        "next_block": next_block,
-        "num_pages": num_pages,
+        **block,
     })
 
 
@@ -443,6 +456,7 @@ def contract_processing_list(request):
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page") or 1
     page_obj = paginator.get_page(page_number)
+    block = _pagination_block(page_obj, paginator)
 
     # page 파라미터만 제거한 쿼리스트링 (페이지 번호 링크/엑셀에 사용)
     qs_keep = request.GET.copy()
@@ -457,6 +471,7 @@ def contract_processing_list(request):
         "qs": qs_without_page,            # 엑셀/페이지 링크에 유지용
         "sales_people": sales_people,     # 작성자 셀렉트
         "page_title": "결재요청 목록",
+        **block,
     })
 
 
@@ -525,6 +540,7 @@ def contract_process_page(request):
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page") or 1
     page_obj = paginator.get_page(page_number)
+    block = _pagination_block(page_obj, paginator)
 
     # page 파라미터 제거한 쿼리스트링 (페이지 링크/엑셀 유지)
     qs_keep = request.GET.copy()
@@ -539,6 +555,7 @@ def contract_process_page(request):
         "qs": qs_without_page,            # 엑셀/페이지 링크 유지
         "sales_people": sales_people,     # 작성자 셀렉트
         "page_title": "결재처리중 목록",
+        **block,
     })
 
 
@@ -607,6 +624,7 @@ def contract_approved_list(request):
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page") or 1
     page_obj = paginator.get_page(page_number)
+    block = _pagination_block(page_obj, paginator)
 
     # page 파라미터 제외한 쿼리스트링 (페이지 링크/엑셀에서 사용)
     qs_keep = request.GET.copy()
@@ -621,6 +639,7 @@ def contract_approved_list(request):
         "qs": qs_without_page,
         "sales_people": sales_people,     # 작성자 셀렉트 옵션
         "page_title": "결재완료 목록",
+        **block,
     })
 
 
@@ -797,6 +816,7 @@ def item_list(request):
 
     paginator = Paginator(qs, per_page)
     page_obj = paginator.get_page(request.GET.get("page"))
+    block = _pagination_block(page_obj, paginator)
 
     # ⬇️ page 제외한 쿼리스트링
     qs_params = request.GET.copy()
@@ -810,6 +830,7 @@ def item_list(request):
         "per_page_options": per_page_options,  
         "per_page": per_page,            
         "qs": qs,
+        **block,
     })
 
 
