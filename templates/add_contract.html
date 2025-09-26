@@ -122,8 +122,13 @@
 
         <div class="form-head">
           <span class="strong">작성자 *</span>
-          <span class="pill">{{ request.user.first_name|default:request.user.username }}</span>
-
+          <span class="pill">
+            {% if is_edit and contract %}
+              {{ contract.writer.first_name|default:contract.writer.username }}
+            {% else %}
+              {{ request.user.first_name|default:request.user.username }}
+            {% endif %}
+          </span>
         </div>
 
         <div class="contents">

@@ -316,6 +316,7 @@ def contract_edit(request, pk):
         form = ContractForm(request.POST, instance=contract)
         if form.is_valid():
             with transaction.atomic():
+                original_writer_id = contract.writer_id
                 # 기존 상태 보관
                 prev_status = contract.status
 
@@ -325,6 +326,7 @@ def contract_edit(request, pk):
 
                 # 상태 결정: 결재요청일 때만 submitted, 아니면 기존 유지
                 contract.status = "submitted" if is_submit else prev_status
+                contract.writer_id = original_writer_id
                 contract.save()
 
                 # 이미지 삭제/추가
