@@ -467,11 +467,13 @@ body {
 .status-link:active{ text-decoration:none !important; color:black; }
 
 /* 이익금액(4열) / 이익율(5열) 숫자만 축소 — tbody만 */
-.form-table.table-list > tbody > tr > td:nth-child(4) span[data-krw],
-.form-table.table-list > tbody > tr > td:nth-child(4) .num-val,
-.form-table.table-list > tbody > tr > td:nth-child(5) .num-val{
-  font-size: 12px !important; line-height: 1.2;
+/* 이익금액(5열) / 이익율(6열) 숫자 크기 통일 */
+.form-table.table-list > tbody > tr > td:nth-child(5),
+.form-table.table-list > tbody > tr > td:nth-child(6){
+  font-size: 13px !important;  /* 이익율(6열)에 이미 13px 적용되어 있어 맞춤 */
+  line-height: 1.2;
 }
+
 
 /* 미니 테이블에서 '규격'(3번째)과 '매입처'(8번째) 우측 정렬 */
 .mini-items tbody td:nth-child(3),
