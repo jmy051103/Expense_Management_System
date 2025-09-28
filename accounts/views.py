@@ -625,6 +625,7 @@ def contract_approved_list(request):
     page_number = request.GET.get("page") or 1
     page_obj = paginator.get_page(page_number)
     block = _pagination_block(page_obj, paginator)
+    page_nums = range(block["start_page"], block["end_page"] + 1)
 
     # page 파라미터 제외한 쿼리스트링 (페이지 링크/엑셀에서 사용)
     qs_keep = request.GET.copy()
@@ -640,6 +641,7 @@ def contract_approved_list(request):
         "sales_people": sales_people,     # 작성자 셀렉트 옵션
         "page_title": "결재완료 목록",
         **block,
+        'page_nums': page_nums,
     })
 
 
@@ -823,6 +825,8 @@ def item_list(request):
     qs_params.pop('page', None)
     qs = qs_params.urlencode()
 
+    page_nums = range(block["start_page"], block["end_page"] + 1)
+
     return render(request, "item_list.html", {
         "items": page_obj.object_list,
         "page_obj": page_obj,
@@ -831,6 +835,7 @@ def item_list(request):
         "per_page": per_page,            
         "qs": qs,
         **block,
+        "page_nums": page_nums,
     })
 
 

@@ -86,6 +86,10 @@ def sales_partner_list(request):
     qs_without_page = qs_keep.urlencode()
     is_popup = request.GET.get("popup") == "1" 
 
+    block = _pagination_block(page_obj, paginator)
+    page_nums = range(block["start_page"], block["end_page"] + 1)
+
+
     return render(request, "sales_partner_list.html", {
         "page_obj": page_obj,
         "per_page_options": per_page_options,
@@ -94,6 +98,8 @@ def sales_partner_list(request):
         "q_contact": q_contact,
         "qs": qs_without_page,
         "is_popup": is_popup,
+        **block,
+        "page_nums": page_nums,
     })
 
 
@@ -150,9 +156,6 @@ def sales_partner_delete(request, pk):
         return redirect("partners:sales_partner_list")
     return redirect("partners:sales_partner_list")
 
-
-def purchase_partner_list(request):
-    return render(request, "purchase_partner_list.html")
 
 @login_required
 def api_purchase_detail(request, pk):
@@ -222,7 +225,11 @@ def purchase_partner_list(request):
     qs_keep = request.GET.copy()
     qs_keep.pop('page', None)
     qs_without_page = qs_keep.urlencode()
+
     is_popup = request.GET.get("popup") == "1"
+
+    block = _pagination_block(page_obj, paginator)
+    page_nums = range(block["start_page"], block["end_page"] + 1)
 
     return render(request, "purchase_partner_list.html", {
         "page_obj": page_obj,
@@ -232,6 +239,8 @@ def purchase_partner_list(request):
         "q_contact": q_contact,
         "qs": qs_without_page,
         "is_popup": is_popup,
+        **block,
+        "page_nums": page_nums,
     })
 
 
@@ -283,3 +292,19 @@ def purchase_partner_delete(request, pk):
         partner.delete()
         return redirect("partners:purchase_partner_list")
     return redirect("partners:purchase_partner_list")
+
+def _pagination_block(page_obj, paginator, block_size=10):
+    cur = page_obj.number
+    num_pages = paginator.num_pages
+    block_idx = (cur - 1) // block_size
+    start_page = block_idx * block_size + 1
+    end_page = min(start_page + block_size - 1, num_pages)
+    prev_block = start_page - block_size if start_page > 1 else None
+    next_block = start_page + block_size if end_page < num_pages else None
+    return {
+        "start_page": start_page,
+        "end_page": end_page,
+        "prev_block": prev_block,
+        "next_block": next_block,
+        "num_pages": num_pages,
+    }
