@@ -349,21 +349,22 @@
 
   <script>
   document.addEventListener("DOMContentLoaded", function(){
-    const KR = new Intl.NumberFormat('ko-KR');
+    // 정수면 소수 없음, 소수 있으면 최대 둘째 자리까지
+    const KR  = new Intl.NumberFormat('ko-KR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    const PCT = new Intl.NumberFormat('ko-KR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
     const toNum = v => {
       if (typeof v === 'number') return v;
       if (!v) return 0;
       return parseFloat(String(v).replace(/[,\s원]/g, '')) || 0;
     };
-    const fmtMoneyText = n => KR.format(Math.round(n)) + '원';
+    const fmtMoneyText = n => KR.format(Number(n || 0)) + '원';
 
     document.querySelectorAll('tr.row-block').forEach(blockTr => {
-      let sellTotalSum = 0;
-      let buyTotalSum  = 0;
+      let sellTotalSum = 0, buyTotalSum = 0;
 
       blockTr.querySelectorAll('.mini-items tbody tr').forEach(row => {
-        const tds = row.children;
-        if (!tds || tds.length < 7) return;
+        const tds = row.children; if (!tds || tds.length < 7) return;
 
         const sellTotalSpan = tds[4]?.querySelector('span[data-krw], span');
         const buyTotalSpan  = tds[6]?.querySelector('span[data-krw], span');
@@ -386,7 +387,8 @@
       const marginCell = rightCells.length >= 2 ? rightCells[1] : null;
 
       if (profitCell) profitCell.textContent = fmtMoneyText(profit);
-      if (marginCell) marginCell.textContent = Math.round(margin) + '%';
+      // 퍼센트도 정수면 소수 없음, 소수 있으면 최대 둘째 자리
+      if (marginCell) marginCell.textContent = PCT.format(margin) + '%';
     });
   });
   </script>

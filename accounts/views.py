@@ -1,6 +1,7 @@
 # accounts/views.py
 from decimal import Decimal, InvalidOperation
 from datetime import date
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -170,9 +171,9 @@ def dashboard(request):
     margin_amt = sales_total - buy_total
     margin_rate = float((margin_amt / sales_total * 100) if sales_total else 0)
 
-    monthly_kpis["sales_total"] = int(sales_total)
-    monthly_kpis["buy_total"] = int(buy_total)
-    monthly_kpis["margin_rate"] = margin_rate
+    monthly_kpis["sales_total"] = sales_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    monthly_kpis["buy_total"]   = buy_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    monthly_kpis["margin_rate"] = round(margin_rate, 2) 
     # ======================================
 
     return render(request, "dashboard.html", {

@@ -1,6 +1,6 @@
 # expenses/views.py
 # expenses/views.py (top)
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 import datetime
 import io
@@ -234,9 +234,9 @@ def add_contract(request):
 
                     # 서버에서 금액 재계산(신뢰성 향상): 단가/수량이 있으면 금액 덮어쓰기
                     if qty and sell_unit:
-                        sell_total = (sell_unit * qty).quantize(Decimal("1."))  # 반올림 규칙은 필요시 변경
+                        sell_total = (sell_unit * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)  # 반올림 규칙은 필요시 변경
                     if qty and buy_unit:
-                        buy_total  = (buy_unit * qty).quantize(Decimal("1."))
+                        buy_total  = (buy_unit * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
                     ContractItem.objects.create(
                         contract=contract,
@@ -363,9 +363,9 @@ def contract_edit(request, pk):
                     buy_total  = _d(get(bt, i, 0))
 
                     if qty and sell_unit:
-                        sell_total = (sell_unit * qty).quantize(Decimal("1."))
+                        sell_total = (sell_unit * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
                     if qty and buy_unit:
-                        buy_total  = (buy_unit  * qty).quantize(Decimal("1."))
+                        buy_total  = (buy_unit  * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
                     ContractItem.objects.create(
                         contract=contract,
@@ -620,7 +620,7 @@ def contract_export(request):
     existing_style_names = {getattr(s, "name", str(s)) for s in wb.named_styles}
     if "krw" not in existing_style_names:
         money = NamedStyle(name="krw")
-        money.number_format = '#,##0"원"'
+        money.number_format = '#,##0.00"원"'
         try:
             wb.add_named_style(money)
         except ValueError:
@@ -724,7 +724,7 @@ def contract_export(request):
                     (c.writer.first_name or c.writer.username) if c.writer_id else "",
                     c.created_at.strftime("%Y-%m-%d") if c.created_at else "",
                     c.margin_month or "",
-                    int(profit) if profit is not None else "",
+                    profit if profit is not None else "",
                     (f"{margin_rate:.2f}%") if margin_rate is not None else "",
                 ]
                 ws.append(
