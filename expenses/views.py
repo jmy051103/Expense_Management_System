@@ -444,9 +444,9 @@ def contract_list(request):
         .select_related("writer", "sales_owner")
         .prefetch_related("images", "items")
         .order_by(
-            F("collect_invoice_date").desc(nulls_last=True),
             "-created_at",
             "-id",
+            F("collect_invoice_date").desc(nulls_last=True),
         )
     )
 
@@ -558,9 +558,9 @@ def contract_export(request):
         .select_related("writer", "sales_owner")
         .prefetch_related("images", "items")
         .order_by(
-            F("collect_invoice_date").desc(nulls_last=True),
             "-created_at",
             "-id",
+            F("collect_invoice_date").desc(nulls_last=True),
         )
     )
 

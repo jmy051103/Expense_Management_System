@@ -316,9 +316,9 @@ def contract_temporary_list(request):
         .filter(status="draft")   # ★ 임시저장만
         .order_by(
             # collect_invoice_date 최신 우선 → 없으면 작성일 최신
-            F("collect_invoice_date").desc(nulls_last=True),
             "-created_at",
             "-id",
+            F("collect_invoice_date").desc(nulls_last=True),
         )
     )
 
@@ -412,9 +412,9 @@ def contract_processing_list(request):
         .prefetch_related("items")
         .filter(status="submitted")
         .order_by(
-            F("collect_invoice_date").desc(nulls_last=True),
             "-created_at",
             "-id",
+            F("collect_invoice_date").desc(nulls_last=True),
         )
     )
 
@@ -496,9 +496,9 @@ def contract_process_page(request):
         .prefetch_related("items")
         .filter(status="processing")
         .order_by(
-            F("collect_invoice_date").desc(nulls_last=True),
             "-created_at",
             "-id",
+            F("collect_invoice_date").desc(nulls_last=True),
         )
     )
 
@@ -580,9 +580,9 @@ def contract_approved_list(request):
         .prefetch_related("items")
         .filter(status="completed")
         .order_by(
-            F("collect_invoice_date").desc(nulls_last=True),
             "-created_at",
             "-id",
+            F("collect_invoice_date").desc(nulls_last=True),
         )
     )
 

@@ -31,7 +31,7 @@ CREATE TABLE `accounts_profile` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `accounts_profile_user_id_49a85d32_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -107,7 +107,7 @@ CREATE TABLE `auth_user` (
   `date_joined` datetime(6) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -202,7 +202,7 @@ CREATE TABLE `django_migrations` (
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `applied` datetime(6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -241,15 +241,15 @@ CREATE TABLE `expenses_contract` (
   `ship_phone` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `collect_invoice_date` date DEFAULT NULL,
   `collect_date` date DEFAULT NULL,
-  `collect_note` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `special_note` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `collect_note` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `special_note` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
   `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` datetime(6) NOT NULL,
+  `contract_no` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `year` int unsigned DEFAULT NULL,
+  `seq` int unsigned DEFAULT NULL,
   `sales_owner_id` int DEFAULT NULL,
   `writer_id` int NOT NULL,
-  `contract_no` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `seq` int unsigned DEFAULT NULL,
-  `year` int unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `contract_no` (`contract_no`),
   UNIQUE KEY `uniq_contract_year_seq` (`year`,`seq`),
@@ -258,9 +258,9 @@ CREATE TABLE `expenses_contract` (
   KEY `expenses_contract_year_d51e6c19` (`year`),
   CONSTRAINT `expenses_contract_sales_owner_id_4ad443ff_fk_auth_user_id` FOREIGN KEY (`sales_owner_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `expenses_contract_writer_id_a314a2d7_fk_auth_user_id` FOREIGN KEY (`writer_id`) REFERENCES `auth_user` (`id`),
-  CONSTRAINT `expenses_contract_chk_1` CHECK ((`seq` >= 0)),
-  CONSTRAINT `expenses_contract_chk_2` CHECK ((`year` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  CONSTRAINT `expenses_contract_chk_1` CHECK ((`year` >= 0)),
+  CONSTRAINT `expenses_contract_chk_2` CHECK ((`seq` >= 0))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -282,10 +282,10 @@ CREATE TABLE `expenses_contractimage` (
   `uploaded_at` datetime(6) NOT NULL,
   `contract_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `expenses_contractimage_filename_7f111f65` (`filename`),
   KEY `expenses_co_contrac_17bde4_idx` (`contract_id`,`uploaded_at`),
+  KEY `expenses_contractimage_filename_7f111f65` (`filename`),
   CONSTRAINT `expenses_contractima_contract_id_44a1a6fc_fk_expenses_` FOREIGN KEY (`contract_id`) REFERENCES `expenses_contract` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -300,9 +300,9 @@ CREATE TABLE `expenses_contractitem` (
   `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `qty` int unsigned NOT NULL,
   `spec` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sell_unit` decimal(14,2) NOT NULL,
+  `sell_unit` decimal(14,4) NOT NULL,
   `sell_total` decimal(14,2) NOT NULL,
-  `buy_unit` decimal(14,2) NOT NULL,
+  `buy_unit` decimal(14,4) NOT NULL,
   `buy_total` decimal(14,2) NOT NULL,
   `vendor` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `vat_mode` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -311,7 +311,7 @@ CREATE TABLE `expenses_contractitem` (
   KEY `expenses_contractite_contract_id_a65ba23d_fk_expenses_` (`contract_id`),
   CONSTRAINT `expenses_contractite_contract_id_a65ba23d_fk_expenses_` FOREIGN KEY (`contract_id`) REFERENCES `expenses_contract` (`id`),
   CONSTRAINT `expenses_contractitem_chk_1` CHECK ((`qty` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -374,7 +374,7 @@ CREATE TABLE `partners_purchasepartner` (
   `email` varchar(254) COLLATE utf8mb4_unicode_ci NOT NULL,
   `homepage` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -395,7 +395,7 @@ CREATE TABLE `partners_purchasepartner_contact` (
   PRIMARY KEY (`id`),
   KEY `partners_purchasepar_partner_id_5e2ee29d_fk_partners_` (`partner_id`),
   CONSTRAINT `partners_purchasepar_partner_id_5e2ee29d_fk_partners_` FOREIGN KEY (`partner_id`) REFERENCES `partners_purchasepartner` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -413,7 +413,7 @@ CREATE TABLE `partners_salespartner` (
   `address` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(254) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -434,7 +434,7 @@ CREATE TABLE `partners_salespartner_contact` (
   PRIMARY KEY (`id`),
   KEY `partners_salespartne_partner_id_ff61b43f_fk_partners_` (`partner_id`),
   CONSTRAINT `partners_salespartne_partner_id_ff61b43f_fk_partners_` FOREIGN KEY (`partner_id`) REFERENCES `partners_salespartner` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -446,4 +446,4 @@ CREATE TABLE `partners_salespartner_contact` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-09-20 23:16:01
+-- Dump completed on 2025-09-30  2:56:20

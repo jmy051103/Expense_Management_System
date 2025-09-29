@@ -95,7 +95,7 @@
   <div class="page">
     <!-- 상단 브레드크럼/액션 -->
     <div class="page-top">
-      <a href="javascript:history.back()" class="link-muted">← 이전으로</a>
+      <a href="{% url 'expenses:contract_list' %}" class="link-muted">← 계약목록으로</a>
       <h1 class="page-title">계약 상세</h1>
       <span class="badge status-{{ contract.status|default:'default' }}">
         {{ contract.get_status_display|default:"상태 미정" }}

@@ -76,8 +76,8 @@ class Contract(models.Model):
     # 회수/비고
     collect_invoice_date = models.DateField(null=True, blank=True)
     collect_date = models.DateField(null=True, blank=True)
-    collect_note = models.CharField(max_length=500, blank=True)
-    special_note = models.CharField(max_length=500, blank=True)
+    collect_note = models.TextField(blank=True)
+    special_note = models.TextField(blank=True)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -155,9 +155,9 @@ class ContractItem(models.Model):
     name       = models.CharField(max_length=200)
     qty        = models.PositiveIntegerField(default=0)
     spec       = models.CharField(max_length=100, blank=True)
-    sell_unit  = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    sell_unit  = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     sell_total = models.DecimalField(max_digits=14, decimal_places=2, default=0)
-    buy_unit   = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    buy_unit   = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     buy_total  = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     vendor     = models.CharField(max_length=200, blank=True)
     vat_mode   = models.CharField(max_length=10, choices=VAT_CHOICES, default="separate")

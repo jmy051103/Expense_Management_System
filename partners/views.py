@@ -16,6 +16,9 @@ from .forms import (
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+
 @login_required
 def api_partner_detail(request, pk):
     p = SalesPartner.objects.filter(pk=pk).prefetch_related("contacts").first()
@@ -126,17 +129,18 @@ def sales_partner_create(request):
 
 
 def sales_partner_edit(request, pk):
-    """매출처 수정 (자동 빈 줄 없음)"""
     partner = get_object_or_404(SalesPartner, pk=pk)
+    next_url = request.GET.get("next") or request.POST.get("next") or request.META.get("HTTP_REFERER")
 
     if request.method == "POST":
         form = SalesPartnerForm(request.POST, instance=partner)
-        formset = SalesPartnerContactFormSetEdit(
-            request.POST, instance=partner, prefix="contacts"
-        )
+        formset = SalesPartnerContactFormSetEdit(request.POST, instance=partner, prefix="contacts")
         if form.is_valid() and formset.is_valid():
             form.save()
             formset.save()
+
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                return redirect(next_url)
             return redirect("partners:sales_partner_list")
     else:
         form = SalesPartnerForm(instance=partner)
@@ -146,6 +150,7 @@ def sales_partner_edit(request, pk):
         "form": form,
         "formset": formset,
         "partner": partner,
+        "next": next_url,
     })
 
 
@@ -266,14 +271,19 @@ def purchase_partner_create(request):
 def purchase_partner_edit(request, pk):
     partner = get_object_or_404(PurchasePartner, pk=pk)
 
+    # GET 또는 POST에서 next를 받아둠 (POST 재전송 대비)
+    next_url = request.GET.get("next") or request.POST.get("next")
+
     if request.method == "POST":
         form = PurchasePartnerForm(request.POST, instance=partner)
-        formset = PurchasePartnerContactFormSetEdit(
-            request.POST, instance=partner, prefix="contacts"
-        )
+        formset = PurchasePartnerContactFormSetEdit(request.POST, instance=partner, prefix="contacts")
         if form.is_valid() and formset.is_valid():
             form.save()
             formset.save()
+
+            # next가 안전하면 거기로, 아니면 목록으로
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                return redirect(next_url)
             return redirect("partners:purchase_partner_list")
     else:
         form = PurchasePartnerForm(instance=partner)
@@ -283,6 +293,7 @@ def purchase_partner_edit(request, pk):
         "form": form,
         "formset": formset,
         "partner": partner,
+        "next": next_url,  # 템플릿에 넘겨 숨은필드로 보냄
     })
 
 
