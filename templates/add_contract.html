@@ -637,6 +637,17 @@
       tr.querySelector('[name="item_name[]"]')?.focus();
     }
 
+    function formatNumberView(el){
+      const raw = (el.dataset.raw ?? el.value ?? '').toString();
+      const n = toNum(raw);
+      el.value = raw === '' ? '' : new Intl.NumberFormat('ko-KR').format(n);
+    }
+
+    function stripCommasView(el){
+      const raw = (el.dataset.raw ?? el.value ?? '').toString().replace(/[,\s]/g,'');
+      el.value = raw;
+    }
+
     function bindRowEvents(tr){
       // 입력 중: data-raw만 갱신(원본 유지)
       tr.addEventListener('input', (e) => {
@@ -646,14 +657,21 @@
         recalcRow(tr);
       });
 
+      tr.addEventListener('focus', (e) => {
+        const t = e.target;
+        if (t.matches('[name="qty[]"],[name="sell_unit[]"],[name="buy_unit[]"]')) {
+          stripCommasView(t);
+        }
+      }, true);
+
       // 포커스 아웃: 단가/수량은 사용자가 입력한 값 그대로(소수 유지)
       tr.addEventListener('blur', (e) => {
         const t = e.target;
         if (t.matches('[name="qty[]"],[name="sell_unit[]"],[name="buy_unit[]"]')) {
-          const raw = t.dataset.raw ?? t.value;
-          t.value = raw; // 보기만 정리하고 원본 유지
+          formatNumberView(t);
         }
       }, true);
+
 
       // Enter 이동/신규행
       tr.addEventListener('keydown', (e) => {
@@ -668,7 +686,18 @@
       tr.querySelector('[data-up]')?.addEventListener('click', (e)=>{ e.stopPropagation(); moveRow(tr, -1); });
       tr.querySelector('[data-down]')?.addEventListener('click', (e)=>{ e.stopPropagation(); moveRow(tr, +1); });
       tr.querySelector('[data-remove]')?.addEventListener('click', (e)=>{ e.stopPropagation(); removeRow(e.currentTarget); });
+
+      ['qty[]','sell_unit[]','buy_unit[]'].forEach(name => {
+        const el = tr.querySelector(`[name="${name}"]`);
+        if (!el) return;
+        const raw = clean(el.dataset.raw ?? el.value);
+        el.dataset.raw = raw;
+        formatNumberView(el);  // ← 콤마로 보이게
+      });
+
     }
+
+    
 
     // 초기행 세팅 + 보정
     tbody.querySelectorAll('tr[data-row]').forEach(tr => {
