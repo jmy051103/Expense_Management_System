@@ -76,8 +76,8 @@ class Contract(models.Model):
     # 회수/비고
     collect_invoice_date = models.DateField(null=True, blank=True)
     collect_date = models.DateField(null=True, blank=True)
-    collect_note = models.CharField(max_length=999999, blank=True)
-    special_note = models.CharField(max_length=999999, blank=True)
+    collect_note = models.CharField(max_length=500, blank=True)
+    special_note = models.CharField(max_length=500, blank=True)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
     created_at = models.DateTimeField(auto_now_add=True)
