@@ -202,7 +202,7 @@ CREATE TABLE `django_migrations` (
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `applied` datetime(6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -300,9 +300,9 @@ CREATE TABLE `expenses_contractitem` (
   `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `qty` int unsigned NOT NULL,
   `spec` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sell_unit` decimal(14,4) NOT NULL,
+  `sell_unit` decimal(14,2) NOT NULL,
   `sell_total` decimal(14,2) NOT NULL,
-  `buy_unit` decimal(14,4) NOT NULL,
+  `buy_unit` decimal(14,2) NOT NULL,
   `buy_total` decimal(14,2) NOT NULL,
   `vendor` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `vat_mode` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -446,4 +446,4 @@ CREATE TABLE `partners_salespartner_contact` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-09-30  2:56:20
+-- Dump completed on 2025-09-30  3:38:43
