@@ -572,3 +572,30 @@ body {
   white-space: nowrap !important;
 }
 
+/* === 계약번호는 한 줄(줄바꿈 금지) === */
+.form-table.table-list > tbody td.meta.meta-no .mono{
+  white-space: nowrap;
+}
+
+/* === 헤더의 '계약번호 / 계약상태' 텍스트도 줄바꿈 금지 === */
+.form-table.table-list thead th:nth-child(2){
+  white-space: nowrap !important;
+}
+
+/* === 매출처/담당자(왼쪽 큰 테이블 3열) 가운데 정렬 === */
+.form-table.table-list > tbody > tr > td.meta.meta-cust{
+  text-align: center;
+}
+.form-table.table-list > tbody > tr > td.meta.meta-cust .cust,
+.form-table.table-list > tbody > tr > td.meta.meta-cust .owner{
+  text-align: center;
+}
+
+/* === 미니 테이블: '품목'은 왼쪽, '매입처'는 가운데 === */
+.mini-items tbody td:nth-child(1){   /* 품목 */
+  text-align: left !important;
+}
+.mini-items thead th:nth-child(8),   /* 매입처 헤더 */
+.mini-items tbody td:nth-child(8){   /* 매입처 본문 */
+  text-align: center !important;
+}
