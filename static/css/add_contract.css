@@ -170,7 +170,7 @@ body {
 
 /* container */
 .page-wrap {
-  max-width: 1200px;
+  max-width: min(1600px, calc(100vw - 64px));
   margin: 0 auto;
   padding: 40px 20px;
 }
@@ -278,13 +278,13 @@ table.form-table {
   border: 1px solid #d1d5db;
   background: #fff;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
 }
 .btn.primary {
   background: #111827;
   color: #fff;
   border-color: #111827;
-  font-size: 15px;
+  font-size: 14px;
 }
 .btn.warn {
   background: #f97316;
@@ -523,3 +523,12 @@ a.btn, a.btn:link, a.btn:visited, a.btn:hover, a.btn:active {
   text-decoration: none !important;
   color: black;
 }
+
+/* 품목관리 열: 내용 가운데 */
+#items-table td:last-child { text-align: center; }
+
+/* 내부 액션 묶음도 가운데 정렬 */
+#items-table .row-actions { 
+  justify-content: center !important; 
+}
+
