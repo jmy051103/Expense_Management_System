@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>임시저장 목록</title>
-  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-26-15">
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-30-09">
 </head>
 <body>
 
@@ -205,7 +205,6 @@
                         <th class="w-num hide-sm">매입단가</th>
                         <th class="w-num">매입금액</th>
                         <th class="w-vendor">매입처</th>
-                        <th class="w-vat">과세</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -230,12 +229,7 @@
                           </td>
 
                           <td class="txt vendor">{{ it.vendor }}</td>
-                          <td class="w-vat">
-                            {% if it.vat_mode == 'separate' %}VAT별도
-                            {% elif it.vat_mode == 'included' %}VAT포함
-                            {% elif it.vat_mode == 'exempt' %}면세
-                            {% else %}-{% endif %}
-                          </td>
+                          
                         </tr>
                       {% empty %}
                         <tr><td class="empty" colspan="9">품목 없음</td></tr>
