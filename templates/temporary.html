@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>임시저장 목록</title>
-  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-30-09">
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-30-11">
 </head>
 <body>
 
@@ -150,17 +150,18 @@
         <table class="form-table table-list">
           <thead>
             <tr>
+              <!-- ✅ 전체선택 -->
               <th style="width:40px">
                 <input type="checkbox" id="check-all">
               </th>
-              <th style="width:80px">계약번호<br><small class="muted">계약상태</small></th>
-              <th style="width:100px">매출처<br><small class="muted">담당자</small></th>
+              <th style="width:110px">계약번호<br><small class="muted">계약상태</small></th>
+              <th style="width:110px">매출처<br><small class="muted">담당자</small></th>
               <th>품목</th>
-              <th style="width:100px">이익금액</th>
-              <th style="width:80px">이익율</th>
-              <th style="width:80px">마감월</th>
-              <th style="width:80px">작성자<br><small class="muted">작성일</small></th>
-              <th style="width:100px">관리</th>
+              <th style="width:110px">이익금액</th>
+              <th style="width:70px">이익율</th>
+              <th style="width:70px">마감월</th>
+              <th style="width:70px">작성자<br><small class="muted">작성일</small></th>
+              <th style="width:80px">관리</th>
             </tr>
           </thead>
 
@@ -198,9 +199,9 @@
                   <table class="mini-items">
                     <thead>
                       <tr>
-                        <th class="w-item" style="width:210px">품목</th>
-                        <th class="w-qty" style="width:40px">수량</th>
-                        <th class="w-spec" style="width:100px">규격</th>
+                        <th class="w-item" style="width:200px">품목</th>
+                        <th class="w-qty" style="width:60px">수량</th>
+                        <th class="w-spec" style="width:90px">규격</th>
                         <th class="w-num hide-sm" style="width:70px">매출단가</th>
                         <th class="w-num" style="width:90px">매출금액</th>
                         <th class="w-num hide-sm" style="width:70px">매입단가</th>
@@ -264,9 +265,9 @@
                 <td class="actions">
                   {% with acc=request.user.profile.access|default_if_none:"" %}
                     {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
-                      <a class="btn light" href="{% url 'expenses:contract_edit' c.id %}">수정</a>
+                      <a class="btn small light" href="{% url 'expenses:contract_edit' c.id %}">수정</a>
                     {% elif acc == '직원모드' and c.writer_id == request.user.id %}
-                      <a class="btn light" href="{% url 'expenses:contract_edit' c.id %}">수정</a>
+                      <a class="btn small light" href="{% url 'expenses:contract_edit' c.id %}">수정</a>
                     {% endif %}
 
                     {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
