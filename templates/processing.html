@@ -349,7 +349,7 @@
 
   <script>
   document.addEventListener("DOMContentLoaded", function(){
-    // 정수면 소수 없음, 소수 있으면 최대 둘째 자리까지
+    // 정수면 소수 없음, 소수 있으면 최대 둘째자리
     const KR  = new Intl.NumberFormat('ko-KR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     const PCT = new Intl.NumberFormat('ko-KR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
@@ -358,17 +358,40 @@
       if (!v) return 0;
       return parseFloat(String(v).replace(/[,\s원]/g, '')) || 0;
     };
-    const fmtMoneyText = n => KR.format(Number(n || 0)) + '원';
+    const fmtMoneyText  = n => KR.format(Number(n || 0)) + '원'; // 금액(원 붙임)
+    const fmtNumberText = n => KR.format(Number(n || 0));        // 숫자(원 안 붙임)
 
+    // 행(계약)별로 품목 미니테이블을 훑어 매출/매입 합계 → 이익/이익률 표시
     document.querySelectorAll('tr.row-block').forEach(blockTr => {
       let sellTotalSum = 0, buyTotalSum = 0;
 
       blockTr.querySelectorAll('.mini-items tbody tr').forEach(row => {
-        const tds = row.children; if (!tds || tds.length < 7) return;
+        const tds = row.children; 
+        if (!tds || tds.length < 7) return;
 
-        const sellTotalSpan = tds[4]?.querySelector('span[data-krw], span');
-        const buyTotalSpan  = tds[6]?.querySelector('span[data-krw], span');
+        // ✅ 수량 / 매출단가 / 매입단가도 세 자리 콤마 표시
+        const qtyCell       = tds[1]; // 수량
+        const sellUnitSpan  = tds[3]?.querySelector('span[data-krw], span'); // 매출단가
+        const sellTotalSpan = tds[4]?.querySelector('span[data-krw], span'); // 매출금액
+        const buyUnitSpan   = tds[5]?.querySelector('span[data-krw], span'); // 매입단가
+        const buyTotalSpan  = tds[6]?.querySelector('span[data-krw], span'); // 매입금액
 
+        // 수량: 콤마만
+        if (qtyCell) {
+          const qty = toNum(qtyCell.textContent);
+          qtyCell.textContent = fmtNumberText(qty);
+        }
+        // 단가: 콤마만
+        if (sellUnitSpan) {
+          const v = toNum(sellUnitSpan.getAttribute('data-krw') || sellUnitSpan.textContent);
+          sellUnitSpan.textContent = fmtNumberText(v);
+        }
+        if (buyUnitSpan) {
+          const v = toNum(buyUnitSpan.getAttribute('data-krw') || buyUnitSpan.textContent);
+          buyUnitSpan.textContent = fmtNumberText(v);
+        }
+
+        // 금액: 콤마 + '원'
         const sellTotal = toNum(sellTotalSpan?.getAttribute('data-krw') || sellTotalSpan?.textContent);
         const buyTotal  = toNum(buyTotalSpan?.getAttribute('data-krw')  || buyTotalSpan?.textContent);
 
@@ -387,11 +410,11 @@
       const marginCell = rightCells.length >= 2 ? rightCells[1] : null;
 
       if (profitCell) profitCell.textContent = fmtMoneyText(profit);
-      // 퍼센트도 정수면 소수 없음, 소수 있으면 최대 둘째 자리
       if (marginCell) marginCell.textContent = PCT.format(margin) + '%';
     });
   });
   </script>
+
 
   <!-- ▶ 추가: 전용 달력(temporary.html과 동일) -->
   <script>
