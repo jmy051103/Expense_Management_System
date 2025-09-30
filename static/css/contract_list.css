@@ -572,10 +572,6 @@ body {
   white-space: nowrap !important;
 }
 
-/* === 계약번호는 한 줄(줄바꿈 금지) === */
-.form-table.table-list > tbody td.meta.meta-no .mono{
-  white-space: nowrap;
-}
 
 /* === 헤더의 '계약번호 / 계약상태' 텍스트도 줄바꿈 금지 === */
 .form-table.table-list thead th:nth-child(2){
