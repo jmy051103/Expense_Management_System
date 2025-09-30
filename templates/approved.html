@@ -146,125 +146,153 @@
       <div class="table-wrap">
         <table class="form-table table-list">
           <thead>
-          <tr>
-            <!-- ✅ 전체선택 -->
-            <th style="width:40px"><input type="checkbox" id="check-all"></th>
-            <th style="width:80px">계약번호<br><small class="muted">계약상태</small></th>
-            <th style="width:120px">매출처<br><small class="muted">담당자</small></th>
-            <th>품목</th>
-            <th style="width:80px">이익금액</th>
-            <th style="width:80px">이익율</th>
-            <th style="width:80px">마감월</th>
-            <th style="width:80px">작성자<br><small class="muted">작성일</small></th>
-            <th style="width:100px">관리</th>
-          </tr>
-          </thead>
-          <tbody>
-          {% for c in contracts %}
-            {% with items=c.items.all rows=1 %}
-              <tr class="row-block" data-href="{% url 'expenses:contract_detail' c.id %}">
-                <!-- ✅ 개별 선택 -->
-                <td class="center">
-                  <input type="checkbox" class="row-check" value="{{ c.id }}" onclick="event.stopPropagation()">
-                </td>
-
-                <td class="meta meta-no" rowspan="{{ rows }}">
-                  <div class="mono">{{ c.contract_no|default:c.id }}</div>
-                  <a href="{% url 'expenses:contract_detail' c.id %}" class="status-link" onclick="event.stopPropagation()">
-                    {{ c.get_status_display }}
-                  </a>
-                </td>
-
-                <td class="meta meta-cust" rowspan="{{ rows }}">
-                  <div class="cust">{{ c.customer_company|default:c.title }}</div>
-                  <div class="owner">
-                    <span class="cust-manager"
-                          data-raw="{{ c.customer_manager|default_if_none:'' }}"
-                          title="{{ c.customer_phone }}{% if c.customer_phone and c.customer_email %} · {% endif %}{{ c.customer_email }}">
-                      {{ c.customer_manager|default:"-" }}
-                    </span>
-                  </div>
-                </td>
-
-                <td class="items-cell">
-                  <table class="mini-items">
-                    <thead>
-                      <tr>
-                        <th class="w-item">품목</th>
-                        <th class="w-qty">수량</th>
-                        <th class="w-spec">규격</th>
-                        <th class="w-num hide-sm">매출단가</th>
-                        <th class="w-num">매출금액</th>
-                        <th class="w-num hide-sm">매입단가</th>
-                        <th class="w-num">매입금액</th>
-                        <th class="w-vendor">매입처</th>
-                        <th class="w-vat">과세</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for it in items %}
-                        <tr>
-                          <td class="txt">{{ it.name }}</td>
-                          <td class="num">{{ it.qty|default:0 }}</td>
-                          <td class="txt">{{ it.spec }}</td>
-                          <td class="num hide-sm"><span data-krw="{{ it.sell_unit|default:0 }}">{{ it.sell_unit|default:0 }}</span></td>
-                          <td class="num strong sell"><span data-krw="{{ it.sell_total|default:0 }}">{{ it.sell_total|default:0 }}</span></td>
-                          <td class="num hide-sm"><span data-krw="{{ it.buy_unit|default:0 }}">{{ it.buy_unit|default:0 }}</span></td>
-                          <td class="num buy"><span data-krw="{{ it.buy_total|default:0 }}">{{ it.buy_total|default:0 }}</span></td>
-                          <td class="txt vendor">{{ it.vendor }}</td>
-                          <td class="w-vat">
-                            {% if it.vat_mode == 'separate' %}VAT별도
-                            {% elif it.vat_mode == 'included' %}VAT포함
-                            {% elif it.vat_mode == 'exempt' %}면세
-                            {% else %}-{% endif %}
-                          </td>
-                        </tr>
-                      {% empty %}
-                        <tr><td class="empty" colspan="9">품목 없음</td></tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-
-                  {% if c.special_note %}
-                    <div class="special-note"><strong>특이사항:</strong> {{ c.special_note }}</div>
-                  {% endif %}
-                </td>
-
-                <td class="right strong" rowspan="{{ rows }}">
-                  {% if c.profit != None %}<span data-krw="{{ c.profit }}">{{ c.profit }}</span>{% else %}-{% endif %}
-                </td>
-                <td class="right" rowspan="{{ rows }}">
-                  {% if c.margin_rate != None %}{{ c.margin_rate|floatformat:2 }}%{% else %}-{% endif %}
-                </td>
-                <td class="center" rowspan="{{ rows }}">
-                  {% if c.margin_month %}{{ c.margin_month }}{% else %}-{% endif %}
-                </td>
-                <td class="author" rowspan="{{ rows }}">
-                  <div>{{ c.writer.first_name|default:c.writer.username }}</div>
-                  <small class="muted">{{ c.created_at|date:"Y-m-d" }}</small>
-                </td>
-
-                <td class="actions" rowspan="{{ rows }}">
-                  <a class="btn light" href="{% url 'expenses:contract_detail' c.id %}" onclick="event.stopPropagation()">상세</a>
-
-                  {% with acc=request.user.profile.access|default_if_none:"" %}
-                    {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
-                      <a class="btn light" href="{% url 'expenses:contract_edit' c.id %}">수정</a>
-                      <form method="post" action="{% url 'expenses:contract_delete' c.id %}" style="display:inline"
-                            onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                        <button type="submit" class="btn danger">삭제</button>
-                      </form>
-                    {% endif %}
-                  {% endwith %}
-                </td>
+              <tr>
+                  <th style="width:40px">
+                  <input type="checkbox" id="check-all">
+                  </th>
+                  <th style="width:80px">계약번호<br><small class="muted">계약상태</small></th>
+                  <th style="width:100px">매출처<br><small class="muted">담당자</small></th>
+                  <th>품목</th>
+                  <th style="width:100px">이익금액</th>
+                  <th style="width:80px">이익율</th>
+                  <th style="width:80px">마감월</th>
+                  <th style="width:80px">작성자<br><small class="muted">작성일</small></th>
+                  <th style="width:100px">관리</th>
               </tr>
-            {% endwith %}
-          {% empty %}
-            <tr><td colspan="9" class="empty">결재완료 상태의 계약이 없습니다.</td></tr>
-          {% endfor %}
-          </tbody>
+              </thead>
+              
+              <tbody>
+              {% for c in contracts %}
+                  {% with items=c.items.all %}
+                  {% with rows=1 %}
+                      <!-- first row (left/right columns use rowspan) -->
+                      <tr class="row-block" data-href="{% url 'expenses:contract_detail' c.id %}">
+                      <!-- ✅ 개별 선택 -->
+                      <td class="center">
+                          <input type="checkbox" class="row-check" value="{{ c.id }}" onclick="event.stopPropagation()">
+                      </td>
+
+                      <!-- 계약번호/상태 -->
+                      <td class="meta meta-no" rowspan="{{ rows }}">
+                          <div class="mono">{{ c.contract_no|default:c.id }}</div>
+                          <a href="{% url 'expenses:contract_detail' c.id %}"
+                          class="status-link" onclick="event.stopPropagation()">
+                          {{ c.get_status_display }}
+                          </a>
+                      </td>
+
+                      <!-- 매출처/담당자 -->
+                      <td class="meta meta-cust" rowspan="{{ rows }}">
+                          <div class="cust">{{ c.customer_company|default:c.title }}</div>
+                          <div class="owner">
+                          <span class="cust-manager"
+                                  data-raw="{{ c.customer_manager|default_if_none:'' }}"
+                                  title="{{ c.customer_phone }}{% if c.customer_phone and c.customer_email %} · {% endif %}{{ c.customer_email }}">
+                              {{ c.customer_manager|default:"-" }}
+                          </span>
+                          </div>
+                      </td>
+
+                      <td class="items-cell">
+                          <table class="mini-items">
+                          <thead>
+                              <tr>
+                              <th class="w-item" style="width:130px">품목</th>
+                              <th class="w-qty" style="width:80px">수량</th>
+                              <th class="w-spec" style="width:100px">규격</th>
+                              <th class="w-num hide-sm" style="width:100px">매출단가</th>
+                              <th class="w-num" style="width:100px">매출금액</th>
+                              <th class="w-num hide-sm" style="width:100px">매입단가</th>
+                              <th class="w-num" style="width:100px">매입금액</th>
+                              <th class="w-vendor" style="width:90px">매입처</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {% for it in items %}
+                              <tr>
+                                  <td class="txt">{{ it.name }}</td>
+                                  <td class="num">{{ it.qty|default:0 }}</td>
+                                  <td class="txt">{{ it.spec }}</td>
+
+                                  <td class="num hide-sm">
+                                  <span data-krw="{{ it.sell_unit|default:0 }}">{{ it.sell_unit|default:0 }}</span>
+                                  </td>
+                                  <td class="num strong sell">
+                                  <span data-krw="{{ it.sell_total|default:0 }}">{{ it.sell_total|default:0 }}</span>
+                                  </td>
+
+                                  <td class="num hide-sm">
+                                  <span data-krw="{{ it.buy_unit|default:0 }}">{{ it.buy_unit|default:0 }}</span>
+                                  </td>
+                                  <td class="num buy">
+                                  <span data-krw="{{ it.buy_total|default:0 }}">{{ it.buy_total|default:0 }}</span>
+                                  </td>
+
+                                  <td class="txt vendor">{{ it.vendor }}</td>
+                                  
+                              </tr>
+                              {% empty %}
+                              <tr><td class="empty-row" colspan="8">품목 없음</td></tr>
+                              {% endfor %}
+                          
+                              
+                          </tbody>
+                          </table>
+                          {% if c.special_note %}
+                          <div class="special-note"><strong>특이사항:</strong> {{ c.special_note }}</div>
+                          {% endif %}
+                      </td>
+
+                      <!-- 오른쪽 고정 컬럼들 -->
+                      <td class="right strong" rowspan="{{ rows }}">
+                          {% if c.profit != None %}
+                          <span data-krw="{{ c.profit }}">{{ c.profit }}</span>
+                          {% else %}-{% endif %}
+                      </td>
+                      <td class="right" rowspan="{{ rows }}">
+                          {% if c.margin_rate != None %}{{ c.margin_rate|floatformat:2 }}%{% else %}-{% endif %}
+                      </td>
+                      <td class="center" rowspan="{{ rows }}">
+                          {% if c.margin_month %}{{ c.margin_month }}{% else %}-{% endif %}
+                      </td>
+                      <td class="author" rowspan="{{ rows }}">
+                          <div>{{ c.writer.first_name|default:c.writer.username }}</div>
+                          <small class="muted">{{ c.created_at|date:"Y-m-d" }}</small>
+                      </td>
+                      <td class="actions" rowspan="{{ rows }}">
+                          {% with acc=request.user.profile.access|default_if_none:"" %}
+                          {# 상위권한: 모두 수정/삭제 가능 #}
+                          {% if request.user.is_superuser or acc == '관리자모드' or acc == '실장모드' or acc == '사장모드' %}
+                              <a class="btn small" href="{% url 'expenses:contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
+                              <form method="post" action="{% url 'expenses:contract_delete' c.id %}"
+                                  onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');"
+                                  style="display:inline">
+                              {% csrf_token %}
+                              <button type="submit" class="btn small gray">삭제</button>
+                              </form>
+
+                          {# 직원모드: 본인이 작성한 건만 수정/삭제 노출 #}
+                          {% elif acc == '직원모드' %}
+                              {% if c.writer_id == request.user.id %}
+                              <a class="btn small" href="{% url 'expenses:contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
+                              <form method="post" action="{% url 'expenses:contract_delete' c.id %}"
+                                      onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');"
+                                      style="display:inline">
+                                  {% csrf_token %}
+                                  <button type="submit" class="btn small gray">삭제</button>
+                              </form>
+                              {% endif %}
+                          {% endif %}
+                          {% endwith %}
+                      </td>
+
+                      </tr>
+                  {% endwith %}
+                  {% endwith %}
+              {% empty %}
+                  <tr><td colspan="9" class="empty">등록된 계약이 없습니다.</td></tr>
+              {% endfor %}
+              </tbody>
         </table>
       </div>
 
