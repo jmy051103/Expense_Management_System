@@ -528,6 +528,7 @@
   <!-- 거래내역: 행 추가/삭제 + 자동합계 + 화살표 이동 -->
   <script>
   (function(){
+    const IS_EDIT = (window.IS_EDIT ?? ("{{ is_edit|yesno:'true,false' }}" === "true"));
     const tbody     = document.getElementById("items-body");
     const btnAdd    = document.getElementById("btn-add-row");
     const sumSellEl = document.getElementById("sum-sell");
@@ -701,16 +702,21 @@
 
     // 초기행 세팅 + 보정
     tbody.querySelectorAll('tr[data-row]').forEach(tr => {
+      // 수량/단가는 raw에만 보관
       ['qty[]','sell_unit[]','buy_unit[]'].forEach(name => {
         const el = tr.querySelector(`[name="${name}"]`);
         if (el) setRaw(el, el.value);
       });
+      // 총액은 서버 값 그대로 표시(콤마) + raw에 저장
       ['sell_total[]','buy_total[]'].forEach(name => {
         const el = tr.querySelector(`[name="${name}"]`);
         if (el) { el.dataset.raw = fix2(el.value); el.value = fmt2(el.dataset.raw); }
       });
+
       bindRowEvents(tr);
-      recalcRow(tr);
+
+      // 🔴 수정 화면일 땐 최초 재계산 금지(서버의 총액 유지), 신규 작성일 때만 계산
+      if (!IS_EDIT) recalcRow(tr);
     });
 
     function addRow(focusFirst=true){

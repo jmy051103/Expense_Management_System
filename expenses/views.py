@@ -232,11 +232,11 @@ def add_contract(request):
                     sell_total = _d(get(st, i, 0))
                     buy_total  = _d(get(bt, i, 0))
 
-                    # 서버에서 금액 재계산(신뢰성 향상): 단가/수량이 있으면 금액 덮어쓰기
-                    if qty and sell_unit:
-                        sell_total = (sell_unit * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)  # 반올림 규칙은 필요시 변경
-                    if qty and buy_unit:
-                        buy_total  = (buy_unit * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                    # # 서버에서 금액 재계산(신뢰성 향상): 단가/수량이 있으면 금액 덮어쓰기
+                    # if qty and sell_unit:
+                    #     sell_total = (sell_unit * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)  # 반올림 규칙은 필요시 변경
+                    # if qty and buy_unit:
+                    #     buy_total  = (buy_unit * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
                     ContractItem.objects.create(
                         contract=contract,
@@ -362,10 +362,10 @@ def contract_edit(request, pk):
                     sell_total = _d(get(st, i, 0))
                     buy_total  = _d(get(bt, i, 0))
 
-                    if qty and sell_unit:
-                        sell_total = (sell_unit * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                    if qty and buy_unit:
-                        buy_total  = (buy_unit  * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                    # if qty and sell_unit:
+                    #     sell_total = (sell_unit * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                    # if qty and buy_unit:
+                    #     buy_total  = (buy_unit  * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
                     ContractItem.objects.create(
                         contract=contract,
