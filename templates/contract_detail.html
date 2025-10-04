@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-18-09">
-  <link rel="stylesheet" href="{% static 'css/contract_detail.css' %}?v=2025-09-19-02">
+  <link rel="stylesheet" href="{% static 'css/contract_detail.css' %}?v=2025-10-04-07">
 </head>
 <body>
 
@@ -169,7 +169,7 @@
           <tbody>
             {% for it in contract.items.all %}
               <tr>
-                <td class="txt">{{ it.name }}</td>
+                <td class=" w-item">{{ it.name }}</td>
                 <td class="num">{{ it.qty|default:0 }}</td>
                 <td class="txt">{{ it.spec|default:"-" }}</td>
 

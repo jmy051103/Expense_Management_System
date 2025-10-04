@@ -84,7 +84,7 @@ body {
 .dropdown a:hover { background: #f3f4f6; }
 
 /* 페이지 레이아웃 */
-.page { max-width: 1060px; margin: 28px auto 48px; padding: 0 20px; }
+.page { max-width: 1600px; margin: 28px auto 48px; padding: 0 20px; }
 .page-top {
   display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; margin-bottom: 14px;
 }
@@ -147,7 +147,19 @@ body {
 .mini-items td{ border-top:1px solid var(--line); padding:10px 10px; }
 .mini-items tbody tr:hover{ background:#fafafa; }
 
-.mini-items .txt{ text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
+.mini-items .txt {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center; /* 기본은 가운데 */
+}
+.mini-items td.w-item {
+  text-align: left;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: initial;
+  word-break: break-word;
+}
 .mini-items .num{ text-align:right; font-variant-numeric: tabular-nums; }
 .mini-items .strong{ font-weight:800; }
 .mini-items .sell{ color:#b91c1c; }
@@ -155,7 +167,7 @@ body {
 .mini-items .vendor{ color:#4b5563; }
 .mini-items .vat{ white-space:nowrap; text-align:center; }
 
-.mini-items .w-item{ width:26%; }
+.mini-items .w-item{ width:36%;}
 .mini-items .w-qty { width:7%;  text-align:center; }
 .mini-items .w-spec{ width:10%; }
 .mini-items .w-num { width:12%; }
@@ -166,21 +178,23 @@ body {
 
 /* 특이사항 박스 (기존 유지) */
 /* === 특이사항 크게 보이기 (확대 버전) === */
-.card:has(.note-box) {
+.card:has(.note-body) {
   padding: 28px;                
 }
 
 
-.note-body{
-  font-size: 16px;              /* 글씨 크게 */
-  line-height: 1.9;             /* 줄간격 넉넉하게 */
-  min-width: 260px;            /* 영역 자체를 길게 (원하면 320~400px로) */
-  color: #111;
-  white-space: pre-wrap;
-  word-break: keep-all;        
-  border:1px solid var(--line); 
-  border-radius:12px;
+.note-body {
+  font-size: 16px;         /* 글자 크기 살짝 키움 */
+  line-height: 2;          /* 줄간격 더 넉넉하게 */
+  width: 90%;              /* 박스 폭 늘림 */
+  margin-left: 0;          /* 왼쪽 정렬 */
+  margin-right: auto;      /* 가운데 정렬 해제 */
+  padding: 20px;           /* 안쪽 여백 조금 넉넉하게 */
+  background: #fcfcfd;     /* 살짝 밝은 배경 (선택사항) */
+  text-align: left;
 }
+
+
 
 /* 하단 버튼 */
 .page-bottom { 
