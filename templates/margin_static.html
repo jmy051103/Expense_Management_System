@@ -10,7 +10,7 @@
   <!-- 공통 프레임 -->
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-17-00">
   <!-- 월별 통계와 동일 스타일 재사용 -->
-  <link rel="stylesheet" href="{% static 'css/monthly_sales_contract.css' %}?v=2025-09-17-02">
+  <link rel="stylesheet" href="{% static 'css/monthly_sales_contract.css' %}?v=2025-10-12-11">
 </head>
 <body>
 
@@ -78,7 +78,7 @@
 
       <!-- 통계 드롭다운 -->
       {% with acc=request.user.profile.access|default_if_none:"" %}
-        {% if request.user.is_superuser or acc == "사장모드" or acc == "실장모드"%}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" or acc == "실장모드"%}
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
             <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
@@ -202,35 +202,79 @@
     const pad = n => (n<10?'0':'') + n;
     const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
-    // 달력 DOM 만들기
+    // 달력 DOM 만들기 (헤더에 연/월 셀렉트 추가)
     function buildPicker(){
       const wrap = document.createElement('div');
       wrap.className = 'dj-datepicker dj-hidden';
       wrap.innerHTML = `
         <div class="dj-dp-head">
           <button type="button" class="dj-dp-btn" data-prev aria-label="이전달">◀</button>
-          <div class="dj-dp-title"></div>
+
+          <div class="dj-dp-title">
+            <select class="dj-dp-year"  aria-label="연도 선택"></select>
+            <span class="dj-dp-suffix">년</span>
+            <select class="dj-dp-month" aria-label="월 선택"></select>
+            <span class="dj-dp-suffix">월</span>
+          </div>
+
           <button type="button" class="dj-dp-btn" data-next aria-label="다음달">▶</button>
         </div>
         <div class="dj-dp-grid">
           <div class="dj-dp-dow">
-            <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
           </div>
           <div class="dj-dp-day"></div>
         </div>`;
       document.body.appendChild(wrap);
       return wrap;
     }
+
     const picker = buildPicker();
-    const titleEl = picker.querySelector('.dj-dp-title');
     const daysEl  = picker.querySelector('.dj-dp-day');
+    const yearSel  = picker.querySelector('.dj-dp-year');
+    const monthSel = picker.querySelector('.dj-dp-month');
 
     let activeInput = null;
     let viewYear = 0, viewMonth = 0; // 0-11
 
+    // 최소 연도 고정
+    const MIN_YEAR = 2019;
+
+    function fillYMOptions(targetYear){
+      const now  = new Date();
+      const yNow = now.getFullYear();
+
+      // 최소 2019년부터, 선택/현재 연도에 따라 자동 확장
+      const start = Math.min(MIN_YEAR, targetYear);
+      const end   = Math.max(yNow, targetYear); // 내년까지
+
+      yearSel.innerHTML = '';
+      for (let y = start; y <= end; y++){
+        const opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        yearSel.appendChild(opt);
+      }
+
+      monthSel.innerHTML = '';
+      for (let m = 1; m <= 12; m++){
+        const opt = document.createElement('option');
+        opt.value = m; opt.textContent = String(m).padStart(2,'0');
+        monthSel.appendChild(opt);
+      }
+    }
+
+    function ensureYearInOptions(y){
+      // 옵션에 없으면 범위를 다시 채움(2019 이전 연도를 선택해도 안전)
+      const exists = Array.from(yearSel.options).some(o => Number(o.value) === y);
+      if (!exists) fillYMOptions(y);
+    }
+
     function render(year, month){
       viewYear = year; viewMonth = month;
-      titleEl.textContent = `${year}년 ${String(month+1).padStart(2,'0')}월`;
+      ensureYearInOptions(year);
+      yearSel.value  = String(year);
+      monthSel.value = String(month+1);
+
       daysEl.innerHTML = '';
 
       const first = new Date(year, month, 1);
@@ -255,17 +299,15 @@
 
         // 클릭: 값만 세팅, 더블클릭: 세팅 + 닫기
         btn.addEventListener('click', ()=>{
-        // 클릭하면 날짜를 input에 미리 넣기만 (확정 아님)
-        if(activeInput){
+          if(activeInput){
             activeInput.value = thisStr;
-        }
+          }
         });
         btn.addEventListener('dblclick', ()=>{
-        // 더블 클릭 시 확정 + 닫기
-        if(activeInput){
+          if(activeInput){
             activeInput.value = thisStr;
             closePicker();
-        }
+          }
         });
         frag.appendChild(btn);
       }
@@ -286,6 +328,8 @@
       const base = (input.value && /^\d{4}-\d{2}-\d{2}$/.test(input.value))
         ? new Date(input.value)
         : new Date();
+
+      fillYMOptions(base.getFullYear());   // 헤더 셀렉트 준비
       render(base.getFullYear(), base.getMonth());
 
       // 위치
@@ -299,6 +343,7 @@
       activeInput = null;
     }
 
+    // 해/달 네비 버튼
     picker.querySelector('[data-prev]').addEventListener('click', ()=>{
       const m = viewMonth===0?11:viewMonth-1;
       const y = viewMonth===0?viewYear-1:viewYear;
@@ -310,11 +355,21 @@
       render(y,m);
     });
 
+    // 연/월 셀렉트 변경 시 점프
+    yearSel.addEventListener('change', ()=>{
+      const y = Number(yearSel.value) || viewYear;
+      render(y, viewMonth);
+    });
+    monthSel.addEventListener('change', ()=>{
+      const m = Number(monthSel.value) - 1;
+      if (m>=0 && m<=11) render(viewYear, m);
+    });
+
     // 외부 클릭/ESC로 닫기
     document.addEventListener('mousedown', (e)=>{
       if(!picker.classList.contains('dj-hidden') &&
-         !picker.contains(e.target) &&
-         e.target !== activeInput){
+        !picker.contains(e.target) &&
+        e.target !== activeInput){
         closePicker();
       }
     });

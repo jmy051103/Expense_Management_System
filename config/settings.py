@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "expenses.apps.ExpensesConfig",
     "partners",
     "reports",
+    "storages",
 ]
 
 # --- Middleware ---
@@ -113,10 +114,37 @@ LOGOUT_REDIRECT_URL = "/"
 # --- Default PK type ---
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
-
 # 업로드 관련 제한 완화
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
-DATA_UPLOAD_MAX_MEMORY_SIZE   = 50 * 1024 * 1024 #50MB
-FILE_UPLOAD_MAX_MEMORY_SIZE   = 50 * 1024 * 1024  #50MB
+DATA_UPLOAD_MAX_MEMORY_SIZE   = 100 * 1024 * 1024  # 100MB
+FILE_UPLOAD_MAX_MEMORY_SIZE   = 100 * 1024 * 1024  # 100MB
+
+USE_OBJECT_STORAGE = os.getenv("USE_OBJECT_STORAGE", "True").strip().lower() in ("true", "1", "yes")
+
+# if USE_OBJECT_STORAGE:
+    # === AWS S3 설정 ===
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")  # .env: daejin-bucket
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "ap-northeast-2")  # 서울
+AWS_S3_SIGNATURE_VERSION = "s3v4"
+AWS_S3_ADDRESSING_STYLE = "virtual"
+
+# 표준 S3는 endpoint 생략 권장(리전으로 자동 선택)
+# 필요 시에만 사용:
+# AWS_S3_ENDPOINT_URL = f"https://s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+
+# 업로드 파일 권한/캐시
+AWS_DEFAULT_ACL = None
+AWS_S3_FILE_OVERWRITE = False
+AWS_QUERYSTRING_AUTH = True                 # presigned URL 사용
+AWS_QUERYSTRING_EXPIRE = 60 * 60 * 6        # 6시간
+AWS_S3_OBJECT_PARAMETERS = {
+    "CacheControl": "public, max-age=31536000",
+}
+
+# Django 5.x 방식: 스토리지 백엔드 지정
+STORAGES = {
+    "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}

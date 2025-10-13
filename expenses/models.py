@@ -4,6 +4,7 @@ from django.db import models
 from django.db import models, transaction
 from django.db.models import Max
 from django.utils import timezone
+from django.core.files.storage import default_storage
 
 # ---------------- 기존 보고서 모델 ----------------
 class ExpenseReport(models.Model):
@@ -119,30 +120,14 @@ class Contract(models.Model):
     
     def __str__(self):
         return f"[{self.get_status_display()}] {self.title} (#{self.pk})"
+    
+    def delete(self, *args, **kwargs):
+        # 연결된 이미지 전부 개별 삭제 (S3 파일까지)
+        for img in list(self.images.all()):
+            img.delete()
+        # 그 다음 계약 자체 삭제
+        super().delete(*args, **kwargs)
 
-
-
-class ContractImage(models.Model):
-    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name="images")
-
-    # 파일들 (원본/파생)
-    original = models.ImageField(upload_to="contracts/orig/%Y/%m/%d/")
-    thumb    = models.ImageField(upload_to="contracts/thumb/%Y/%m/%d/", blank=True)
-    medium   = models.ImageField(upload_to="contracts/medium/%Y/%m/%d/", blank=True)
-
-    # 메타정보
-    filename = models.CharField(max_length=255, db_index=True, blank=True)
-    width    = models.IntegerField(null=True, blank=True)
-    height   = models.IntegerField(null=True, blank=True)
-    content_type = models.CharField(max_length=50, blank=True)
-
-    uploaded_at  = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        indexes = [models.Index(fields=["contract", "uploaded_at"])]
-
-    def __str__(self):
-        return self.filename or self.original.name
     
 class ContractItem(models.Model):
     VAT_CHOICES = [
@@ -173,3 +158,34 @@ class ContractItem(models.Model):
 
     def __str__(self):
         return f"{self.name} x{self.qty}"
+    
+class ContractImage(models.Model):
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name="images")
+
+    original = models.ImageField(upload_to="contracts/orig/%Y/%m/%d/")
+    thumb    = models.ImageField(upload_to="contracts/thumb/%Y/%m/%d/", blank=True)
+    medium   = models.ImageField(upload_to="contracts/medium/%Y/%m/%d/", blank=True)
+
+    filename = models.CharField(max_length=255, db_index=True, blank=True)
+    width    = models.IntegerField(null=True, blank=True)
+    height   = models.IntegerField(null=True, blank=True)
+    content_type = models.CharField(max_length=50, blank=True)
+
+    uploaded_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["contract", "uploaded_at"])]
+
+    def __str__(self):
+        return self.filename or self.original.name
+
+    # ✅ 파일 삭제 로직 (S3, Naver, 로컬 모두 자동 지원)
+    def delete(self, *args, **kwargs):
+        for field_name in ["original", "medium", "thumb"]:
+            f = getattr(self, field_name, None)
+            if f and f.name and default_storage.exists(f.name):
+                try:
+                    default_storage.delete(f.name)
+                except Exception as e:
+                    print(f"[WARN] 파일 삭제 실패: {f.name} ({e})")
+        super().delete(*args, **kwargs)

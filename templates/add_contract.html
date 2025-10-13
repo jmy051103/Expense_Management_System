@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-10-01-00">
+  <link rel="stylesheet" href="{% static 'css/add_contract.css' %}?v=2025-10-12-11">
   <style>
     /* 거래내역 표 내부 전용(버튼 크기/배치) */
     #items-table .arrows-col{
@@ -84,7 +84,7 @@
 
       <!-- 통계 드롭다운 -->
       {% with acc=request.user.profile.access|default_if_none:"" %}
-        {% if request.user.is_superuser or acc == "사장모드" or acc == "실장모드"%}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" or acc == "실장모드"%}
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
             <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
@@ -460,7 +460,7 @@
   <!-- 업로드 미리보기 -->
   <script>
   (function(){
-    const MAX_FILES = 10, MAX_MB = 10;
+    const MAX_FILES = 10, MAX_MB = 8;
     const input = document.getElementById('images-input');
     const pickBtn = document.getElementById('pick-images');
     const dropZone = document.getElementById('drop-zone');

@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>업무지원 시스템</title>
-  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-09-30-11">
+  <link rel="stylesheet" href="{% static 'css/contract_list.css' %}?v=2025-10-12-11">
 </head>
 <body>
 
@@ -73,7 +73,7 @@
 
       <!-- 통계 드롭다운 -->
       {% with acc=request.user.profile.access|default_if_none:"" %}
-        {% if request.user.is_superuser or acc == "사장모드" or acc == "실장모드"%}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" or acc == "실장모드"%}
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
             <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
@@ -285,7 +285,7 @@
 
                         {# 직원모드: 본인이 작성한 건만 수정/삭제 노출 #}
                         {% elif acc == '직원모드' %}
-                          {% if c.writer_id == request.user.id %}
+                          {% if c.writer_id == request.user.id and c.status == 'draft' %}
                             <a class="btn small" href="{% url 'expenses:contract_edit' c.id %}" onclick="event.stopPropagation()">수정</a>
                             <form method="post" action="{% url 'expenses:contract_delete' c.id %}"
                                   onsubmit="event.stopPropagation(); return confirm('정말 삭제하시겠습니까?');"

@@ -180,7 +180,7 @@ table.table-stat tfoot td{
 
 /* ===== 달력 ===== */
 :root{
-  --dp-scale: 1.15;
+  --dp-scale: 1;
   --dp-bg: #fff;
   --dp-ink: #111;
   --dp-muted: #6b7280;

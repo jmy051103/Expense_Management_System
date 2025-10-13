@@ -10,7 +10,7 @@
   <!-- 공통 프레임 -->
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-17-00">
   <!-- 이 페이지 전용 -->
-  <link rel="stylesheet" href="{% static 'css/monthly_sales_contract.css' %}?v=2025-09-17-02">
+  <link rel="stylesheet" href="{% static 'css/monthly_sales_contract.css' %}?v=2025-10-12-11">
 </head>
 <body>
 
@@ -78,7 +78,7 @@
 
       <!-- 통계 드롭다운 -->
       {% with acc=request.user.profile.access|default_if_none:"" %}
-        {% if request.user.is_superuser or acc == "사장모드" or acc == "실장모드"%}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" or acc == "실장모드"%}
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
             <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
@@ -194,75 +194,80 @@
 
   <!-- 숫자 포맷/필터/표 렌더링 -->
   <script>
-    (function(){
-      const KR  = new Intl.NumberFormat('ko-KR');
-      const pad = n => (n<10?'0':'') + n;
-      const dateStr = (y,m,d) => `${y}-${pad(m)}-${pad(d)}`;
+  (function(){
+    const KR  = new Intl.NumberFormat('ko-KR');
+    const pad = n => (n<10?'0':'') + n;
+    const dateStr = (y,m,d) => `${y}-${pad(m)}-${pad(d)}`;
 
-      // 연/월 셀렉터 채우기
-      const ySel = document.getElementById('year');
-      const mSel = document.getElementById('month');
-      const form = document.querySelector('.monthly-filter');
+    // 연/월 셀렉터 채우기
+    const ySel = document.getElementById('year');
+    const mSel = document.getElementById('month');
+    const form = document.querySelector('.monthly-filter');
 
-      const now  = new Date();
-      const yNow = now.getFullYear();
-      const mNow = now.getMonth() + 1;
+    const now  = new Date();
+    const yNow = now.getFullYear();
+    const mNow = now.getMonth() + 1;
 
-      const yVal = (window.SELECTED_YEAR  && window.SELECTED_YEAR  > 0) ? window.SELECTED_YEAR  : yNow;
-      const mVal = (window.SELECTED_MONTH && window.SELECTED_MONTH > 0) ? window.SELECTED_MONTH : mNow;
+    const yVal = (window.SELECTED_YEAR  && window.SELECTED_YEAR  > 0) ? window.SELECTED_YEAR  : yNow;
+    const mVal = (window.SELECTED_MONTH && window.SELECTED_MONTH > 0) ? window.SELECTED_MONTH : mNow;
 
-      for (let y = yNow - 6; y <= yNow; y++) {
-        const opt = document.createElement('option');
-        opt.value = y; opt.textContent = y;
-        if (y === yVal) opt.selected = true;
-        ySel.appendChild(opt);
-      }
-      for (let i = 1; i <= 12; i++) {
-        const opt = document.createElement('option');
-        opt.value = i; opt.textContent = String(i).padStart(2,'0') + '월';
-        if (i === mVal) opt.selected = true;
-        mSel.appendChild(opt);
-      }
+    // ✅ 2019년부터 올해까지 고정
+    const MIN_YEAR = 2019;
+    for (let y = MIN_YEAR; y <= yNow; y++) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      if (y === yVal) opt.selected = true;
+      ySel.appendChild(opt);
+    }
 
-      // 셀렉터 변경 시 자동 검색 제출(원하면 주석 처리)
-      ySel.addEventListener('change', ()=> form.submit());
-      mSel.addEventListener('change', ()=> form.submit());
+    for (let i = 1; i <= 12; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = String(i).padStart(2,'0') + '월';
+      if (i === mVal) opt.selected = true;
+      mSel.appendChild(opt);
+    }
 
-      // 표 렌더링
-      const tbody = document.getElementById('tbody-rows');
-      const sumT  = document.getElementById('sum-total');
-      const sumS  = document.getElementById('sum-supply');
-      const sumV  = document.getElementById('sum-vat');
+    // 셀렉터 변경 시 자동 검색 제출(원하면 주석 처리)
+    ySel.addEventListener('change', ()=> form.submit());
+    mSel.addEventListener('change', ()=> form.submit());
 
-      const daysInMonth = new Date(yVal, mVal, 0).getDate(); // mVal: 1-12 OK
-      let total = 0, supply = 0, vat = 0;
+    // 표 렌더링
+    const tbody = document.getElementById('tbody-rows');
+    const sumT  = document.getElementById('sum-total');
+    const sumS  = document.getElementById('sum-supply');
+    const sumV  = document.getElementById('sum-vat');
 
-      for (let d = 1; d <= daysInMonth; d++) {
-        const key = dateStr(yVal, mVal, d);
-        const row = (window.DAILY && window.DAILY[key]) ? window.DAILY[key] : null;
+    const daysInMonth = new Date(yVal, mVal, 0).getDate(); // mVal: 1-12
+    let total = 0, supply = 0, vat = 0;
 
-        const t = row && typeof row.total  === 'number' ? row.total  : 0;
-        const s = row && typeof row.supply === 'number' ? row.supply : t;
-        const v = row && typeof row.vat    === 'number' ? row.vat    : 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = dateStr(yVal, mVal, d);
+      const row = (window.DAILY && window.DAILY[key]) ? window.DAILY[key] : null;
 
-        total  += t;
-        supply += s;
-        vat    += v;
+      const t = row && typeof row.total  === 'number' ? row.total  : 0;
+      const s = row && typeof row.supply === 'number' ? row.supply : t;
+      const v = row && typeof row.vat    === 'number' ? row.vat    : 0;
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="center">${key}</td>
-          <td class="right num">${KR.format(Math.round(t))}</td>
-          <td class="right num">${KR.format(Math.round(s))}</td>
-          <td class="right num">${KR.format(Math.round(v))}</td>
-        `;
-        tbody.appendChild(tr);
-      }
+      total  += t;
+      supply += s;
+      vat    += v;
 
-      sumT.textContent = KR.format(Math.round(total));
-      sumS.textContent = KR.format(Math.round(supply));
-      sumV.textContent = KR.format(Math.round(vat));
-    })();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="center">${key}</td>
+        <td class="right num">${KR.format(Math.round(t))}</td>
+        <td class="right num">${KR.format(Math.round(s))}</td>
+        <td class="right num">${KR.format(Math.round(v))}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    sumT.textContent = KR.format(Math.round(total));
+    sumS.textContent = KR.format(Math.round(supply));
+    sumV.textContent = KR.format(Math.round(vat));
+  })();
   </script>
 
   <script>

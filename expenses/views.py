@@ -332,7 +332,10 @@ def contract_edit(request, pk):
                 # 이미지 삭제/추가
                 del_ids = request.POST.getlist("del_image_ids[]")
                 if del_ids:
-                    ContractImage.objects.filter(contract=contract, id__in=del_ids).delete()
+                    # 각 인스턴스의 delete()가 호출되어 models.py에서 S3 파일도 함께 삭제됨
+                    for img in ContractImage.objects.filter(contract=contract, id__in=del_ids):
+                        img.delete()
+
                 for f in request.FILES.getlist("images"):
                     ContractImage.objects.create(contract=contract, original=f)
 

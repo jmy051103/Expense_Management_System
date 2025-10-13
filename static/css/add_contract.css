@@ -455,7 +455,7 @@ table.form-table { width: 100%; border-collapse: collapse; table-layout: fixed; 
 
 /* ===== 달력 ===== */
 :root{
-  --dp-scale: 1.15;            /* 달력 전체 크기 배율 */
+  --dp-scale: 1;            /* 달력 전체 크기 배율 */
   --dp-bg: #fff;
   --dp-ink: #111;
   --dp-muted: #6b7280;

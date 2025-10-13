@@ -10,7 +10,7 @@
   <!-- 공통 프레임 -->
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2025-09-17-00">
   <!-- 월별 통계 스타일 재사용 -->
-  <link rel="stylesheet" href="{% static 'css/monthly_sales_contract.css' %}?v=2025-09-17-02">
+  <link rel="stylesheet" href="{% static 'css/monthly_sales_contract.css' %}?v=2025-10-12-11">
 </head>
 <body>
   <!-- 상단 상태줄 -->
@@ -77,7 +77,7 @@
 
       <!-- 통계 드롭다운 -->
       {% with acc=request.user.profile.access|default_if_none:"" %}
-        {% if request.user.is_superuser or acc == "사장모드" or acc == "실장모드"%}
+        {% if request.user.is_superuser or acc == "관리자모드" or acc == "사장모드" or acc == "실장모드"%}
           <div class="tab-group has-dropdown">
             <a href="#" class="tab" aria-haspopup="true" aria-expanded="false" aria-controls="menu-stats">통계</a>
             <ul id="menu-stats" class="dropdown" role="menu" aria-label="통계 메뉴">
@@ -196,14 +196,14 @@
     </div>
   </footer>
 
-  <!-- 연/월 셀렉터(2019~2025 고정) -->
+  <!-- 연/월 셀렉터(2019~현재년도 고정) -->
   <script>
     (function(){
       const ySel = document.getElementById('year');
       const mSel = document.getElementById('month');
       const form = document.querySelector('.monthly-filter');
 
-      // 비어 있으면 0 → 선택 시 현재값으로 대체됨
+      // 서버에서 전달된 선택값
       const SELECTED_YEAR  = Number('{{ year|default:0 }}');
       const SELECTED_MONTH = Number('{{ month|default:0 }}');
 
@@ -214,13 +214,15 @@
       const yVal = SELECTED_YEAR  > 0 ? SELECTED_YEAR  : yNow;
       const mVal = SELECTED_MONTH > 0 ? SELECTED_MONTH : mNow;
 
-      // 최근 6년치 (원하면 범위 조절)
-      for (let y = yNow - 6; y <= yNow; y++){
+      // ✅ 2019년부터 올해까지
+      const MIN_YEAR = 2019;
+      for (let y = MIN_YEAR; y <= yNow; y++){
         const o = document.createElement('option');
         o.value = y; o.textContent = y;
         if (y === yVal) o.selected = true;
         ySel.appendChild(o);
       }
+
       for (let m = 1; m <= 12; m++){
         const o = document.createElement('option');
         o.value = m; o.textContent = String(m).padStart(2,'0');
